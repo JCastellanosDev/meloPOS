@@ -3,231 +3,175 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.*?>
-<?import javafx.scene.text.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.melo.controller.PaymentPortalController"
+            fx:controller="mx.edu.utch.melo.controller.PaymentPortalController"
             prefWidth="1280" prefHeight="960"
-            style="-fx-background-color: #FDF5EF;">
+            stylesheets="@styles.css">
 
-    <!-- ===== LEFT SIDEBAR ===== -->
+    <!-- ===== MENÚ LATERAL ===== -->
     <left>
-        <VBox prefWidth="228" prefHeight="960"
-              style="-fx-background-color: #2C1A0E; -fx-padding: 0;">
-
-            <!-- Logo -->
-            <VBox alignment="CENTER" style="-fx-padding: 20 16 16 16; -fx-background-color: #1E1208;">
-                <Label text="melo" style="-fx-text-fill: #FFFFFF; -fx-font-size: 20; -fx-font-weight: BOLD;"/>
-                <Label text="Terminal 04" style="-fx-text-fill: #7A6050; -fx-font-size: 11;"/>
-            </VBox>
-
-            <!-- Nav -->
-            <VBox style="-fx-padding: 16 10 0 10; -fx-spacing: 2;">
-                <!-- Active -->
-                <Button text="📋  Orders" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: #E07540; -fx-text-fill: #FFFFFF; -fx-font-size: 13; -fx-font-weight: BOLD; -fx-background-radius: 8; -fx-padding: 10 14; -fx-cursor: HAND;"/>
-                <Button text="🪑  Tables" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #9A7060; -fx-font-size: 13; -fx-padding: 10 14; -fx-cursor: HAND;"/>
-                <Button text="🍽  Menu" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #9A7060; -fx-font-size: 13; -fx-padding: 10 14; -fx-cursor: HAND;"/>
-                <Button text="👥  Staff" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #9A7060; -fx-font-size: 13; -fx-padding: 10 14; -fx-cursor: HAND;"/>
-                <Button text="📦  Inventory" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #9A7060; -fx-font-size: 13; -fx-padding: 10 14; -fx-cursor: HAND;"/>
-                <Button text="⚙️  Settings" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #9A7060; -fx-font-size: 13; -fx-padding: 10 14; -fx-cursor: HAND;"/>
-            </VBox>
-
-            <Region VBox.vgrow="ALWAYS"/>
-
-            <!-- Close Shift -->
-            <VBox style="-fx-padding: 0 16 24 16;">
-                <Button text="Close Shift" maxWidth="Infinity" prefHeight="44"
-                        style="-fx-background-color: #E07540; -fx-text-fill: white; -fx-font-size: 14; -fx-font-weight: BOLD; -fx-background-radius: 8; -fx-cursor: HAND;"/>
+        <VBox>
+            <fx:include fx:id="sidebar" source="Sidebar.fxml">
+                <VBox.vgrow>ALWAYS</VBox.vgrow>
+            </fx:include>
+            <!-- Cerrar turno -->
+            <VBox styleClass="sidebar-extra-section">
+                <Button text="Cerrar Turno" maxWidth="Infinity" styleClass="btn-accent-block"/>
             </VBox>
         </VBox>
     </left>
 
-    <!-- ===== TOP BAR ===== -->
+    <!-- ===== BARRA SUPERIOR ===== -->
     <top>
-        <HBox prefHeight="60" alignment="CENTER"
-              style="-fx-background-color: #FFFFFF; -fx-border-color: #E8DDD5; -fx-border-width: 0 0 1 0; -fx-padding: 0 24; -fx-spacing: 16;">
-            <Label text="Payment Portal"
-                   style="-fx-font-size: 18; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
-            <!-- Tabs -->
-            <HBox spacing="4" style="-fx-padding: 0 20;">
-                <Button text="Dine In" style="-fx-background-color: transparent; -fx-text-fill: #888888; -fx-font-size: 13; -fx-cursor: HAND; -fx-padding: 6 12;"/>
-                <Button text="Takeaway" style="-fx-background-color: transparent; -fx-text-fill: #C8552A; -fx-font-size: 13; -fx-font-weight: BOLD; -fx-cursor: HAND; -fx-padding: 6 12; -fx-border-color: transparent transparent #C8552A transparent; -fx-border-width: 0 0 2 0;"/>
-                <Button text="Delivery" style="-fx-background-color: transparent; -fx-text-fill: #888888; -fx-font-size: 13; -fx-cursor: HAND; -fx-padding: 6 12;"/>
+        <HBox prefHeight="64" alignment="CENTER_LEFT" styleClass="topbar">
+            <Label text="Portal de Pagos" styleClass="text-title-sm"/>
+            <!-- Pestañas -->
+            <HBox spacing="4" styleClass="pad-0-24">
+                <Button text="Comedor" styleClass="tab-item"/>
+                <Button text="Para Llevar" styleClass="tab-item-active"/>
+                <Button text="Domicilio" styleClass="tab-item"/>
             </HBox>
             <Region HBox.hgrow="ALWAYS"/>
-            <TextField promptText="Search order..." prefWidth="240"
-                       style="-fx-background-color: #F5EDE6; -fx-background-radius: 20; -fx-border-color: transparent; -fx-padding: 8 16; -fx-font-size: 12;"/>
-            <Button text="🔔" style="-fx-background-color: transparent; -fx-font-size: 18; -fx-cursor: HAND;"/>
-            <Button text="New Order"
-                    style="-fx-background-color: #1A1A1A; -fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: BOLD; -fx-background-radius: 8; -fx-padding: 8 16; -fx-cursor: HAND;"/>
+            <TextField promptText="Buscar orden..." prefWidth="240" styleClass="search-field"/>
+            <Button text="🔔" styleClass="icon-button"/>
+            <Button text="Nueva Orden" styleClass="btn-primary"/>
         </HBox>
     </top>
 
-    <!-- ===== CENTER ===== -->
+    <!-- ===== CENTRO ===== -->
     <center>
-        <HBox style="-fx-padding: 24; -fx-spacing: 20;" alignment="TOP_CENTER">
+        <HBox styleClass="pad-24 gap-20" alignment="TOP_CENTER">
 
-            <!-- LEFT: Receipt / Order Summary -->
-            <VBox prefWidth="340" minHeight="700"
-                  style="-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-border-color: #E8DDD5; -fx-border-radius: 12; -fx-border-width: 1; -fx-padding: 28; -fx-spacing: 0; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
-                <!-- Header -->
-                <VBox alignment="CENTER" style="-fx-spacing: 4; -fx-padding: 0 0 16 0;">
-                    <Label text="L'Étoile Noir" style="-fx-font-size: 16; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
-                    <Label text="ORDER #15925" style="-fx-font-size: 12; -fx-text-fill: #555555;"/>
-                    <Label text="24 Oct 2023, 19:42" style="-fx-font-size: 12; -fx-text-fill: #555555;"/>
-                    <Label text="Usuario: [Nombre de usuario]" style="-fx-font-size: 12; -fx-text-fill: #555555;"/>
-                    <Label text="Cajero: Vakero" style="-fx-font-size: 12; -fx-text-fill: #555555;"/>
+            <!-- IZQUIERDA: Recibo / Resumen de la orden -->
+            <VBox prefWidth="340" minHeight="700" styleClass="card-lg gap-0">
+                <!-- Encabezado -->
+                <VBox alignment="CENTER" styleClass="gap-4 pad-bottom-16">
+                    <Label text="L'Étoile Noir" styleClass="text-body-strong"/>
+                    <Label text="ORDEN #15925" styleClass="text-muted"/>
+                    <Label text="24 Oct 2023, 19:42" styleClass="text-muted"/>
+                    <Label text="Usuario: [Nombre de usuario]" styleClass="text-muted"/>
+                    <Label text="Cajero: Vakero" styleClass="text-muted"/>
                 </VBox>
 
-                <Separator style="-fx-padding: 0 0 16 0;" VBox.margin=" 0 0 16 0"/>
+                <Separator styleClass="pad-bottom-16"/>
 
-                <!-- Items -->
-                <VBox style="-fx-spacing: 12; -fx-padding: 16 0;">
+                <!-- Artículos -->
+                <VBox styleClass="gap-12 pad-y-16">
                     <HBox>
                         <VBox HBox.hgrow="ALWAYS">
-                            <Label text="1x  Chw-bacon Burger" style="-fx-font-size: 13; -fx-text-fill: #1A1A1A;"/>
-                            <Label text="Extra cheese, Med rare" style="-fx-font-size: 11; -fx-text-fill: #888888;"/>
+                            <Label text="1x  Hamburguesa con Tocino y Queso" styleClass="text-body"/>
+                            <Label text="Extra queso, término medio" styleClass="text-muted-sm"/>
                         </VBox>
-                        <Label text="$104.00" style="-fx-font-size: 13; -fx-text-fill: #1A1A1A;"/>
+                        <Label text="\$104.00" styleClass="text-body"/>
                     </HBox>
                     <HBox>
-                        <Label text="2x  Espresso Double" style="-fx-font-size: 13; -fx-text-fill: #1A1A1A;" HBox.hgrow="ALWAYS"/>
-                        <Label text="$72.00" style="-fx-font-size: 13; -fx-text-fill: #1A1A1A;"/>
+                        <Label text="2x  Espresso Doble" styleClass="text-body" HBox.hgrow="ALWAYS"/>
+                        <Label text="\$72.00" styleClass="text-body"/>
                     </HBox>
                 </VBox>
 
                 <Region VBox.vgrow="ALWAYS"/>
 
-                <!-- Totals -->
-                <VBox style="-fx-border-color: #E8DDD5; -fx-border-width: 1 0 0 0; -fx-padding: 16 0 0 0; -fx-spacing: 8;">
+                <!-- Totales -->
+                <VBox styleClass="totals-box">
                     <HBox>
-                        <Label text="Subtotal" style="-fx-font-size: 13; -fx-text-fill: #888888;" HBox.hgrow="ALWAYS"/>
-                        <Label text="$176.00" style="-fx-font-size: 13; -fx-text-fill: #1A1A1A;"/>
+                        <Label text="Subtotal" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                        <Label text="\$176.00" styleClass="text-body"/>
                     </HBox>
                     <HBox>
-                        <Label text="IVA (16%)" style="-fx-font-size: 13; -fx-text-fill: #888888;" HBox.hgrow="ALWAYS"/>
-                        <Label text="$28.16" style="-fx-font-size: 13; -fx-text-fill: #1A1A1A;"/>
+                        <Label text="IVA (16%)" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                        <Label text="\$28.16" styleClass="text-body"/>
                     </HBox>
                     <HBox>
-                        <Label text="Total" style="-fx-font-size: 16; -fx-font-weight: BOLD; -fx-text-fill: #C8552A;" HBox.hgrow="ALWAYS"/>
-                        <Label text="$204.16" style="-fx-font-size: 16; -fx-font-weight: BOLD; -fx-text-fill: #C8552A;"/>
+                        <Label text="Total" styleClass="text-price-lg" HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="lblTotalCuenta" text="\$204.16" styleClass="text-price-lg"/>
                     </HBox>
                 </VBox>
             </VBox>
 
-            <!-- CENTER: Payment method + Amount received -->
+            <!-- CENTRO: Método de pago + monto recibido -->
             <VBox prefWidth="340" spacing="16">
 
-                <!-- Payment methods -->
+                <!-- Métodos de pago -->
                 <HBox spacing="12">
-                    <!-- Efectivo (active) -->
-                    <VBox prefWidth="100" prefHeight="110" alignment="CENTER" spacing="8"
-                          style="-fx-background-color: #C8552A; -fx-background-radius: 12; -fx-cursor: HAND;">
-                        <Label text="💵" style="-fx-font-size: 28;"/>
-                        <Label text="Efectivo" style="-fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: BOLD;"/>
+                    <!-- Efectivo (activo) -->
+                    <VBox fx:id="tileEfectivo" prefWidth="100" prefHeight="110" styleClass="pay-method-active gap-8" onMouseClicked="#onEfectivoClick">
+                        <Label text="💵" styleClass="text-icon-lg-accent"/>
+                        <Label fx:id="lblEfectivo" text="Efectivo" styleClass="pay-method-label-active"/>
                     </VBox>
                     <!-- Tarjeta -->
-                    <VBox prefWidth="100" prefHeight="110" alignment="CENTER" spacing="8"
-                          style="-fx-background-color: #F5EDE6; -fx-background-radius: 12; -fx-cursor: HAND;" HBox.hgrow="ALWAYS">
-                        <Label text="💳" style="-fx-font-size: 28;"/>
-                        <Label text="Tarjeta" style="-fx-text-fill: #1A1A1A; -fx-font-size: 13;"/>
+                    <VBox fx:id="tileTarjeta" prefWidth="100" prefHeight="110" styleClass="pay-method gap-8" HBox.hgrow="ALWAYS" onMouseClicked="#onTarjetaClick">
+                        <Label text="💳" styleClass="text-icon-lg-accent"/>
+                        <Label fx:id="lblTarjeta" text="Tarjeta" styleClass="pay-method-label"/>
                     </VBox>
                     <!-- Transferencia -->
-                    <VBox prefWidth="100" prefHeight="110" alignment="CENTER" spacing="8"
-                          style="-fx-background-color: #F5EDE6; -fx-background-radius: 12; -fx-cursor: HAND;" HBox.hgrow="ALWAYS">
-                        <Label text="📱" style="-fx-font-size: 28;"/>
-                        <Label text="Transferencia" style="-fx-text-fill: #1A1A1A; -fx-font-size: 12; -fx-wrap-text: true;" textAlignment="CENTER"/>
+                    <VBox fx:id="tileTransferencia" prefWidth="100" prefHeight="110" styleClass="pay-method gap-8" HBox.hgrow="ALWAYS" onMouseClicked="#onTransferenciaClick">
+                        <Label text="📱" styleClass="text-icon-lg-accent"/>
+                        <Label fx:id="lblTransferencia" text="Transferencia" styleClass="pay-method-label" textAlignment="CENTER" wrapText="true"/>
                     </VBox>
                 </HBox>
 
                 <!-- Recibido + Cambio -->
-                <VBox style="-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-border-color: #E8DDD5; -fx-border-radius: 12; -fx-border-width: 1; -fx-padding: 24; -fx-spacing: 16; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+                <VBox styleClass="card gap-16">
 
-                    <Label text="RECIBIDO" style="-fx-font-size: 11; -fx-text-fill: #888888; -fx-font-weight: BOLD;"/>
+                    <Label text="RECIBIDO" styleClass="text-label-caps"/>
 
-                    <!-- Amount display -->
-                    <HBox alignment="CENTER_LEFT" spacing="8"
-                          style="-fx-background-color: #FFFFFF; -fx-border-color: #C8552A; -fx-border-radius: 8; -fx-border-width: 1.5; -fx-padding: 12 16; -fx-background-radius: 8;">
-                        <Label text="$" style="-fx-font-size: 18; -fx-text-fill: #888888;"/>
-                        <Label fx:id="lblRecibido" text="500.00"
-                               style="-fx-font-size: 28; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;" HBox.hgrow="ALWAYS"/>
+                    <!-- Monto -->
+                    <HBox styleClass="amount-box">
+                        <Label text="\$" styleClass="amount-currency"/>
+                        <Label fx:id="lblRecibido" text="500.00" styleClass="amount-value" HBox.hgrow="ALWAYS"/>
                     </HBox>
 
                     <!-- Cambio -->
-                    <VBox style="-fx-background-color: #FDF5EF; -fx-background-radius: 10; -fx-padding: 16; -fx-spacing: 6;">
-                        <Label text="CAMBIO" style="-fx-font-size: 11; -fx-text-fill: #888888; -fx-font-weight: BOLD;"/>
+                    <VBox styleClass="change-box">
+                        <Label text="CAMBIO" styleClass="text-label-caps"/>
                         <HBox alignment="CENTER_LEFT">
-                            <Label fx:id="lblCambio" text="$295.84"
-                                   style="-fx-font-size: 26; -fx-font-weight: BOLD; -fx-text-fill: #C8552A;" HBox.hgrow="ALWAYS"/>
-                            <Button text="🔄"
-                                    style="-fx-background-color: transparent; -fx-text-fill: #C8552A; -fx-font-size: 20; -fx-cursor: HAND;"/>
+                            <Label fx:id="lblCambio" text="\$295.84" styleClass="change-value" HBox.hgrow="ALWAYS"/>
+                            <Button text="🔄" styleClass="icon-button" onAction="#onReiniciarRecibido"/>
                         </HBox>
                     </VBox>
 
-                    <!-- Action buttons -->
-                    <HBox spacing="12" style="-fx-padding: 8 0 0 0;">
-                        <Button text="🖨  No imprimir" prefWidth="140" prefHeight="56"
-                                style="-fx-background-color: #FFFFFF; -fx-text-fill: #C8552A; -fx-font-size: 13; -fx-background-radius: 10; -fx-border-color: #E8DDD5; -fx-border-radius: 10; -fx-border-width: 1; -fx-cursor: HAND; -fx-wrap-text: true;" HBox.hgrow="ALWAYS"/>
-                        <Button text="✅  Confirmar Pago" prefWidth="140" prefHeight="56"
-                                style="-fx-background-color: #C8552A; -fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: BOLD; -fx-background-radius: 10; -fx-cursor: HAND; -fx-wrap-text: true;" HBox.hgrow="ALWAYS"/>
+                    <!-- Botones de acción -->
+                    <HBox spacing="12" styleClass="pad-top-8">
+                        <Button text="🖨  No imprimir" prefWidth="140" prefHeight="56" styleClass="btn-outline-accent" HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="btnConfirmarPago" text="✅  Confirmar Pago" prefWidth="140" prefHeight="56" styleClass="btn-accent" HBox.hgrow="ALWAYS"/>
                     </HBox>
                 </VBox>
             </VBox>
 
-            <!-- RIGHT: Numpad -->
+            <!-- DERECHA: Teclado numérico -->
             <VBox prefWidth="200" spacing="0">
-                <!-- Number grid -->
+                <!-- Rejilla de números -->
                 <GridPane hgap="10" vgap="10">
-                    <!-- Row 1: 1 2 3 -->
-                    <Button text="1" prefWidth="56" prefHeight="60" GridPane.columnIndex="0" GridPane.rowIndex="0"
-                            style="-fx-background-color: transparent; -fx-text-fill: #1A1A1A; -fx-font-size: 20; -fx-cursor: HAND;"/>
-                    <Button text="2" prefWidth="56" prefHeight="60" GridPane.columnIndex="1" GridPane.rowIndex="0"
-                            style="-fx-background-color: transparent; -fx-text-fill: #1A1A1A; -fx-font-size: 20; -fx-cursor: HAND;"/>
-                    <Button text="3" prefWidth="56" prefHeight="60" GridPane.columnIndex="2" GridPane.rowIndex="0"
-                            style="-fx-background-color: transparent; -fx-text-fill: #1A1A1A; -fx-font-size: 20; -fx-cursor: HAND;"/>
-                    <!-- Row 2: 4 5 6 -->
-                    <Button text="4" prefWidth="56" prefHeight="60" GridPane.columnIndex="0" GridPane.rowIndex="1"
-                            style="-fx-background-color: transparent; -fx-text-fill: #1A1A1A; -fx-font-size: 20; -fx-cursor: HAND;"/>
-                    <Button text="5" prefWidth="56" prefHeight="60" GridPane.columnIndex="1" GridPane.rowIndex="1"
-                            style="-fx-background-color: transparent; -fx-text-fill: #1A1A1A; -fx-font-size: 20; -fx-cursor: HAND;"/>
-                    <Button text="6" prefWidth="56" prefHeight="60" GridPane.columnIndex="2" GridPane.rowIndex="1"
-                            style="-fx-background-color: transparent; -fx-text-fill: #1A1A1A; -fx-font-size: 20; -fx-cursor: HAND;"/>
-                    <!-- Row 3: 7 8 9 -->
-                    <Button text="7" prefWidth="56" prefHeight="60" GridPane.columnIndex="0" GridPane.rowIndex="2"
-                            style="-fx-background-color: transparent; -fx-text-fill: #1A1A1A; -fx-font-size: 20; -fx-cursor: HAND;"/>
-                    <Button text="8" prefWidth="56" prefHeight="60" GridPane.columnIndex="1" GridPane.rowIndex="2"
-                            style="-fx-background-color: transparent; -fx-text-fill: #1A1A1A; -fx-font-size: 20; -fx-cursor: HAND;"/>
-                    <Button text="9" prefWidth="56" prefHeight="60" GridPane.columnIndex="2" GridPane.rowIndex="2"
-                            style="-fx-background-color: transparent; -fx-text-fill: #1A1A1A; -fx-font-size: 20; -fx-cursor: HAND;"/>
-                    <!-- Row 4: . 0 ⌫ -->
-                    <Button text="." prefWidth="56" prefHeight="60" GridPane.columnIndex="0" GridPane.rowIndex="3"
-                            style="-fx-background-color: transparent; -fx-text-fill: #1A1A1A; -fx-font-size: 20; -fx-cursor: HAND;"/>
-                    <Button text="0" prefWidth="56" prefHeight="60" GridPane.columnIndex="1" GridPane.rowIndex="3"
-                            style="-fx-background-color: transparent; -fx-text-fill: #1A1A1A; -fx-font-size: 20; -fx-cursor: HAND;"/>
-                    <Button text="⌫" prefWidth="56" prefHeight="60" GridPane.columnIndex="2" GridPane.rowIndex="3"
-                            style="-fx-background-color: #FDDDD0; -fx-text-fill: #C8552A; -fx-font-size: 18; -fx-background-radius: 8; -fx-cursor: HAND;"/>
+                    <!-- Fila 1: 1 2 3 -->
+                    <Button text="1" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
+                    <Button text="2" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
+                    <Button text="3" GridPane.columnIndex="2" GridPane.rowIndex="0" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
+                    <!-- Fila 2: 4 5 6 -->
+                    <Button text="4" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
+                    <Button text="5" GridPane.columnIndex="1" GridPane.rowIndex="1" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
+                    <Button text="6" GridPane.columnIndex="2" GridPane.rowIndex="1" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
+                    <!-- Fila 3: 7 8 9 -->
+                    <Button text="7" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
+                    <Button text="8" GridPane.columnIndex="1" GridPane.rowIndex="2" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
+                    <Button text="9" GridPane.columnIndex="2" GridPane.rowIndex="2" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
+                    <!-- Fila 4: . 0 ⌫ -->
+                    <Button text="." GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
+                    <Button text="0" GridPane.columnIndex="1" GridPane.rowIndex="3" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
+                    <Button text="⌫" GridPane.columnIndex="2" GridPane.rowIndex="3" styleClass="numpad-btn-danger" onAction="#onTeclaNumpad"/>
                 </GridPane>
 
-                <!-- Quick amount buttons -->
-                <VBox spacing="10" style="-fx-padding: 24 0 0 0;">
+                <!-- Montos rápidos -->
+                <VBox spacing="10" styleClass="pad-top-24">
                     <HBox spacing="10">
-                        <Button text="$200" prefWidth="90" prefHeight="52"
-                                style="-fx-background-color: #F5EDE6; -fx-text-fill: #1A1A1A; -fx-font-size: 14; -fx-font-weight: BOLD; -fx-background-radius: 8; -fx-cursor: HAND;" HBox.hgrow="ALWAYS"/>
-                        <Button text="$500" prefWidth="90" prefHeight="52"
-                                style="-fx-background-color: #F5EDE6; -fx-text-fill: #1A1A1A; -fx-font-size: 14; -fx-font-weight: BOLD; -fx-background-radius: 8; -fx-cursor: HAND;" HBox.hgrow="ALWAYS"/>
+                        <Button text="\$200" prefWidth="90" styleClass="quick-amount-btn" HBox.hgrow="ALWAYS" onAction="#onMontoRapido"/>
+                        <Button text="\$500" prefWidth="90" styleClass="quick-amount-btn" HBox.hgrow="ALWAYS" onAction="#onMontoRapido"/>
                     </HBox>
                     <HBox spacing="10">
-                        <Button text="$1000" prefWidth="90" prefHeight="52"
-                                style="-fx-background-color: #F5EDE6; -fx-text-fill: #1A1A1A; -fx-font-size: 14; -fx-font-weight: BOLD; -fx-background-radius: 8; -fx-cursor: HAND;" HBox.hgrow="ALWAYS"/>
-                        <Button text="Exacto" prefWidth="90" prefHeight="52"
-                                style="-fx-background-color: #1A1A1A; -fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: BOLD; -fx-background-radius: 8; -fx-cursor: HAND;" HBox.hgrow="ALWAYS"/>
+                        <Button text="\$1000" prefWidth="90" styleClass="quick-amount-btn" HBox.hgrow="ALWAYS" onAction="#onMontoRapido"/>
+                        <Button text="Exacto" prefWidth="90" styleClass="quick-amount-btn-primary" HBox.hgrow="ALWAYS" onAction="#onMontoRapido"/>
                     </HBox>
                 </VBox>
             </VBox>

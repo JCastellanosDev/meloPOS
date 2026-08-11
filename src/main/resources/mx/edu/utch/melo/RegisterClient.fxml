@@ -3,202 +3,130 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.*?>
-<?import javafx.scene.text.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.melo.controller.RegisterClientController"
+            fx:controller="mx.edu.utch.melo.controller.RegisterClientController"
             prefWidth="1280" prefHeight="960"
-            style="-fx-background-color: #FDF5EF;">
+            stylesheets="@styles.css">
 
-    <!-- ===== LEFT SIDEBAR (dark) ===== -->
+    <!-- ===== MENÚ LATERAL ===== -->
     <left>
-        <VBox prefWidth="228" prefHeight="960"
-              style="-fx-background-color: #2C1A0E; -fx-padding: 0;">
-
-            <!-- Logo -->
-            <VBox style="-fx-padding: 20 20 12 20; -fx-background-color: #1E1208;">
-                <Label text="melo" style="-fx-text-fill: #FFFFFF; -fx-font-size: 20; -fx-font-weight: BOLD;"/>
-                <Label text="STATION 01" style="-fx-text-fill: #7A6050; -fx-font-size: 10; -fx-letter-spacing: 1;"/>
-            </VBox>
-
-            <!-- New Table button -->
-            <VBox style="-fx-padding: 16 12 8 12;">
-                <Button text="＋  New Table" maxWidth="Infinity" prefHeight="40"
-                        style="-fx-background-color: #E07540; -fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: BOLD; -fx-background-radius: 8; -fx-cursor: HAND;"/>
-            </VBox>
-
-            <!-- Nav -->
-            <VBox style="-fx-padding: 4 10 0 10; -fx-spacing: 2;">
-                <Button text="🪑  Floor Plan" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #9A7060; -fx-font-size: 13; -fx-padding: 10 12; -fx-cursor: HAND;"/>
-                <Button text="📋  Orders" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #9A7060; -fx-font-size: 13; -fx-padding: 10 12; -fx-cursor: HAND;"/>
-                <Button text="🍽  Menu" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #9A7060; -fx-font-size: 13; -fx-padding: 10 12; -fx-cursor: HAND;"/>
-                <!-- Active -->
-                <Button text="👥  Clientes" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: #E07540; -fx-text-fill: #FFFFFF; -fx-font-size: 13; -fx-font-weight: BOLD; -fx-background-radius: 8; -fx-padding: 10 12; -fx-cursor: HAND;"/>
-                <Button text="📦  Inventory" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #9A7060; -fx-font-size: 13; -fx-padding: 10 12; -fx-cursor: HAND;"/>
-                <Button text="📊  Reports" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #9A7060; -fx-font-size: 13; -fx-padding: 10 12; -fx-cursor: HAND;"/>
-            </VBox>
-
-            <Region VBox.vgrow="ALWAYS"/>
-
-            <!-- Bottom nav -->
-            <VBox style="-fx-padding: 0 10 0 10; -fx-spacing: 2;">
-                <Button text="⚙️  Settings" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #9A7060; -fx-font-size: 13; -fx-padding: 10 12; -fx-cursor: HAND;"/>
-                <Button text="❓  Support" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #9A7060; -fx-font-size: 13; -fx-padding: 10 12; -fx-cursor: HAND;"/>
-            </VBox>
-
-            <!-- User avatar -->
-            <HBox alignment="CENTER_LEFT" spacing="10"
-                  style="-fx-padding: 16 16 20 16; -fx-border-color: #3A2010; -fx-border-width: 1 0 0 0;">
-                <StackPane style="-fx-background-color: #E07540; -fx-background-radius: 50; -fx-min-width: 36; -fx-min-height: 36;" alignment="CENTER">
-                    <Label text="U" style="-fx-text-fill: white; -fx-font-size: 14; -fx-font-weight: BOLD;"/>
-                </StackPane>
-                <Label text="Admin User" style="-fx-text-fill: #DDDDDD; -fx-font-size: 13;"/>
-            </HBox>
-        </VBox>
+        <fx:include fx:id="sidebar" source="Sidebar.fxml"/>
     </left>
 
-    <!-- ===== TOP BAR ===== -->
+    <!-- ===== BARRA SUPERIOR ===== -->
     <top>
-        <HBox prefHeight="52" alignment="CENTER"
-              style="-fx-background-color: #FFFFFF; -fx-border-color: #E8DDD5; -fx-border-width: 0 0 1 0; -fx-padding: 0 24; -fx-spacing: 8;">
-            <Label text="Clientes" style="-fx-font-size: 13; -fx-text-fill: #888888; -fx-cursor: HAND;"/>
-            <Label text="›" style="-fx-text-fill: #888888;"/>
-            <Label text="Registrar Cliente"
-                   style="-fx-font-size: 13; -fx-font-weight: BOLD; -fx-text-fill: #C8552A;"/>
+        <HBox prefHeight="64" alignment="CENTER_LEFT" styleClass="topbar">
+            <Label text="Clientes" styleClass="breadcrumb-text"/>
+            <Label text="›" styleClass="breadcrumb-sep"/>
+            <Label text="Registrar Cliente" styleClass="breadcrumb-active"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Button text="🔍" style="-fx-background-color: transparent; -fx-font-size: 16; -fx-cursor: HAND;"/>
-            <Button text="🔔" style="-fx-background-color: transparent; -fx-font-size: 16; -fx-cursor: HAND;"/>
-            <Button text="👤" style="-fx-background-color: transparent; -fx-font-size: 16; -fx-cursor: HAND;"/>
+            <Button text="＋  Nueva Mesa" styleClass="btn-accent"/>
+            <Button text="🔍" styleClass="icon-button"/>
+            <fx:include fx:id="topbar" source="Topbar.fxml"/>
         </HBox>
     </top>
 
-    <!-- ===== CENTER: Registration Form ===== -->
+    <!-- ===== CENTRO: Formulario de registro ===== -->
     <center>
-        <HBox style="-fx-padding: 32; -fx-spacing: 24;" alignment="TOP_LEFT">
+        <HBox styleClass="pad-32 gap-24" alignment="TOP_LEFT">
 
-            <!-- Form panel -->
-            <VBox prefWidth="580" spacing="0"
-                  style="-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-border-color: #E8DDD5; -fx-border-radius: 12; -fx-border-width: 1; -fx-padding: 32; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
-                <Label text="Registrar Nuevo Cliente"
-                       style="-fx-font-size: 22; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
-                <Label text="Ingrese los datos del cliente para añadirlo al sistema."
-                       style="-fx-font-size: 13; -fx-text-fill: #888888; -fx-padding: 4 0 24 0;"/>
+            <!-- Panel del formulario -->
+            <VBox prefWidth="580" styleClass="card-lg gap-0">
+                <Label text="Registrar Nuevo Cliente" styleClass="text-subtitle"/>
+                <Label text="Ingrese los datos del cliente para añadirlo al sistema." styleClass="text-muted" wrapText="true">
+                    <VBox.margin><Insets top="4" bottom="24"/></VBox.margin>
+                </Label>
 
-                <!-- Name field -->
-                <Label text="NOMBRE Y APELLIDO"
-                       style="-fx-font-size: 10; -fx-font-weight: BOLD; -fx-text-fill: #888888; -fx-letter-spacing: 0.5;"/>
-                <HBox alignment="CENTER_LEFT"
-                      style="-fx-background-color: #FFFFFF; -fx-border-color: #D8CFC8; -fx-border-radius: 8; -fx-border-width: 1; -fx-padding: 0 14; -fx-margin: 6 0 20 0; -fx-background-radius: 8;" prefHeight="44">
+                <!-- Nombre -->
+                <Label text="NOMBRE Y APELLIDO" styleClass="text-label-caps"/>
+                <HBox alignment="CENTER_LEFT" styleClass="input-wrapper">
                     <VBox.margin><Insets top="6" bottom="20"/></VBox.margin>
-                    <Label text="👤" style="-fx-font-size: 16; -fx-text-fill: #AAAAAA;"/>
-                    <TextField promptText="Ej. Juan Pérez" prefWidth="480"
-                               style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 13; -fx-padding: 0 0 0 8;"/>
+                    <Label text="👤" styleClass="input-icon"/>
+                    <TextField fx:id="txtNombre" promptText="Ej. Juan Pérez" prefWidth="480" styleClass="input-plain"/>
                 </HBox>
 
-                <!-- Phone field -->
-                <Label text="NÚMERO DE CELULAR"
-                       style="-fx-font-size: 10; -fx-font-weight: BOLD; -fx-text-fill: #888888; -fx-letter-spacing: 0.5;"/>
-                <HBox alignment="CENTER_LEFT"
-                      style="-fx-background-color: #FFFFFF; -fx-border-color: #D8CFC8; -fx-border-radius: 8; -fx-border-width: 1; -fx-padding: 0 14; -fx-background-radius: 8;" prefHeight="44">
+                <!-- Teléfono -->
+                <Label text="NÚMERO DE CELULAR" styleClass="text-label-caps"/>
+                <HBox alignment="CENTER_LEFT" styleClass="input-wrapper">
                     <VBox.margin><Insets top="6" bottom="20"/></VBox.margin>
-                    <Label text="📱" style="-fx-font-size: 16; -fx-text-fill: #AAAAAA;"/>
-                    <TextField fx:id="txtPhone" promptText="Ej. 300 123 4567" prefWidth="480"
-                               style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 13; -fx-padding: 0 0 0 8;"/>
+                    <Label text="📱" styleClass="input-icon"/>
+                    <TextField fx:id="txtPhone" promptText="Ej. 300 123 4567" prefWidth="480" styleClass="input-plain"/>
                 </HBox>
 
-                <!-- Address field -->
-                <Label text="DIRECCIÓN DE ENTREGA"
-                       style="-fx-font-size: 10; -fx-font-weight: BOLD; -fx-text-fill: #888888; -fx-letter-spacing: 0.5;"/>
+                <!-- Dirección -->
+                <Label text="DIRECCIÓN DE ENTREGA" styleClass="text-label-caps"/>
                 <HBox alignment="CENTER" spacing="8">
                     <VBox.margin><Insets top="6" bottom="6"/></VBox.margin>
-                    <HBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS"
-                          style="-fx-background-color: #FFFFFF; -fx-border-color: #D8CFC8; -fx-border-radius: 8; -fx-border-width: 1; -fx-padding: 0 14; -fx-background-radius: 8;" prefHeight="44">
-                        <Label text="📍" style="-fx-font-size: 16; -fx-text-fill: #AAAAAA;"/>
-                        <TextField fx:id="txtAddress" promptText="Calle, Carrera, Barrio, Detalles adicionales..." prefWidth="350"
-                                   style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 13; -fx-padding: 0 0 0 8;"/>
+                    <HBox alignment="CENTER_LEFT" styleClass="input-wrapper" HBox.hgrow="ALWAYS">
+                        <Label text="📍" styleClass="input-icon"/>
+                        <TextField fx:id="txtAddress" promptText="Calle, Carrera, Barrio, Detalles adicionales..." prefWidth="350" styleClass="input-plain"/>
                     </HBox>
-                    <Button text="🗺  Ubicar"
-                            style="-fx-background-color: #FFFFFF; -fx-text-fill: #C8552A; -fx-font-size: 13; -fx-background-radius: 8; -fx-border-color: #C8552A; -fx-border-radius: 8; -fx-border-width: 1; -fx-padding: 10 14; -fx-cursor: HAND;"/>
+                    <Button text="🗺  Ubicar" styleClass="btn-outline-accent"/>
                 </HBox>
-                <Label text="Use el mapa para mayor precisión en entregas a domicilio."
-                       style="-fx-font-size: 11; -fx-text-fill: #AAAAAA; -fx-padding: 0 0 16 0;"/>
+                <Label text="Use el mapa para mayor precisión en entregas a domicilio." styleClass="text-muted-lighter">
+                    <VBox.margin><Insets bottom="16"/></VBox.margin>
+                </Label>
 
-                <!-- Map placeholder -->
-                <Pane prefHeight="200"
-                      style="-fx-background-color: #D8CCBA; -fx-background-radius: 8;">
+                <!-- Mapa (placeholder) -->
+                <Pane prefHeight="200" styleClass="map-placeholder">
                     <VBox.margin><Insets bottom="8"/></VBox.margin>
                     <StackPane prefWidth="580" prefHeight="200">
                         <VBox alignment="CENTER" spacing="6">
-                            <Label text="📍" style="-fx-font-size: 28;"/>
-                            <Button text="Abrir Google Maps"
-                                    style="-fx-background-color: #FFFFFF; -fx-text-fill: #1A1A1A; -fx-font-size: 12; -fx-background-radius: 6; -fx-padding: 6 14; -fx-cursor: HAND; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 6, 0, 0, 2);"/>
+                            <Label text="📍" styleClass="text-icon-lg-accent"/>
+                            <Button text="Abrir Google Maps" styleClass="btn-outline"/>
                         </VBox>
                     </StackPane>
                 </Pane>
 
-                <Separator style="-fx-padding: 8 0;"/>
+                <Separator styleClass="pad-8"/>
 
-                <!-- Action buttons -->
-                <HBox spacing="12" style="-fx-padding: 16 0 0 0;">
-                    <Button text="Cancelar" prefHeight="44" prefWidth="140"
-                            style="-fx-background-color: #FFFFFF; -fx-text-fill: #555555; -fx-font-size: 13; -fx-background-radius: 8; -fx-border-color: #D8CFC8; -fx-border-radius: 8; -fx-border-width: 1; -fx-cursor: HAND;"/>
-                    <Button text="💾  Guardar Cliente" prefHeight="44" HBox.hgrow="ALWAYS"
-                            style="-fx-background-color: #1A1A1A; -fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: BOLD; -fx-background-radius: 8; -fx-cursor: HAND;"/>
+                <!-- Mensaje de validación -->
+                <Label fx:id="lblError" styleClass="form-error" wrapText="true" visible="false" managed="false"/>
+
+                <!-- Botones de acción -->
+                <HBox spacing="12" styleClass="pad-top-16">
+                    <Button text="Cancelar" prefWidth="140" styleClass="btn-outline" onAction="#onCancelar"/>
+                    <Button text="💾  Guardar Cliente" HBox.hgrow="ALWAYS" styleClass="btn-primary" onAction="#onGuardarCliente"/>
                 </HBox>
             </VBox>
 
-            <!-- Right panel -->
+            <!-- Panel derecho -->
             <VBox spacing="16" prefWidth="300">
 
-                <!-- Search by filter -->
-                <VBox style="-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-border-color: #E8DDD5; -fx-border-radius: 12; -fx-border-width: 1; -fx-padding: 20; -fx-spacing: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+                <!-- Búsqueda por filtro -->
+                <VBox styleClass="card gap-12">
                     <HBox spacing="8" alignment="CENTER_LEFT">
-                        <Label text="🔍" style="-fx-font-size: 16;"/>
-                        <Label text="Buscar por Filtro"
-                               style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+                        <Label text="🔍" styleClass="text-body"/>
+                        <Label text="Buscar por Filtro" styleClass="text-body-strong"/>
                     </HBox>
-                    <Label text="Verifique si el cliente ya existe antes de crear uno nuevo."
-                           style="-fx-font-size: 12; -fx-text-fill: #888888; -fx-wrap-text: true;" maxWidth="260"/>
+                    <Label text="Verifique si el cliente ya existe antes de crear uno nuevo." styleClass="text-muted" wrapText="true" maxWidth="260"/>
 
-                    <TextField promptText="Teléfono, Nombre o ID..."
-                               style="-fx-background-color: #F8F4F0; -fx-border-color: #E0D8D0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-border-width: 1; -fx-padding: 8 12; -fx-font-size: 12;"/>
+                    <TextField promptText="Teléfono, Nombre o ID..." styleClass="search-field"/>
 
-                    <!-- Filter chips -->
-                    <HBox spacing="8" style="-fx-padding: 4 0 0 0;">
-                        <Button text="Recientes"
-                                style="-fx-background-color: #F5EDE6; -fx-text-fill: #555555; -fx-font-size: 11; -fx-background-radius: 20; -fx-padding: 4 10; -fx-cursor: HAND;"/>
-                        <Button text="Barrio Centro"
-                                style="-fx-background-color: #F5EDE6; -fx-text-fill: #555555; -fx-font-size: 11; -fx-background-radius: 20; -fx-padding: 4 10; -fx-cursor: HAND;"/>
-                        <Button text="Empresas"
-                                style="-fx-background-color: #F5EDE6; -fx-text-fill: #555555; -fx-font-size: 11; -fx-background-radius: 20; -fx-padding: 4 10; -fx-cursor: HAND;"/>
+                    <!-- Chips de filtro -->
+                    <HBox spacing="8" styleClass="pad-top-4">
+                        <Button text="Recientes" styleClass="chip"/>
+                        <Button text="Barrio Centro" styleClass="chip"/>
+                        <Button text="Empresas" styleClass="chip"/>
                     </HBox>
 
-                    <!-- Empty state -->
-                    <VBox alignment="CENTER" spacing="8" style="-fx-padding: 20 0; -fx-border-color: #F0EAE4; -fx-border-radius: 8; -fx-border-width: 1; -fx-background-color: #FAFAF8; -fx-background-radius: 8;">
-                        <Label text="🔍" style="-fx-font-size: 24; -fx-text-fill: #CCCCCC;"/>
-                        <Label text="Los resultados aparecerán aquí"
-                               style="-fx-font-size: 12; -fx-text-fill: #AAAAAA; -fx-text-alignment: CENTER; -fx-wrap-text: true;" maxWidth="200" textAlignment="CENTER"/>
+                    <!-- Estado vacío -->
+                    <VBox styleClass="empty-state">
+                        <Label text="🔍" styleClass="empty-state-icon"/>
+                        <Label text="Los resultados aparecerán aquí" styleClass="empty-state-text" maxWidth="200" textAlignment="CENTER"/>
                     </VBox>
                 </VBox>
 
-                <!-- Service tip -->
-                <VBox style="-fx-background-color: #FFF8F4; -fx-background-radius: 12; -fx-border-color: #F0DDD0; -fx-border-radius: 12; -fx-border-width: 1; -fx-padding: 18; -fx-spacing: 8;">
+                <!-- Consejo de servicio -->
+                <VBox styleClass="tip-box">
                     <HBox spacing="8" alignment="CENTER_LEFT">
-                        <Label text="ℹ️" style="-fx-font-size: 14;"/>
-                        <Label text="Consejo de Servicio"
-                               style="-fx-font-size: 13; -fx-font-weight: BOLD; -fx-text-fill: #C8552A;"/>
+                        <Label text="ℹ️" styleClass="text-body"/>
+                        <Label text="Consejo de Servicio" styleClass="tip-title"/>
                     </HBox>
                     <Label text="Para entregas recurrentes, asegúrese de guardar referencias claras en la dirección. Un registro preciso reduce los tiempos de entrega."
-                           style="-fx-font-size: 12; -fx-text-fill: #666666; -fx-wrap-text: true;" maxWidth="260"/>
+                           styleClass="text-muted" wrapText="true" maxWidth="260"/>
                 </VBox>
             </VBox>
         </HBox>

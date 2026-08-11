@@ -3,185 +3,147 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.*?>
-<?import javafx.scene.text.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.melo.controller.KitchenDisplayController"
+            fx:controller="mx.edu.utch.melo.controller.KitchenDisplayController"
             prefWidth="1280" prefHeight="800"
-            style="-fx-background-color: #1C1C1C;">
+            stylesheets="@styles.css">
 
-    <!-- ===== LEFT ICON SIDEBAR ===== -->
+    <!-- ===== MENÚ LATERAL ===== -->
     <left>
-        <VBox prefWidth="64" prefHeight="800" alignment="TOP_CENTER"
-              style="-fx-background-color: #111111; -fx-padding: 16 0; -fx-spacing: 20;">
-            <Label text="🍴" style="-fx-font-size: 22; -fx-text-fill: #E07540;"/>
-            <Separator style="-fx-border-color: #333333;"/>
-            <Button text="🖨" style="-fx-background-color: transparent; -fx-text-fill: #888888; -fx-font-size: 18; -fx-cursor: HAND;"/>
-            <Button text="📋" style="-fx-background-color: transparent; -fx-text-fill: #888888; -fx-font-size: 18; -fx-cursor: HAND;"/>
-            <!-- Active -->
-            <StackPane style="-fx-background-color: #E07540; -fx-background-radius: 10; -fx-min-width: 44; -fx-min-height: 44;">
-                <Label text="🍴" style="-fx-font-size: 20; -fx-text-fill: white;"/>
-            </StackPane>
-            <Button text="🛵" style="-fx-background-color: transparent; -fx-text-fill: #888888; -fx-font-size: 18; -fx-cursor: HAND;"/>
-            <Button text="📊" style="-fx-background-color: transparent; -fx-text-fill: #888888; -fx-font-size: 18; -fx-cursor: HAND;"/>
-        </VBox>
+        <fx:include fx:id="sidebar" source="Sidebar.fxml"/>
     </left>
 
-    <!-- ===== TOP BAR ===== -->
+    <!-- ===== BARRA SUPERIOR ===== -->
     <top>
-        <VBox style="-fx-background-color: #111111;">
-            <HBox prefHeight="56" alignment="CENTER"
-                  style="-fx-padding: 0 24; -fx-spacing: 16;">
-                <Label text="Kitchen Display - Terminal 1"
-                       style="-fx-font-size: 18; -fx-font-weight: BOLD; -fx-text-fill: #FFFFFF;"/>
-                <!-- Badges -->
-                <Label text="12 Active"
-                       style="-fx-background-color: #333333; -fx-text-fill: #AAAAAA; -fx-font-size: 11; -fx-background-radius: 20; -fx-padding: 4 10;"/>
-                <Label text="2 Urgent"
-                       style="-fx-background-color: #5C2020; -fx-text-fill: #FF6B6B; -fx-font-size: 11; -fx-background-radius: 20; -fx-padding: 4 10;"/>
+        <VBox styleClass="topbar">
+            <HBox prefHeight="64" alignment="CENTER_LEFT" spacing="12">
+                <Label text="Pantalla de Cocina - Terminal 1" styleClass="topbar-title"/>
+                <!-- Insignias -->
+                <Label fx:id="lblActivas" text="4 Activas" styleClass="badge badge-muted"/>
+                <Label text="2 Urgentes" styleClass="badge badge-urgent"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Button text="🔄" style="-fx-background-color: transparent; -fx-text-fill: #888888; -fx-font-size: 18; -fx-cursor: HAND;"/>
-                <Button text="🔔" style="-fx-background-color: transparent; -fx-text-fill: #888888; -fx-font-size: 18; -fx-cursor: HAND;"/>
-                <Button text="⚙️" style="-fx-background-color: transparent; -fx-text-fill: #888888; -fx-font-size: 18; -fx-cursor: HAND;"/>
+                <Label fx:id="lblClock" text="23:34:43" styleClass="text-muted"/>
+                <Button text="🔄" styleClass="icon-button"/>
+                <Button text="🔔" styleClass="icon-button"/>
+                <Button text="⚙️" styleClass="icon-button"/>
             </HBox>
 
-            <!-- Station filter tabs -->
-            <HBox style="-fx-padding: 0 24 12 24; -fx-spacing: 8;" alignment="CENTER_LEFT">
-                <Button text="All Stations"
-                        style="-fx-background-color: #444444; -fx-text-fill: #FFFFFF; -fx-font-size: 12; -fx-font-weight: BOLD; -fx-background-radius: 6; -fx-padding: 6 16; -fx-cursor: HAND;"/>
-                <Button text="Grill"
-                        style="-fx-background-color: transparent; -fx-text-fill: #888888; -fx-font-size: 12; -fx-background-radius: 6; -fx-padding: 6 16; -fx-cursor: HAND; -fx-border-color: #444444; -fx-border-radius: 6; -fx-border-width: 1;"/>
-                <Button text="Prep"
-                        style="-fx-background-color: transparent; -fx-text-fill: #888888; -fx-font-size: 12; -fx-background-radius: 6; -fx-padding: 6 16; -fx-cursor: HAND; -fx-border-color: #444444; -fx-border-radius: 6; -fx-border-width: 1;"/>
-                <Button text="Fryer"
-                        style="-fx-background-color: transparent; -fx-text-fill: #888888; -fx-font-size: 12; -fx-background-radius: 6; -fx-padding: 6 16; -fx-cursor: HAND; -fx-border-color: #444444; -fx-border-radius: 6; -fx-border-width: 1;"/>
-                <Region HBox.hgrow="ALWAYS"/>
-                <Label fx:id="lblClock" text="23:34:43"
-                       style="-fx-text-fill: #888888; -fx-font-size: 13;"/>
+            <!-- Pestañas de estación -->
+            <HBox styleClass="pad-16 gap-8" alignment="CENTER_LEFT">
+                <Button text="Todas las Estaciones" styleClass="station-tab-active"/>
+                <Button text="Parrilla" styleClass="station-tab"/>
+                <Button text="Preparación" styleClass="station-tab"/>
+                <Button text="Freidora" styleClass="station-tab"/>
             </HBox>
         </VBox>
     </top>
 
-    <!-- ===== CENTER: Order Cards ===== -->
+    <!-- ===== CENTRO: Tarjetas de órdenes (superficie oscura KDS) ===== -->
     <center>
-        <ScrollPane fitToHeight="true" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
-            <HBox style="-fx-padding: 16 20; -fx-spacing: 16;" alignment="TOP_LEFT">
+        <StackPane styleClass="kds-surface">
+            <ScrollPane fitToHeight="true" styleClass="kds-scroll">
+                <HBox fx:id="contenedorTickets" styleClass="pad-16-20 gap-16" alignment="TOP_LEFT">
 
-                <!-- Order #151 - Normal (gray) -->
-                <VBox prefWidth="280" style="-fx-background-color: #2A2A2A; -fx-background-radius: 10; -fx-border-color: #3A3A3A; -fx-border-radius: 10; -fx-border-width: 1.5; -fx-padding: 0;">
-                    <!-- Header -->
-                    <HBox style="-fx-padding: 14 16 10 16;" alignment="CENTER_LEFT">
-                        <Label text="Orden #151"
-                               style="-fx-font-size: 15; -fx-font-weight: BOLD; -fx-text-fill: #FFFFFF;" HBox.hgrow="ALWAYS"/>
-                        <VBox alignment="CENTER_RIGHT">
-                            <Label text="12:05" style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #4CAF50;"/>
-                            <Label text="Elapsed" style="-fx-font-size: 10; -fx-text-fill: #888888;"/>
+                    <!-- Orden #151 - Normal -->
+                    <VBox styleClass="ticket">
+                        <HBox styleClass="ticket-header">
+                            <Label text="Orden #151" styleClass="ticket-title" HBox.hgrow="ALWAYS"/>
+                            <VBox alignment="CENTER_RIGHT">
+                                <Label text="12:05" styleClass="text-time-ok"/>
+                                <Label text="Transcurrido" styleClass="text-muted-sm"/>
+                            </VBox>
+                        </HBox>
+                        <Label text="Mesa 4 • Comedor" styleClass="ticket-meta"/>
+                        <Separator styleClass="ticket-separator"/>
+                        <VBox styleClass="ticket-items">
+                            <Label text="1x Hamburguesa Clásica" styleClass="ticket-item"/>
+                            <Label text="1x Papas Fritas" styleClass="ticket-item"/>
+                            <Label text="2x Coca-Cola Light" styleClass="ticket-item"/>
                         </VBox>
-                    </HBox>
-                    <Label text="Table 4 • Dine-in"
-                           style="-fx-text-fill: #888888; -fx-font-size: 11; -fx-padding: 0 16 12 16;"/>
-                    <Separator style="-fx-border-color: #3A3A3A;"/>
-                    <!-- Items -->
-                    <VBox style="-fx-padding: 12 16; -fx-spacing: 10;">
-                        <Label text="1x Classic Burger" style="-fx-text-fill: #DDDDDD; -fx-font-size: 13;"/>
-                        <Label text="1x Fries" style="-fx-text-fill: #DDDDDD; -fx-font-size: 13;"/>
-                        <Label text="2x Diet Coke" style="-fx-text-fill: #DDDDDD; -fx-font-size: 13;"/>
+                        <Region VBox.vgrow="ALWAYS"/>
+                        <Button text="✓  Completar Pedido" maxWidth="Infinity" styleClass="ticket-bump-btn" onAction="#onCompletarPedido">
+                            <VBox.margin><Insets top="8"/></VBox.margin>
+                        </Button>
                     </VBox>
-                    <Region VBox.vgrow="ALWAYS"/>
-                    <!-- Bump button -->
-                    <Button text="✓  Bump Order" maxWidth="Infinity" prefHeight="44"
-                            style="-fx-background-color: #3A3A3A; -fx-text-fill: #CCCCCC; -fx-font-size: 13; -fx-font-weight: BOLD; -fx-background-radius: 0 0 10 10; -fx-cursor: HAND;">
-                        <VBox.margin><Insets top="8"/></VBox.margin>
-                    </Button>
-                </VBox>
 
-                <!-- Order #154 - Orange border (active/selected) -->
-                <VBox prefWidth="280" style="-fx-background-color: #2A2018; -fx-background-radius: 10; -fx-border-color: #E07540; -fx-border-radius: 10; -fx-border-width: 2; -fx-padding: 0;">
-                    <HBox style="-fx-padding: 14 16 10 16;" alignment="CENTER_LEFT">
-                        <Label text="Orden #154"
-                               style="-fx-font-size: 15; -fx-font-weight: BOLD; -fx-text-fill: #FFFFFF;" HBox.hgrow="ALWAYS"/>
-                        <VBox alignment="CENTER_RIGHT">
-                            <Label text="08:42" style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #E07540;"/>
-                            <Label text="Elapsed" style="-fx-font-size: 10; -fx-text-fill: #888888;"/>
+                    <!-- Orden #154 - Activa (borde de acento) -->
+                    <VBox styleClass="ticket-active">
+                        <HBox styleClass="ticket-header">
+                            <Label text="Orden #154" styleClass="ticket-title" HBox.hgrow="ALWAYS"/>
+                            <VBox alignment="CENTER_RIGHT">
+                                <Label text="08:42" styleClass="text-time-warn"/>
+                                <Label text="Transcurrido" styleClass="text-muted-sm"/>
+                            </VBox>
+                        </HBox>
+                        <Label text="Para Llevar • UberEats" styleClass="ticket-meta"/>
+                        <Separator styleClass="ticket-separator-active"/>
+                        <VBox styleClass="ticket-items">
+                            <!-- Artículo con modificación -->
+                            <VBox styleClass="ticket-mod-flag">
+                                <HBox spacing="8" alignment="CENTER_LEFT">
+                                    <Label text="1x Hamburguesa" styleClass="ticket-item-strong"/>
+                                    <Label text="MODIFICACIÓN" styleClass="mod-tag"/>
+                                </HBox>
+                                <Label text="+ Queso extra" styleClass="ticket-mod-add"/>
+                                <Label text="− Sin cebolla" styleClass="ticket-mod-remove"/>
+                            </VBox>
+                            <Label text="1x Papas Fritas (Grande)" styleClass="ticket-item"/>
                         </VBox>
-                    </HBox>
-                    <Label text="Takeaway • UberEats"
-                           style="-fx-text-fill: #888888; -fx-font-size: 11; -fx-padding: 0 16 12 16;"/>
-                    <Separator style="-fx-border-color: #5A3520;"/>
-                    <VBox style="-fx-padding: 12 16; -fx-spacing: 10;">
-                        <!-- Item with modification -->
-                        <VBox style="-fx-border-color: #E07540; -fx-border-width: 0 0 0 3; -fx-padding: 0 0 0 10; -fx-spacing: 4;">
-                            <HBox spacing="8" alignment="CENTER_LEFT">
-                                <Label text="1x Hamburguesa"
-                                       style="-fx-text-fill: #FFFFFF; -fx-font-size: 13; -fx-font-weight: BOLD;"/>
-                                <Label text="MODIFICACIÓN"
-                                       style="-fx-background-color: #8B4513; -fx-text-fill: #E07540; -fx-font-size: 9; -fx-font-weight: BOLD; -fx-background-radius: 4; -fx-padding: 2 6;"/>
-                            </HBox>
-                            <Label text="+ Queso extra" style="-fx-text-fill: #4CAF50; -fx-font-size: 12;"/>
-                            <Label text="− Sin cebolla" style="-fx-text-fill: #FF6B6B; -fx-font-size: 12;"/>
-                        </VBox>
-                        <Label text="1x Papas Fritas (Grande)" style="-fx-text-fill: #DDDDDD; -fx-font-size: 13;"/>
+                        <Region VBox.vgrow="ALWAYS"/>
+                        <Button text="✓  Completar Pedido" maxWidth="Infinity" styleClass="ticket-bump-btn-active" onAction="#onCompletarPedido">
+                            <VBox.margin><Insets top="8"/></VBox.margin>
+                        </Button>
                     </VBox>
-                    <Region VBox.vgrow="ALWAYS"/>
-                    <Button text="✓  Bump Order" maxWidth="Infinity" prefHeight="44"
-                            style="-fx-background-color: #E07540; -fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: BOLD; -fx-background-radius: 0 0 10 10; -fx-cursor: HAND;">
-                        <VBox.margin><Insets top="8"/></VBox.margin>
-                    </Button>
-                </VBox>
 
-                <!-- Order #148 - Red border (urgent) -->
-                <VBox prefWidth="280" style="-fx-background-color: #2A1A1A; -fx-background-radius: 10; -fx-border-color: #FF4444; -fx-border-radius: 10; -fx-border-width: 2; -fx-padding: 0;">
-                    <HBox style="-fx-padding: 14 16 10 16;" alignment="CENTER_LEFT">
-                        <Label text="Orden #148"
-                               style="-fx-font-size: 15; -fx-font-weight: BOLD; -fx-text-fill: #FFFFFF;" HBox.hgrow="ALWAYS"/>
-                        <VBox alignment="CENTER_RIGHT">
-                            <Label text="24:15" style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #FF4444;"/>
-                            <Label text="Elapsed" style="-fx-font-size: 10; -fx-text-fill: #888888;"/>
+                    <!-- Orden #148 - Urgente (borde rojo) -->
+                    <VBox styleClass="ticket-urgent">
+                        <HBox styleClass="ticket-header">
+                            <Label text="Orden #148" styleClass="ticket-title" HBox.hgrow="ALWAYS"/>
+                            <VBox alignment="CENTER_RIGHT">
+                                <Label text="24:15" styleClass="text-time-urgent"/>
+                                <Label text="Transcurrido" styleClass="text-muted-sm"/>
+                            </VBox>
+                        </HBox>
+                        <Label text="Mesa 12 • Comedor" styleClass="ticket-meta"/>
+                        <Separator styleClass="ticket-separator-urgent"/>
+                        <VBox styleClass="ticket-items">
+                            <VBox spacing="2">
+                                <Label text="1x Corte Ribeye" styleClass="ticket-item-strong"/>
+                                <Label text="Término Medio" styleClass="ticket-item-note"/>
+                            </VBox>
+                            <Label text="1x Ensalada César" styleClass="ticket-item"/>
                         </VBox>
-                    </HBox>
-                    <Label text="Table 12 • Dine-in"
-                           style="-fx-text-fill: #888888; -fx-font-size: 11; -fx-padding: 0 16 12 16;"/>
-                    <Separator style="-fx-border-color: #5A2020;"/>
-                    <VBox style="-fx-padding: 12 16; -fx-spacing: 10;">
-                        <VBox spacing="2">
-                            <Label text="1x Ribeye Steak" style="-fx-text-fill: #DDDDDD; -fx-font-size: 13; -fx-font-weight: BOLD;"/>
-                            <Label text="Medium Rare" style="-fx-text-fill: #888888; -fx-font-size: 11;"/>
-                        </VBox>
-                        <Label text="1x Caesar Salad" style="-fx-text-fill: #DDDDDD; -fx-font-size: 13;"/>
+                        <Region VBox.vgrow="ALWAYS"/>
+                        <Button text="✓  Completar Pedido" maxWidth="Infinity" styleClass="ticket-bump-btn-urgent" onAction="#onCompletarPedido">
+                            <VBox.margin><Insets top="8"/></VBox.margin>
+                        </Button>
                     </VBox>
-                    <Region VBox.vgrow="ALWAYS"/>
-                    <Button text="✓  Bump Order" maxWidth="Infinity" prefHeight="44"
-                            style="-fx-background-color: #3A2020; -fx-text-fill: #CCCCCC; -fx-font-size: 13; -fx-font-weight: BOLD; -fx-background-radius: 0 0 10 10; -fx-cursor: HAND;">
-                        <VBox.margin><Insets top="8"/></VBox.margin>
-                    </Button>
-                </VBox>
 
-                <!-- Order #156 - Normal -->
-                <VBox prefWidth="280" style="-fx-background-color: #2A2A2A; -fx-background-radius: 10; -fx-border-color: #3A3A3A; -fx-border-radius: 10; -fx-border-width: 1.5; -fx-padding: 0;">
-                    <HBox style="-fx-padding: 14 16 10 16;" alignment="CENTER_LEFT">
-                        <Label text="Orden #156"
-                               style="-fx-font-size: 15; -fx-font-weight: BOLD; -fx-text-fill: #FFFFFF;" HBox.hgrow="ALWAYS"/>
-                        <VBox alignment="CENTER_RIGHT">
-                            <Label text="02:10" style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #4CAF50;"/>
-                            <Label text="Elapsed" style="-fx-font-size: 10; -fx-text-fill: #888888;"/>
+                    <!-- Orden #156 - Normal -->
+                    <VBox styleClass="ticket">
+                        <HBox styleClass="ticket-header">
+                            <Label text="Orden #156" styleClass="ticket-title" HBox.hgrow="ALWAYS"/>
+                            <VBox alignment="CENTER_RIGHT">
+                                <Label text="02:10" styleClass="text-time-ok"/>
+                                <Label text="Transcurrido" styleClass="text-muted-sm"/>
+                            </VBox>
+                        </HBox>
+                        <Label text="Mesa 2 • Comedor" styleClass="ticket-meta"/>
+                        <Separator styleClass="ticket-separator"/>
+                        <VBox styleClass="ticket-items">
+                            <Label text="3x Limonada" styleClass="ticket-item"/>
                         </VBox>
-                    </HBox>
-                    <Label text="Table 2 • Dine-in"
-                           style="-fx-text-fill: #888888; -fx-font-size: 11; -fx-padding: 0 16 12 16;"/>
-                    <Separator style="-fx-border-color: #3A3A3A;"/>
-                    <VBox style="-fx-padding: 12 16; -fx-spacing: 10;">
-                        <Label text="3x Lemonade" style="-fx-text-fill: #DDDDDD; -fx-font-size: 13;"/>
+                        <Region VBox.vgrow="ALWAYS"/>
+                        <Button text="✓  Completar Pedido" maxWidth="Infinity" styleClass="ticket-bump-btn" onAction="#onCompletarPedido">
+                            <VBox.margin><Insets top="8"/></VBox.margin>
+                        </Button>
                     </VBox>
-                    <Region VBox.vgrow="ALWAYS"/>
-                    <Button text="✓  Bump Order" maxWidth="Infinity" prefHeight="44"
-                            style="-fx-background-color: #3A3A3A; -fx-text-fill: #CCCCCC; -fx-font-size: 13; -fx-font-weight: BOLD; -fx-background-radius: 0 0 10 10; -fx-cursor: HAND;">
-                        <VBox.margin><Insets top="8"/></VBox.margin>
-                    </Button>
-                </VBox>
 
-            </HBox>
-        </ScrollPane>
+                </HBox>
+            </ScrollPane>
+        </StackPane>
     </center>
 
 </BorderPane>

@@ -1,153 +1,103 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/21"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.melo.controller.DashboardController"
-            prefWidth="1280" prefHeight="960"
-            style="-fx-background-color: #FDF5EF;">
+<BorderPane prefHeight="960" prefWidth="1280" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mx.edu.utch.melo.controller.DashboardController">
 
-    <!-- ===== LEFT SIDEBAR ===== -->
+    <!-- ===== MENÚ LATERAL ===== -->
     <left>
-        <VBox prefWidth="228" prefHeight="960"
-              style="-fx-background-color: #2C1A0E; -fx-padding: 0;">
-
-            <!-- Logo area -->
-            <VBox alignment="CENTER" style="-fx-padding: 24 20 20 20; -fx-background-color: #1E1208;">
-                <Label text="melo" style="-fx-text-fill: #FFFFFF; -fx-font-size: 22; -fx-font-weight: BOLD;"/>
-                <Label text="Terminal 01" style="-fx-text-fill: #9A8070; -fx-font-size: 12;"/>
-            </VBox>
-
-            <!-- Nav items -->
-            <VBox style="-fx-padding: 20 12 0 12; -fx-spacing: 4;">
-                <Button text="Orders" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #C0A898; -fx-font-size: 14; -fx-padding: 10 16; -fx-cursor: HAND;"/>
-                <Button text="Tables" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #C0A898; -fx-font-size: 14; -fx-padding: 10 16; -fx-cursor: HAND;"/>
-                <Button text="Menu" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #C0A898; -fx-font-size: 14; -fx-padding: 10 16; -fx-cursor: HAND;"/>
-                <Button text="Reports" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #C0A898; -fx-font-size: 14; -fx-padding: 10 16; -fx-cursor: HAND;"/>
-                <Button text="Inventory" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #C0A898; -fx-font-size: 14; -fx-padding: 10 16; -fx-cursor: HAND;"/>
-            </VBox>
-
-            <Region VBox.vgrow="ALWAYS"/>
-
-            <!-- Bottom: Settings -->
-            <VBox style="-fx-padding: 0 12 24 12; -fx-spacing: 4;">
-                <Button text="Settings" maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent; -fx-text-fill: #C0A898; -fx-font-size: 14; -fx-padding: 10 16; -fx-cursor: HAND;"/>
-            </VBox>
-        </VBox>
+        <fx:include fx:id="sidebar" source="Sidebar.fxml" />
     </left>
 
-    <!-- ===== TOP BAR ===== -->
+    <!-- ===== BARRA SUPERIOR ===== -->
     <top>
-        <HBox prefHeight="64" alignment="CENTER_LEFT"
-              style="-fx-background-color: #FFFFFF; -fx-border-color: #E8DDD5; -fx-border-width: 0 0 1 0; -fx-padding: 0 24;">
-            <Label text="Melo POS" style="-fx-font-size: 20; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <!-- Search -->
-            <TextField promptText="Search..." prefWidth="260"
-                       style="-fx-background-color: #F5EDE6; -fx-background-radius: 20; -fx-border-color: transparent; -fx-padding: 8 16; -fx-font-size: 13;"/>
-            <HBox.margin><Insets left="16"/></HBox.margin>
-            <Button text="🔔" style="-fx-background-color: transparent; -fx-font-size: 18; -fx-cursor: HAND; -fx-padding: 0 8;"/>
-            <Button text="👤" style="-fx-background-color: transparent; -fx-font-size: 18; -fx-cursor: HAND; -fx-padding: 0 8;"/>
+        <HBox alignment="CENTER_LEFT" prefHeight="64" styleClass="topbar">
+            <Region HBox.hgrow="ALWAYS" />
+            <TextField prefWidth="260" promptText="Buscar..." styleClass="search-field">
+                <HBox.margin>
+                    <Insets left="16" />
+                </HBox.margin>
+            </TextField>
+            <fx:include fx:id="topbar" source="Topbar.fxml" />
         </HBox>
     </top>
 
-    <!-- ===== CENTER CONTENT ===== -->
+    <!-- ===== CONTENIDO CENTRAL ===== -->
     <center>
-        <VBox style="-fx-padding: 48 48 0 48; -fx-spacing: 32;">
+        <VBox styleClass="pad-dashboard gap-32">
 
-            <!-- Greeting -->
-            <VBox spacing="6">
-                <Label text="Good Morning, Terminal 01"
-                       style="-fx-font-size: 36; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
-                <Label text="Select a mode to begin operations."
-                       style="-fx-font-size: 14; -fx-text-fill: #888888;"/>
-            </VBox>
+            <!-- Saludo -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label fx:id="txtSaludo" styleClass="text-header" text="Buenos días" />
+                <Label fx:id="txtUsuario" styleClass="text-header" text="Usuario" />
+            </HBox>
 
-            <!-- Top row: Comedor (large) + Domicilio -->
+            <!-- Fila superior: Comedor (grande) + Domicilio -->
             <HBox spacing="20" HBox.hgrow="ALWAYS">
 
-                <!-- Comedor card (large) -->
-                <VBox prefWidth="600" prefHeight="280"
-                      style="-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-border-color: #E8DDD5; -fx-border-radius: 12; -fx-border-width: 1; -fx-padding: 32; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
-                    <Label text="🪑" style="-fx-font-size: 28; -fx-text-fill: #C8552A;"/>
-                    <VBox.margin><Insets bottom="16"/></VBox.margin>
-                    <Label text="Comedor"
-                           style="-fx-font-size: 26; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
-                    <Label text="Manage dine-in orders, table assignments, and floor plan."
-                           style="-fx-font-size: 13; -fx-text-fill: #888888; -fx-wrap-text: true;" maxWidth="320"/>
-                    <Region VBox.vgrow="ALWAYS"/>
-                    <Button text="Open Floor Plan"
-                            style="-fx-background-color: #1A1A1A; -fx-text-fill: #FFFFFF; -fx-font-size: 13; -fx-font-weight: BOLD; -fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: HAND;"/>
+                <!-- Tarjeta Comedor -->
+                <VBox prefHeight="280" prefWidth="600" styleClass="card-lg">
+                    <Label styleClass="text-icon-lg-accent" text="🪑">
+                        <VBox.margin>
+                            <Insets bottom="16" />
+                        </VBox.margin>
+                    </Label>
+                    <Label styleClass="text-title" text="Comedor" />
+                    <Label maxWidth="320" styleClass="text-muted" text="Realiza pedidos al instante" wrapText="true" />
+                    <Region VBox.vgrow="ALWAYS" />
+                    <Button fx:id="btnComedor" styleClass="btn-primary" text="Realizar pedido" />
                 </VBox>
 
-                <!-- Domicilio card -->
-                <VBox prefWidth="280" prefHeight="280"
-                      style="-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-border-color: #E8DDD5; -fx-border-radius: 12; -fx-border-width: 1; -fx-padding: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
-                    <!-- Badge -->
+                <!-- Tarjeta Domicilio -->
+                <VBox prefHeight="280" prefWidth="280" styleClass="card">
                     <HBox alignment="TOP_RIGHT">
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Label text="3 Active"
-                               style="-fx-background-color: #F4E4D8; -fx-text-fill: #C8552A; -fx-font-size: 11; -fx-font-weight: BOLD; -fx-background-radius: 20; -fx-padding: 4 10;"/>
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="txtPedidosActivos" styleClass="badge badge-accent" text="3 activos" />
                     </HBox>
-                    <Label text="🛵" style="-fx-font-size: 26; -fx-text-fill: #C8552A;"/>
-                    <Region VBox.vgrow="ALWAYS"/>
-                    <Label text="Domicilio"
-                           style="-fx-font-size: 20; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
-                    <Label text="Delivery &amp; Takeout"
-                           style="-fx-font-size: 12; -fx-text-fill: #888888;"/>
+                    <Label styleClass="text-icon-lg-accent" text="🛵" />
+                    <Region prefHeight="16.0" VBox.vgrow="ALWAYS" />
+                    <Label styleClass="text-title-sm" text="Domicilio" />
+                    <Label styleClass="text-muted" text="Para recoger o domicilios" />
+                    <Button fx:id="btnDomicilio" styleClass="btn-primary" text="Realizar pedido">
+                        <VBox.margin>
+                            <Insets top="12" />
+                        </VBox.margin>
+                    </Button>
                 </VBox>
             </HBox>
 
-            <!-- Bottom row: 3 cards -->
+            <!-- Fila inferior: 3 tarjetas -->
             <HBox spacing="20">
 
                 <!-- Reservaciones -->
-                <VBox prefWidth="280" prefHeight="160"
-                      style="-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-border-color: #E8DDD5; -fx-border-radius: 12; -fx-border-width: 1; -fx-padding: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);" HBox.hgrow="ALWAYS">
-                    <Label text="📅" style="-fx-font-size: 24; -fx-text-fill: #C8552A;"/>
-                    <Region VBox.vgrow="ALWAYS"/>
-                    <Label text="Reservaciones"
-                           style="-fx-font-size: 18; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
-                    <Label text="Manage upcoming bookings"
-                           style="-fx-font-size: 12; -fx-text-fill: #888888;"/>
+                <VBox prefHeight="160" prefWidth="280" styleClass="card" HBox.hgrow="ALWAYS">
+                    <Region VBox.vgrow="ALWAYS" />
+                    <Label styleClass="text-title-sm" text="Reservaciones" />
+                    <Label styleClass="text-muted" text="Maneja las reservaciones" />
+                    <Button fx:id="btnReservaciones" alignment="CENTER" styleClass="btn-primary" text="Realizar pedido">
+                        <VBox.margin>
+                            <Insets top="12" />
+                        </VBox.margin>
+                    </Button>
                 </VBox>
 
                 <!-- Reportes Rápidos -->
-                <VBox prefWidth="280" prefHeight="160"
-                      style="-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-border-color: #E8DDD5; -fx-border-radius: 12; -fx-border-width: 1; -fx-padding: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);" HBox.hgrow="ALWAYS">
+                <VBox prefHeight="160" prefWidth="280" styleClass="card" HBox.hgrow="ALWAYS">
                     <HBox alignment="CENTER_LEFT">
-                        <Label text="📊" style="-fx-font-size: 24; -fx-text-fill: #C8552A;"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Label text="$1,240 Today"
-                               style="-fx-font-size: 12; -fx-text-fill: #888888;"/>
+                        <Label styleClass="text-icon-accent" text="📊" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="txtVentaActual" styleClass="text-muted" text="\$1,240 hoy" />
                     </HBox>
-                    <Region VBox.vgrow="ALWAYS"/>
-                    <Label text="Reportes Rápidos"
-                           style="-fx-font-size: 18; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
-                    <Label text="Sales overview"
-                           style="-fx-font-size: 12; -fx-text-fill: #888888;"/>
-                </VBox>
-
-                <!-- Ajustes -->
-                <VBox prefWidth="280" prefHeight="160"
-                      style="-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-border-color: #E8DDD5; -fx-border-radius: 12; -fx-border-width: 1; -fx-padding: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);" HBox.hgrow="ALWAYS">
-                    <Label text="⚙️" style="-fx-font-size: 24; -fx-text-fill: #C8552A;"/>
-                    <Region VBox.vgrow="ALWAYS"/>
-                    <Label text="Ajustes"
-                           style="-fx-font-size: 18; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
-                    <Label text="System configuration"
-                           style="-fx-font-size: 12; -fx-text-fill: #888888;"/>
+                    <Region VBox.vgrow="ALWAYS" />
+                    <Label styleClass="text-title-sm" text="Reportes Rápidos" />
+                    <Label styleClass="text-muted" text="Ventas hasta el momento" />
                 </VBox>
             </HBox>
         </VBox>

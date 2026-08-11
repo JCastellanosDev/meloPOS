@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  Menú lateral (Sidebar) reutilizable.
+  Cada pantalla lo incluye con <fx:include source="Sidebar.fxml" fx:id="sidebar"/>
+  y, si lo necesita, marca su sección activa desde el controlador de la pantalla
+  llamando a sidebarController.setActivo(sidebarController.getBtnX()).
+-->
+<VBox prefWidth="228" prefHeight="960" styleClass="sidebar"
+      xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="mx.edu.utch.melo.controller.SidebarController">
+
+    <!-- Logo -->
+    <VBox styleClass="sidebar-logo">
+        <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
+            <image>
+                <Image url="@img/melo1.png" />
+            </image>
+        </ImageView>
+    </VBox>
+
+    <!-- Navegación principal -->
+    <VBox styleClass="sidebar-nav">
+        <Button fx:id="btnOrdenes" text="📋  Órdenes" maxWidth="Infinity" styleClass="nav-button" />
+        <Button fx:id="btnMesas" text="🪑  Mesas" maxWidth="Infinity" styleClass="nav-button" />
+        <Button fx:id="btnMenu" text="🍽  Menú" maxWidth="Infinity" styleClass="nav-button" />
+        <Button fx:id="btnCocina" text="🍴  Cocina" maxWidth="Infinity" styleClass="nav-button" />
+        <Button fx:id="btnDomicilio" text="🛵  Domicilio" maxWidth="Infinity" styleClass="nav-button" />
+        <Button fx:id="btnClientes" text="👥  Clientes" maxWidth="Infinity" styleClass="nav-button" />
+        <Button fx:id="btnPersonal" text="👤  Personal" maxWidth="Infinity" styleClass="nav-button" />
+        <Button fx:id="btnInventario" text="📦  Inventario" maxWidth="Infinity" styleClass="nav-button" />
+        <Button fx:id="btnReportes" text="📊  Reportes" maxWidth="Infinity" styleClass="nav-button" />
+    </VBox>
+
+    <Region VBox.vgrow="ALWAYS" />
+
+    <!-- Navegación inferior -->
+    <VBox styleClass="sidebar-nav-bottom">
+        <Button fx:id="btnAjustes" text="⚙️  Ajustes" maxWidth="Infinity" styleClass="nav-button" />
+    </VBox>
+
+    <!-- Usuario en sesión -->
+    <HBox styleClass="sidebar-footer">
+        <StackPane styleClass="avatar">
+            <Label styleClass="avatar-label" text="A" />
+        </StackPane>
+        <Label styleClass="sidebar-user-label" text="Usuario Administrador" />
+    </HBox>
+</VBox>

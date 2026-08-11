@@ -1,0 +1,994 @@
+/* =========================================================
+   melo POS - Hoja de estilos centralizada
+   Sustituye todos los estilos "inline" (style="-fx-...") de
+   los archivos FXML por clases reutilizables.
+
+   ⚠ REGLA IMPORTANTE — combinación de clases en un mismo nodo:
+   No combines dos style classes que redeclaren la MISMA propiedad
+   -fx-* sobre el mismo nodo (p. ej. dos clases que ambas traigan
+   -fx-padding o -fx-background-color). En una prueba real con este
+   proyecto, styleClass="card card-lg" -- donde .card traía fondo/
+   borde/sombra/padding y .card-lg solo pretendía sobrescribir el
+   padding -- hizo que JavaFX NO renderizara el fondo/borde/sombra
+   del nodo en absoluto (no lanza excepción, simplemente el nodo se
+   ve "vacío"). La solución fue hacer que .card-lg sea AUTOCONTENIDA
+   (repite fondo/borde/sombra + su propio padding) y usarla sola,
+   nunca junto con .card. Aplica el mismo criterio a .sidebar-extra-section
+   (autocontenida, no se combina con .sidebar).
+
+   Cuándo SÍ es seguro combinar clases: cuando cada clase toca
+   propiedades -fx-* distintas y no se solapan -- por eso las
+   utilidades .gap-N (solo -fx-spacing) y .pad-N (solo -fx-padding)
+   se combinan libremente entre sí y con clases de componente
+   (p. ej. styleClass="card gap-16"): ninguna redeclara lo que ya
+   trae la otra.
+   ========================================================= */
+
+/* ---------- Paleta (colores "looked-up", reutilizables) ---------- */
+.root {
+    -bg-app: #FDF5EF;
+    -bg-sidebar: #2C1A0E;
+    -bg-sidebar-logo: #1E1208;
+    -bg-white: #FFFFFF;
+    -bg-soft: #F5EDE6;
+    -bg-soft-alt: #F8F4F0;
+    -bg-tip: #FFF8F4;
+    -border-soft: #E8DDD5;
+    -border-tip: #F0DDD0;
+    -border-input: #D8CFC8;
+    -text-dark: #1A1A1A;
+    -text-muted: #888888;
+    -text-muted-light: #AAAAAA;
+    -text-body: #555555;
+    -text-nav: #C0A898;
+    -accent: #C8552A;
+    -accent-soft-bg: #F4E4D8;
+    -success: #4CAF50;
+    -danger: #FF4444;
+    -danger-soft: #FF6B6B;
+
+    -fx-background-color: -bg-app;
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+/* =========================================================
+   UTILIDADES DE ESPACIADO
+   Combinables entre sí, p. ej. styleClass="pad-24 gap-20"
+   ========================================================= */
+.gap-0  { -fx-spacing: 0; }
+.gap-4  { -fx-spacing: 4; }
+.gap-6  { -fx-spacing: 6; }
+.gap-8  { -fx-spacing: 8; }
+.gap-10 { -fx-spacing: 10; }
+.gap-12 { -fx-spacing: 12; }
+.gap-16 { -fx-spacing: 16; }
+.gap-20 { -fx-spacing: 20; }
+.gap-24 { -fx-spacing: 24; }
+.gap-32 { -fx-spacing: 32; }
+
+.pad-0-24  { -fx-padding: 0 24; }
+.pad-16    { -fx-padding: 16; }
+.pad-16-20 { -fx-padding: 16 20; }
+.pad-20    { -fx-padding: 20; }
+.pad-24    { -fx-padding: 24; }
+.pad-32    { -fx-padding: 32; }
+.pad-dashboard { -fx-padding: 48 48 0 48; }
+.pad-y-16 { -fx-padding: 16 0; }
+.pad-bottom-16 { -fx-padding: 0 0 16 0; }
+.pad-top-8 { -fx-padding: 8 0 0 0; }
+.pad-top-24 { -fx-padding: 24 0 0 0; }
+.pad-top-16 { -fx-padding: 16 0 0 0; }
+.pad-top-4 { -fx-padding: 4 0 0 0; }
+.pad-8 { -fx-padding: 8 0; }
+
+/* =========================================================
+   SIDEBAR (menu lateral oscuro)
+   ========================================================= */
+.sidebar {
+    -fx-background-color: -bg-sidebar;
+    -fx-padding: 0;
+}
+
+.sidebar-logo {
+    -fx-alignment: center;
+    -fx-padding: 24 20 20 20;
+    -fx-background-color: -bg-sidebar-logo;
+}
+
+.sidebar-nav {
+    -fx-padding: 20 12 0 12;
+    -fx-spacing: 4;
+}
+
+.sidebar-nav-bottom {
+    -fx-padding: 0 12 24 12;
+    -fx-spacing: 4;
+}
+
+/* Autocontenida (no se combina con .sidebar) para evitar conflictos de cascada CSS
+   cuando una pantalla necesita una sección extra bajo el Sidebar.fxml incluido,
+   p. ej. el botón "Cerrar Turno" en PaymentPortal. */
+.sidebar-extra-section {
+    -fx-background-color: -bg-sidebar;
+    -fx-padding: 0 12 24 12;
+    -fx-spacing: 4;
+}
+
+.sidebar-footer {
+    -fx-padding: 16 16 20 16;
+    -fx-spacing: 10;
+    -fx-alignment: center-left;
+    -fx-border-color: #3A2010 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text-nav;
+    -fx-font-size: 14;
+    -fx-padding: 12 16;
+    -fx-cursor: hand;
+    -fx-background-radius: 8;
+    -fx-alignment: center-left;
+}
+.nav-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.06);
+}
+.nav-button:disabled {
+    -fx-opacity: 0.4;
+    -fx-cursor: default;
+}
+
+.nav-button-active {
+    -fx-background-color: -accent;
+    -fx-text-fill: -bg-white;
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-padding: 12 16;
+    -fx-cursor: hand;
+    -fx-alignment: center-left;
+}
+
+.avatar {
+    -fx-background-color: -accent;
+    -fx-background-radius: 50;
+    -fx-min-width: 36;
+    -fx-min-height: 36;
+    -fx-alignment: center;
+}
+.avatar-label {
+    -fx-text-fill: -bg-white;
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+}
+.sidebar-user-label {
+    -fx-text-fill: #DDDDDD;
+    -fx-font-size: 13;
+}
+
+/* =========================================================
+   TOPBAR (barra superior)
+   ========================================================= */
+.topbar {
+    -fx-background-color: -bg-white;
+    -fx-border-color: transparent transparent -border-soft transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 0 24;
+    -fx-spacing: 16;
+    -fx-alignment: center-left;
+}
+
+.topbar-title {
+    -fx-font-size: 16;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-dark;
+}
+
+.search-field {
+    -fx-background-color: -bg-soft;
+    -fx-background-radius: 20;
+    -fx-border-color: transparent;
+    -fx-padding: 8 16;
+    -fx-font-size: 13;
+    -fx-min-height: 36;
+}
+
+.icon-button {
+    -fx-background-color: transparent;
+    -fx-font-size: 18;
+    -fx-cursor: hand;
+    -fx-padding: 8;
+    -fx-background-radius: 22;
+    -fx-min-width: 44;
+    -fx-min-height: 44;
+}
+.icon-button:hover {
+    -fx-background-color: -bg-soft;
+}
+
+/* Selector de mesa / botones de filtro en la barra superior */
+.pill-button {
+    -fx-background-color: -bg-soft;
+    -fx-text-fill: -text-dark;
+    -fx-font-size: 13;
+    -fx-background-radius: 8;
+    -fx-padding: 8 16;
+    -fx-cursor: hand;
+    -fx-min-height: 44;
+}
+
+/* =========================================================
+   TARJETAS (cards) genéricas
+   ========================================================= */
+.card {
+    -fx-background-color: -bg-white;
+    -fx-background-radius: 12;
+    -fx-border-color: -border-soft;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 24;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 8, 0, 0, 2);
+}
+
+/* Variante de tarjeta con más "aire" interior. Autocontenida a propósito
+   (no se combina con .card) para evitar conflictos de cascada CSS. */
+.card-lg {
+    -fx-background-color: -bg-white;
+    -fx-background-radius: 12;
+    -fx-border-color: -border-soft;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 32;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 8, 0, 0, 2);
+}
+
+.card-selected {
+    -fx-border-color: -accent;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(200, 85, 42, 0.2), 10, 0, 0, 2);
+}
+
+/* =========================================================
+   BOTONES DE ACCIÓN
+   Todos con área mínima táctil de 44x44 px.
+   ========================================================= */
+.btn-primary:disabled,
+.btn-accent:disabled {
+    -fx-opacity: 0.45;
+    -fx-cursor: default;
+}
+
+.btn-primary {
+    -fx-background-color: -text-dark;
+    -fx-text-fill: -bg-white;
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-padding: 12 20;
+    -fx-cursor: hand;
+    -fx-min-height: 44;
+}
+
+.btn-accent {
+    -fx-background-color: -accent;
+    -fx-text-fill: -bg-white;
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-padding: 12 20;
+    -fx-cursor: hand;
+    -fx-min-height: 44;
+}
+
+.btn-outline {
+    -fx-background-color: -bg-white;
+    -fx-text-fill: -text-body;
+    -fx-font-size: 13;
+    -fx-background-radius: 8;
+    -fx-border-color: -border-input;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 12 20;
+    -fx-cursor: hand;
+    -fx-min-height: 44;
+}
+
+.btn-outline-accent {
+    -fx-background-color: -bg-white;
+    -fx-text-fill: -accent;
+    -fx-font-size: 13;
+    -fx-background-radius: 8;
+    -fx-border-color: -accent;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 12 20;
+    -fx-cursor: hand;
+    -fx-min-height: 44;
+    -fx-wrap-text: true;
+}
+
+.btn-accent-block {
+    -fx-background-color: -accent;
+    -fx-text-fill: -bg-white;
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-min-height: 48;
+}
+
+/* Botón de cantidad (− / +) en el panel de orden */
+.btn-qty {
+    -fx-background-color: #F0E4DC;
+    -fx-text-fill: -text-dark;
+    -fx-background-radius: 8;
+    -fx-min-width: 44;
+    -fx-min-height: 44;
+    -fx-cursor: hand;
+    -fx-font-size: 15;
+}
+
+.btn-icon-danger {
+    -fx-background-color: transparent;
+    -fx-text-fill: -accent;
+    -fx-cursor: hand;
+    -fx-font-size: 15;
+    -fx-min-width: 44;
+    -fx-min-height: 44;
+}
+
+/* Botón circular "+" / "✓" para agregar platillos (modificadores de platillos) */
+.btn-round-add {
+    -fx-background-color: transparent;
+    -fx-text-fill: -accent;
+    -fx-font-size: 22;
+    -fx-cursor: hand;
+    -fx-border-color: -accent;
+    -fx-border-radius: 50;
+    -fx-border-width: 1.5;
+    -fx-background-radius: 50;
+    -fx-min-width: 44;
+    -fx-min-height: 44;
+}
+
+.btn-round-add-selected {
+    -fx-background-color: -accent;
+    -fx-text-fill: -bg-white;
+    -fx-font-size: 16;
+    -fx-cursor: hand;
+    -fx-background-radius: 50;
+    -fx-min-width: 44;
+    -fx-min-height: 44;
+}
+
+/* Etiquetas tipo "chip" para modificadores de platillos (touch-friendly) */
+.chip-modifier {
+    -fx-background-color: -bg-soft;
+    -fx-text-fill: -accent;
+    -fx-font-size: 11;
+    -fx-background-radius: 20;
+    -fx-padding: 10 14;
+    -fx-cursor: hand;
+    -fx-min-height: 44;
+}
+
+/* Chips informativos de filtro (no son modificadores de platillos) */
+.chip {
+    -fx-background-color: -bg-soft;
+    -fx-text-fill: -text-body;
+    -fx-font-size: 11;
+    -fx-background-radius: 20;
+    -fx-padding: 6 12;
+    -fx-cursor: hand;
+    -fx-min-height: 36;
+}
+
+/* =========================================================
+   INSIGNIAS (badges) de estado
+   ========================================================= */
+.badge {
+    -fx-font-size: 11;
+    -fx-font-weight: bold;
+    -fx-background-radius: 20;
+    -fx-padding: 4 10;
+}
+.badge-accent {
+    -fx-background-color: -accent-soft-bg;
+    -fx-text-fill: -accent;
+}
+.badge-muted {
+    -fx-background-color: -bg-soft;
+    -fx-text-fill: -text-muted;
+    -fx-font-weight: normal;
+}
+.badge-success {
+    -fx-background-color: #E8F5E8;
+    -fx-text-fill: -success;
+}
+.badge-urgent {
+    -fx-background-color: #FBE3DB;
+    -fx-text-fill: -accent;
+}
+
+/* =========================================================
+   TIPOGRAFÍA
+   ========================================================= */
+.text-header {
+    -fx-font-size: 36;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-dark;
+}
+.text-title {
+    -fx-font-size: 26;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-dark;
+}
+.text-title-sm {
+    -fx-font-size: 18;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-dark;
+}
+.text-subtitle {
+    -fx-font-size: 22;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-dark;
+}
+.text-body {
+    -fx-font-size: 13;
+    -fx-text-fill: -text-dark;
+}
+.text-body-strong {
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-dark;
+}
+.text-muted {
+    -fx-font-size: 12;
+    -fx-text-fill: -text-muted;
+}
+.text-muted-sm {
+    -fx-font-size: 11;
+    -fx-text-fill: -text-muted;
+}
+.text-muted-lighter {
+    -fx-font-size: 11;
+    -fx-text-fill: -text-muted-light;
+}
+.text-price {
+    -fx-font-size: 15;
+    -fx-font-weight: bold;
+    -fx-text-fill: -accent;
+}
+.text-price-lg {
+    -fx-font-size: 16;
+    -fx-font-weight: bold;
+    -fx-text-fill: -accent;
+}
+.text-label-caps {
+    -fx-font-size: 10;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-muted;
+}
+.text-icon-accent {
+    -fx-font-size: 24;
+    -fx-text-fill: -accent;
+}
+.text-icon-lg-accent {
+    -fx-font-size: 28;
+    -fx-text-fill: -accent;
+}
+
+/* =========================================================
+   FORMULARIOS
+   ========================================================= */
+.input-wrapper {
+    -fx-background-color: -bg-white;
+    -fx-border-color: -border-input;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 0 14;
+    -fx-background-radius: 8;
+    -fx-min-height: 44;
+    -fx-alignment: center-left;
+}
+.input-plain {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-size: 13;
+    -fx-padding: 0 0 0 8;
+}
+.input-icon {
+    -fx-font-size: 16;
+    -fx-text-fill: -text-muted-light;
+}
+
+/* =========================================================
+   ESTADÍSTICAS / MINI TARJETAS
+   ========================================================= */
+.panel-right {
+    -fx-background-color: -bg-white;
+    -fx-border-color: transparent transparent transparent -border-soft;
+    -fx-border-width: 0 0 0 1;
+    -fx-padding: 24 20;
+    -fx-spacing: 20;
+}
+.stat-value-lg {
+    -fx-font-size: 36;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-dark;
+}
+.stat-value-accent {
+    -fx-font-size: 36;
+    -fx-font-weight: bold;
+    -fx-text-fill: -accent;
+}
+.mini-stat-box {
+    -fx-background-color: -bg-soft-alt;
+    -fx-background-radius: 8;
+    -fx-border-color: -border-soft;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 12;
+    -fx-spacing: 2;
+    -fx-alignment: center;
+}
+.mini-stat-box-accent {
+    -fx-background-color: -bg-soft-alt;
+    -fx-background-radius: 8;
+    -fx-border-color: -accent;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 12;
+    -fx-spacing: 2;
+    -fx-alignment: center;
+}
+.dest-card {
+    -fx-background-color: -bg-soft-alt;
+    -fx-background-radius: 8;
+    -fx-border-color: -border-soft;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 14;
+    -fx-spacing: 4;
+}
+.order-panel {
+    -fx-background-color: -bg-app;
+    -fx-border-color: transparent transparent transparent -border-soft;
+    -fx-border-width: 0 0 0 1;
+}
+.totals-box {
+    -fx-border-color: -border-soft transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 16 0 24 0;
+    -fx-spacing: 8;
+}
+.order-card {
+    -fx-background-color: -bg-white;
+    -fx-background-radius: 8;
+    -fx-border-color: -border-soft;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 14;
+    -fx-spacing: 6;
+}
+
+/* =========================================================
+   MAPA / DELIVERY
+   ========================================================= */
+.map-placeholder {
+    -fx-background-color: #D8CCBA;
+    -fx-background-radius: 8;
+}
+.map-surface {
+    -fx-background-color: #C8A878;
+    -fx-background-radius: 12;
+}
+.map-pin-overlay {
+    -fx-padding: 0 0 60 0;
+}
+.map-pin-card {
+    -fx-background-color: -bg-white;
+    -fx-background-radius: 8;
+    -fx-padding: 8 14;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 8, 0, 0, 2);
+}
+.ai-banner {
+    -fx-background-color: -bg-white;
+    -fx-background-radius: 12;
+    -fx-padding: 16 20;
+    -fx-spacing: 8;
+    -fx-border-color: -border-soft;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 10, 0, 0, 2);
+}
+
+/* =========================================================
+   VALIDACIÓN DE FORMULARIOS
+   ========================================================= */
+.form-error {
+    -fx-text-fill: -danger;
+    -fx-font-size: 12;
+    -fx-font-weight: bold;
+    -fx-background-color: #FDE8E8;
+    -fx-background-radius: 8;
+    -fx-padding: 10 14;
+}
+
+/* =========================================================
+   AVISO / TIP
+   ========================================================= */
+.tip-box {
+    -fx-background-color: -bg-tip;
+    -fx-background-radius: 12;
+    -fx-border-color: -border-tip;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 18;
+    -fx-spacing: 8;
+}
+.tip-title {
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+    -fx-text-fill: -accent;
+}
+.empty-state {
+    -fx-alignment: center;
+    -fx-spacing: 8;
+    -fx-padding: 20 0;
+    -fx-border-color: #F0EAE4;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-background-color: #FAFAF8;
+    -fx-background-radius: 8;
+}
+.empty-state-icon {
+    -fx-font-size: 24;
+    -fx-text-fill: #CCCCCC;
+}
+.empty-state-text {
+    -fx-font-size: 12;
+    -fx-text-fill: -text-muted-light;
+    -fx-text-alignment: center;
+    -fx-wrap-text: true;
+}
+
+/* =========================================================
+   PESTAÑAS (tabs) / MIGAS DE PAN (breadcrumb)
+   ========================================================= */
+.tab-item {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 13;
+    -fx-cursor: hand;
+    -fx-padding: 10 12;
+    -fx-min-height: 44;
+}
+.tab-item-active {
+    -fx-background-color: transparent;
+    -fx-text-fill: -accent;
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-padding: 10 12;
+    -fx-border-color: transparent transparent -accent transparent;
+    -fx-border-width: 0 0 2 0;
+    -fx-min-height: 44;
+}
+.breadcrumb-text {
+    -fx-font-size: 13;
+    -fx-text-fill: -text-muted;
+    -fx-cursor: hand;
+}
+.breadcrumb-sep {
+    -fx-text-fill: -text-muted;
+}
+.breadcrumb-active {
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+    -fx-text-fill: -accent;
+}
+
+/* =========================================================
+   MENÚ / TARJETAS DE PLATILLOS (generadas dinámicamente)
+   ========================================================= */
+.menu-card {
+    -fx-background-color: -bg-white;
+    -fx-background-radius: 12;
+    -fx-border-color: -border-soft;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 8, 0, 0, 2);
+    -fx-pref-width: 220;
+}
+.menu-card-selected {
+    -fx-border-color: -accent;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(200, 85, 42, 0.2), 10, 0, 0, 2);
+}
+.menu-card-image {
+    -fx-background-color: #E8D5C4;
+    -fx-background-radius: 12 12 0 0;
+    -fx-pref-height: 150;
+}
+.menu-card-body {
+    -fx-padding: 12;
+    -fx-spacing: 4;
+}
+.menu-card-title {
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-dark;
+}
+.menu-card-desc {
+    -fx-font-size: 11;
+    -fx-text-fill: -text-muted;
+    -fx-wrap-text: true;
+}
+.menu-card-footer {
+    -fx-padding: 8 0 0 0;
+    -fx-alignment: center-left;
+}
+.menu-card-tag {
+    -fx-background-color: #E07540;
+    -fx-text-fill: -bg-white;
+    -fx-font-size: 10;
+    -fx-font-weight: bold;
+    -fx-background-radius: 4;
+    -fx-padding: 3 8;
+}
+
+/* =========================================================
+   PANEL DE COCINA (Kitchen Display System)
+   ========================================================= */
+.kds-surface {
+    -fx-background-color: #1C1C1C;
+}
+.kds-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-border-color: transparent;
+}
+.ticket {
+    -fx-background-color: #2A2A2A;
+    -fx-background-radius: 10;
+    -fx-border-color: #3A3A3A;
+    -fx-border-radius: 10;
+    -fx-border-width: 1.5;
+    -fx-pref-width: 280;
+}
+.ticket-active {
+    -fx-background-color: #2A2018;
+    -fx-background-radius: 10;
+    -fx-border-color: -accent;
+    -fx-border-radius: 10;
+    -fx-border-width: 2;
+    -fx-pref-width: 280;
+}
+.ticket-urgent {
+    -fx-background-color: #2A1A1A;
+    -fx-background-radius: 10;
+    -fx-border-color: -danger;
+    -fx-border-radius: 10;
+    -fx-border-width: 2;
+    -fx-pref-width: 280;
+}
+.ticket-header {
+    -fx-padding: 14 16 10 16;
+    -fx-alignment: center-left;
+}
+.ticket-title {
+    -fx-font-size: 15;
+    -fx-font-weight: bold;
+    -fx-text-fill: -bg-white;
+}
+.ticket-meta {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 11;
+    -fx-padding: 0 16 12 16;
+}
+.ticket-items {
+    -fx-padding: 12 16;
+    -fx-spacing: 10;
+}
+.ticket-item {
+    -fx-text-fill: #DDDDDD;
+    -fx-font-size: 13;
+}
+.ticket-item-strong {
+    -fx-text-fill: -bg-white;
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+}
+.ticket-item-note {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 11;
+}
+.ticket-mod-flag {
+    -fx-border-color: -accent;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 0 0 0 10;
+    -fx-spacing: 4;
+}
+.ticket-mod-add {
+    -fx-text-fill: -success;
+    -fx-font-size: 12;
+}
+.ticket-mod-remove {
+    -fx-text-fill: -danger-soft;
+    -fx-font-size: 12;
+}
+.mod-tag {
+    -fx-background-color: #8B4513;
+    -fx-text-fill: #F0B08C;
+    -fx-font-size: 9;
+    -fx-font-weight: bold;
+    -fx-background-radius: 4;
+    -fx-padding: 2 6;
+}
+.ticket-separator {
+    -fx-border-color: #3A3A3A;
+}
+.ticket-separator-active {
+    -fx-border-color: #5A3520;
+}
+.ticket-separator-urgent {
+    -fx-border-color: #5A2020;
+}
+.text-time-ok {
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+    -fx-text-fill: -success;
+}
+.text-time-warn {
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+    -fx-text-fill: -accent;
+}
+.text-time-urgent {
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+    -fx-text-fill: -danger;
+}
+.ticket-bump-btn {
+    -fx-background-color: #3A3A3A;
+    -fx-text-fill: #CCCCCC;
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+    -fx-background-radius: 0 0 10 10;
+    -fx-cursor: hand;
+    -fx-min-height: 48;
+}
+.ticket-bump-btn-urgent {
+    -fx-background-color: #3A2020;
+    -fx-text-fill: #CCCCCC;
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+    -fx-background-radius: 0 0 10 10;
+    -fx-cursor: hand;
+    -fx-min-height: 48;
+}
+.ticket-bump-btn-active {
+    -fx-background-color: -accent;
+    -fx-text-fill: -bg-white;
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+    -fx-background-radius: 0 0 10 10;
+    -fx-cursor: hand;
+    -fx-min-height: 48;
+}
+.station-tab {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 12;
+    -fx-background-radius: 6;
+    -fx-padding: 6 16;
+    -fx-cursor: hand;
+    -fx-border-color: -border-soft;
+    -fx-border-radius: 6;
+    -fx-border-width: 1;
+    -fx-min-height: 44;
+}
+.station-tab-active {
+    -fx-background-color: -text-dark;
+    -fx-text-fill: -bg-white;
+    -fx-font-size: 12;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-padding: 6 16;
+    -fx-cursor: hand;
+    -fx-min-height: 44;
+}
+
+/* =========================================================
+   PAGO / NUMPAD
+   ========================================================= */
+.pay-method {
+    -fx-background-color: -bg-soft;
+    -fx-background-radius: 12;
+    -fx-cursor: hand;
+    -fx-alignment: center;
+    -fx-min-height: 44;
+}
+.pay-method-active {
+    -fx-background-color: -accent;
+    -fx-background-radius: 12;
+    -fx-cursor: hand;
+    -fx-alignment: center;
+    -fx-min-height: 44;
+}
+.pay-method-label {
+    -fx-text-fill: -text-dark;
+    -fx-font-size: 13;
+}
+.pay-method-label-active {
+    -fx-text-fill: -bg-white;
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+}
+.amount-box {
+    -fx-background-color: -bg-white;
+    -fx-border-color: -accent;
+    -fx-border-radius: 8;
+    -fx-border-width: 1.5;
+    -fx-padding: 12 16;
+    -fx-background-radius: 8;
+    -fx-alignment: center-left;
+    -fx-spacing: 8;
+}
+.amount-currency {
+    -fx-font-size: 18;
+    -fx-text-fill: -text-muted;
+}
+.amount-value {
+    -fx-font-size: 28;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-dark;
+}
+.change-box {
+    -fx-background-color: -bg-app;
+    -fx-background-radius: 10;
+    -fx-padding: 16;
+    -fx-spacing: 6;
+}
+.change-value {
+    -fx-font-size: 26;
+    -fx-font-weight: bold;
+    -fx-text-fill: -accent;
+}
+.numpad-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text-dark;
+    -fx-font-size: 20;
+    -fx-cursor: hand;
+    -fx-min-width: 56;
+    -fx-min-height: 56;
+}
+.numpad-btn-danger {
+    -fx-background-color: #FDDDD0;
+    -fx-text-fill: -accent;
+    -fx-font-size: 18;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-min-width: 56;
+    -fx-min-height: 56;
+}
+.quick-amount-btn {
+    -fx-background-color: -bg-soft;
+    -fx-text-fill: -text-dark;
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-min-height: 52;
+}
+.quick-amount-btn-primary {
+    -fx-background-color: -text-dark;
+    -fx-text-fill: -bg-white;
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-min-height: 52;
+}

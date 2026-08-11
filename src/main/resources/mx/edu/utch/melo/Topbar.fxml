@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.HBox?>
+
+<!--
+  Clúster de acciones común de la barra superior (notificaciones + usuario).
+  Cada pantalla lo incluye al final de su propio <top> con
+  <fx:include source="Topbar.fxml"/>, conservando su título, buscador
+  o pestañas particulares fuera de este componente.
+-->
+<HBox alignment="CENTER_LEFT" spacing="4"
+      xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="mx.edu.utch.melo.controller.TopbarController">
+    <Button fx:id="btnNotificaciones" text="🔔" styleClass="icon-button" />
+    <Button fx:id="btnUsuario" text="👤" styleClass="icon-button" />
+</HBox>
