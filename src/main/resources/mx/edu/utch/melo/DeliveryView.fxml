@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.web.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.melo.controller.DeliveryController"
+            prefWidth="1280" prefHeight="960"
+            style="-fx-background-color: #FDF5EF;">
+
+    <!-- ===== LEFT SIDEBAR ===== -->
+    <left>
+        <VBox prefWidth="228" prefHeight="960"
+              style="-fx-background-color: #FDF5EF; -fx-border-color: #E8DDD5; -fx-border-width: 0 1 0 0; -fx-padding: 0;">
+
+            <!-- Logo -->
+            <VBox style="-fx-padding: 20 20 16 20;">
+                <Label text="Gourmet Intel" style="-fx-font-size: 18; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+                <Label text="Main Terminal" style="-fx-text-fill: #888888; -fx-font-size: 11;"/>
+            </VBox>
+
+            <Separator/>
+
+            <!-- Nav -->
+            <VBox style="-fx-padding: 16 12 0 12; -fx-spacing: 2;">
+                <Button text="🖨  POS" maxWidth="Infinity" alignment="CENTER_LEFT"
+                        style="-fx-background-color: transparent; -fx-text-fill: #555555; -fx-font-size: 13; -fx-padding: 10 12; -fx-cursor: HAND;"/>
+                <Button text="📦  Inventory" maxWidth="Infinity" alignment="CENTER_LEFT"
+                        style="-fx-background-color: transparent; -fx-text-fill: #555555; -fx-font-size: 13; -fx-padding: 10 12; -fx-cursor: HAND;"/>
+                <Button text="🍴  Kitchen" maxWidth="Infinity" alignment="CENTER_LEFT"
+                        style="-fx-background-color: transparent; -fx-text-fill: #555555; -fx-font-size: 13; -fx-padding: 10 12; -fx-cursor: HAND;"/>
+                <!-- Active -->
+                <Button text="🛵  Delivery" maxWidth="Infinity" alignment="CENTER_LEFT"
+                        style="-fx-background-color: #1A1A1A; -fx-text-fill: #FFFFFF; -fx-font-size: 13; -fx-font-weight: BOLD; -fx-background-radius: 8; -fx-padding: 10 12; -fx-cursor: HAND;"/>
+                <Button text="📊  Reports" maxWidth="Infinity" alignment="CENTER_LEFT"
+                        style="-fx-background-color: transparent; -fx-text-fill: #555555; -fx-font-size: 13; -fx-padding: 10 12; -fx-cursor: HAND;"/>
+                <Button text="🤖  AI Copilot" maxWidth="Infinity" alignment="CENTER_LEFT"
+                        style="-fx-background-color: transparent; -fx-text-fill: #555555; -fx-font-size: 13; -fx-padding: 10 12; -fx-cursor: HAND;"/>
+            </VBox>
+        </VBox>
+    </left>
+
+    <!-- ===== TOP BAR ===== -->
+    <top>
+        <HBox prefHeight="56" alignment="CENTER"
+              style="-fx-background-color: #FFFFFF; -fx-border-color: #E8DDD5; -fx-border-width: 0 0 1 0; -fx-padding: 0 24; -fx-spacing: 16;">
+            <Label text="Terminal 01"
+                   style="-fx-font-size: 16; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="🔄" style="-fx-background-color: transparent; -fx-font-size: 18; -fx-cursor: HAND;"/>
+            <Button text="🔔" style="-fx-background-color: transparent; -fx-font-size: 18; -fx-cursor: HAND;"/>
+            <Button text="👤" style="-fx-background-color: transparent; -fx-font-size: 18; -fx-cursor: HAND;"/>
+        </HBox>
+    </top>
+
+    <!-- ===== CENTER: Map ===== -->
+    <center>
+        <StackPane style="-fx-padding: 16;">
+            <!-- Map placeholder (use WebView with map or ImageView in production) -->
+            <Pane style="-fx-background-color: #C8A878; -fx-background-radius: 12;">
+                <!-- Grid lines to simulate map streets -->
+            </Pane>
+
+            <!-- Map pin label overlay -->
+            <VBox alignment="CENTER" style="-fx-padding: 0 0 60 0;">
+                <StackPane>
+                    <VBox alignment="CENTER" spacing="0"
+                          style="-fx-background-color: #FFFFFF; -fx-background-radius: 8; -fx-padding: 8 14; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 8, 0, 0, 2);">
+                        <Label text="Zona Norte" style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+                        <Label text="400 pedidos" style="-fx-font-size: 12; -fx-text-fill: #C8552A;"/>
+                    </VBox>
+                </StackPane>
+            </VBox>
+
+            <!-- AI Suggestion banner (bottom overlay) -->
+            <VBox alignment="BOTTOM_CENTER" style="-fx-padding: 24;">
+                <VBox style="-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-padding: 16 20; -fx-spacing: 8; -fx-border-color: #E8DDD5; -fx-border-radius: 12; -fx-border-width: 1; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);" maxWidth="560">
+                    <HBox spacing="12" alignment="CENTER_LEFT">
+                        <Label text="🤖" style="-fx-font-size: 20; -fx-text-fill: #C8552A;"/>
+                        <Label text="AI Routing Suggestion"
+                               style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+                    </HBox>
+                    <Label text="High volume detected in Zona Norte. Recommending dispatch of 2 additional drivers to maintain &lt;15min delivery times."
+                           style="-fx-font-size: 12; -fx-text-fill: #555555; -fx-wrap-text: true;" maxWidth="520"/>
+                    <Button text="Deploy Drivers"
+                            style="-fx-background-color: #C8552A; -fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: BOLD; -fx-background-radius: 8; -fx-padding: 8 18; -fx-cursor: HAND;">
+                        <VBox.margin><Insets top="4"/></VBox.margin>
+                    </Button>
+                </VBox>
+            </VBox>
+        </StackPane>
+    </center>
+
+    <!-- ===== RIGHT PANEL ===== -->
+    <right>
+        <VBox prefWidth="340" prefHeight="960"
+              style="-fx-background-color: #FFFFFF; -fx-border-color: #E8DDD5; -fx-border-width: 0 0 0 1; -fx-padding: 24 20; -fx-spacing: 20;">
+
+            <!-- Analytics header -->
+            <Label text="Delivery Analytics"
+                   style="-fx-font-size: 18; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+
+            <!-- Metrics row -->
+            <HBox spacing="0">
+                <VBox HBox.hgrow="ALWAYS" spacing="4">
+                    <Label text="84%" style="-fx-font-size: 36; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+                    <Label text="On-Time Rate" style="-fx-font-size: 12; -fx-text-fill: #888888;"/>
+                </VBox>
+                <VBox alignment="TOP_RIGHT" spacing="4">
+                    <Label text="24" style="-fx-font-size: 36; -fx-font-weight: BOLD; -fx-text-fill: #C8552A;"/>
+                    <Label text="Active Drivers" style="-fx-font-size: 12; -fx-text-fill: #888888;"/>
+                </VBox>
+            </HBox>
+
+            <Separator/>
+
+            <!-- New Order Entry -->
+            <VBox spacing="12">
+                <HBox alignment="CENTER_LEFT">
+                    <Label text="New Order Entry"
+                           style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;" HBox.hgrow="ALWAYS"/>
+                    <Label text="Awaiting Assign"
+                           style="-fx-font-size: 11; -fx-text-fill: #888888;"/>
+                </HBox>
+
+                <!-- Destination card -->
+                <VBox style="-fx-background-color: #F8F4F0; -fx-background-radius: 8; -fx-border-color: #E8DDD5; -fx-border-radius: 8; -fx-border-width: 1; -fx-padding: 14; -fx-spacing: 4;">
+                    <Label text="Destination" style="-fx-font-size: 11; -fx-text-fill: #888888;"/>
+                    <Label text="Av. Tecnológico 1234" style="-fx-font-size: 13; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+                    <Label text="Client: Maria Rodriguez (VIP)" style="-fx-font-size: 12; -fx-text-fill: #555555;"/>
+                </VBox>
+
+                <!-- Distance / Time / Price -->
+                <HBox spacing="8">
+                    <VBox style="-fx-background-color: #F8F4F0; -fx-background-radius: 8; -fx-border-color: #E8DDD5; -fx-border-radius: 8; -fx-border-width: 1; -fx-padding: 12; -fx-spacing: 2;" HBox.hgrow="ALWAYS" alignment="CENTER">
+                        <Label text="📍" style="-fx-font-size: 16;"/>
+                        <Label text="4.2km" style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+                        <Label text="Distancia" style="-fx-font-size: 10; -fx-text-fill: #888888;"/>
+                    </VBox>
+                    <VBox style="-fx-background-color: #F8F4F0; -fx-background-radius: 8; -fx-border-color: #E8DDD5; -fx-border-radius: 8; -fx-border-width: 1; -fx-padding: 12; -fx-spacing: 2;" HBox.hgrow="ALWAYS" alignment="CENTER">
+                        <Label text="⏱" style="-fx-font-size: 16;"/>
+                        <Label text="11 min" style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+                        <Label text="Tiempo" style="-fx-font-size: 10; -fx-text-fill: #888888;"/>
+                    </VBox>
+                    <VBox style="-fx-background-color: #F8F4F0; -fx-background-radius: 8; -fx-border-color: #C8552A; -fx-border-radius: 8; -fx-border-width: 1; -fx-padding: 12; -fx-spacing: 2;" HBox.hgrow="ALWAYS" alignment="CENTER">
+                        <Label text="💵" style="-fx-font-size: 16;"/>
+                        <Label text="$35" style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #C8552A;"/>
+                        <Label text="Sugerido" style="-fx-font-size: 10; -fx-text-fill: #C8552A;"/>
+                    </VBox>
+                </HBox>
+
+                <Button text="Assign to Driver" maxWidth="Infinity" prefHeight="44"
+                        style="-fx-background-color: #1A1A1A; -fx-text-fill: white; -fx-font-size: 14; -fx-font-weight: BOLD; -fx-background-radius: 8; -fx-cursor: HAND;"/>
+            </VBox>
+
+            <Separator/>
+
+            <!-- Active Orders -->
+            <VBox spacing="12">
+                <Label text="Active Orders"
+                       style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+
+                <!-- Order 8892 -->
+                <VBox style="-fx-background-color: #FFFFFF; -fx-background-radius: 8; -fx-border-color: #E8DDD5; -fx-border-radius: 8; -fx-border-width: 1; -fx-padding: 14; -fx-spacing: 6;">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="Order #8892"
+                               style="-fx-font-size: 13; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;" HBox.hgrow="ALWAYS"/>
+                        <Label text="● En Route"
+                               style="-fx-background-color: #E8F5E8; -fx-text-fill: #4CAF50; -fx-font-size: 10; -fx-background-radius: 20; -fx-padding: 3 8;"/>
+                    </HBox>
+                    <Label text="Driver: Carlos M." style="-fx-font-size: 12; -fx-text-fill: #555555;"/>
+                    <HBox spacing="6" alignment="CENTER_LEFT">
+                        <Label text="📍" style="-fx-font-size: 12;"/>
+                        <Label text="Blvd. Independencia 445" style="-fx-font-size: 12; -fx-text-fill: #888888;"/>
+                    </HBox>
+                </VBox>
+
+                <!-- Order 8891 -->
+                <VBox style="-fx-background-color: #FFFFFF; -fx-background-radius: 8; -fx-border-color: #E8DDD5; -fx-border-radius: 8; -fx-border-width: 1; -fx-padding: 14; -fx-spacing: 6;">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="Order #8891"
+                               style="-fx-font-size: 13; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;" HBox.hgrow="ALWAYS"/>
+                        <Label text="● Pickup"
+                               style="-fx-background-color: #FFF3E0; -fx-text-fill: #E07540; -fx-font-size: 10; -fx-background-radius: 20; -fx-padding: 3 8;"/>
+                    </HBox>
+                    <Label text="Driver: Ana G." style="-fx-font-size: 12; -fx-text-fill: #555555;"/>
+                    <HBox spacing="6" alignment="CENTER_LEFT">
+                        <Label text="📍" style="-fx-font-size: 12;"/>
+                        <Label text="Calle 12, Zona Centro" style="-fx-font-size: 12; -fx-text-fill: #888888;"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+        </VBox>
+    </right>
+
+</BorderPane>

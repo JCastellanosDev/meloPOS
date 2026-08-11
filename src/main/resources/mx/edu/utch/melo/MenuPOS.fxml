@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.melo.controller.MenuPOSController"
+            prefWidth="1280" prefHeight="960"
+            style="-fx-background-color: #FDF5EF;">
+
+    <!-- ===== LEFT SIDEBAR (dark) ===== -->
+    <left>
+        <VBox prefWidth="200" prefHeight="960"
+              style="-fx-background-color: #2C1A0E; -fx-padding: 0;">
+
+            <!-- Logo -->
+            <VBox alignment="CENTER" style="-fx-padding: 20 16 16 16; -fx-background-color: #1E1208;">
+                <Label text="melo" style="-fx-text-fill: #FFFFFF; -fx-font-size: 20; -fx-font-weight: BOLD;"/>
+                <Label text="Terminal de Ventas" style="-fx-text-fill: #7A6050; -fx-font-size: 10;"/>
+            </VBox>
+
+            <!-- Nav -->
+            <VBox style="-fx-padding: 16 10 0 10; -fx-spacing: 2;">
+                <!-- Active item -->
+                <Button text="🍽  Platillos" maxWidth="Infinity" alignment="CENTER_LEFT"
+                        style="-fx-background-color: #C8552A; -fx-text-fill: #FFFFFF; -fx-font-size: 13; -fx-font-weight: BOLD; -fx-background-radius: 8; -fx-padding: 10 14; -fx-cursor: HAND;"/>
+                <Button text="🍹  Bebidas" maxWidth="Infinity" alignment="CENTER_LEFT"
+                        style="-fx-background-color: transparent; -fx-text-fill: #9A7060; -fx-font-size: 13; -fx-padding: 10 14; -fx-cursor: HAND;"/>
+                <Button text="🍮  Postres" maxWidth="Infinity" alignment="CENTER_LEFT"
+                        style="-fx-background-color: transparent; -fx-text-fill: #9A7060; -fx-font-size: 13; -fx-padding: 10 14; -fx-cursor: HAND;"/>
+            </VBox>
+
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <VBox style="-fx-padding: 0 10 20 10; -fx-spacing: 2;">
+                <Button text="📊  Reportes" maxWidth="Infinity" alignment="CENTER_LEFT"
+                        style="-fx-background-color: transparent; -fx-text-fill: #9A7060; -fx-font-size: 13; -fx-padding: 10 14; -fx-cursor: HAND;"/>
+                <Button text="⚙️  Configuración" maxWidth="Infinity" alignment="CENTER_LEFT"
+                        style="-fx-background-color: transparent; -fx-text-fill: #9A7060; -fx-font-size: 13; -fx-padding: 10 14; -fx-cursor: HAND;"/>
+            </VBox>
+        </VBox>
+    </left>
+
+    <!-- ===== TOP BAR ===== -->
+    <top>
+        <HBox prefHeight="60" alignment="CENTER"
+              style="-fx-background-color: #FFFFFF; -fx-border-color: #E8DDD5; -fx-border-width: 0 0 1 0; -fx-padding: 0 20; -fx-spacing: 16;">
+            <!-- Search -->
+            <TextField promptText="Buscar platillo..." prefWidth="340"
+                       style="-fx-background-color: #F5EDE6; -fx-background-radius: 20; -fx-border-color: transparent; -fx-padding: 8 16; -fx-font-size: 13;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <!-- Table selector -->
+            <Button text="🪑  Mesa 12  ▾"
+                    style="-fx-background-color: #F5EDE6; -fx-text-fill: #1A1A1A; -fx-font-size: 13; -fx-background-radius: 8; -fx-padding: 8 16; -fx-cursor: HAND;"/>
+            <Button text="🔔" style="-fx-background-color: transparent; -fx-font-size: 18; -fx-cursor: HAND;"/>
+            <Button text="👤" style="-fx-background-color: transparent; -fx-font-size: 18; -fx-cursor: HAND;"/>
+        </HBox>
+    </top>
+
+    <!-- ===== CENTER: Menu Grid ===== -->
+    <center>
+        <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
+            <VBox style="-fx-padding: 24; -fx-spacing: 16;">
+                <!-- Row 1 -->
+                <HBox spacing="16">
+                    <!-- Card 1 -->
+                    <VBox prefWidth="220" prefHeight="300"
+                          style="-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-border-color: #E8DDD5; -fx-border-radius: 12; -fx-border-width: 1; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+                        <StackPane prefHeight="150" style="-fx-background-color: #E8D5C4; -fx-background-radius: 12 12 0 0;">
+                            <Label text="POPULAR"
+                                   style="-fx-background-color: #E07540; -fx-text-fill: white; -fx-font-size: 10; -fx-font-weight: BOLD; -fx-background-radius: 4; -fx-padding: 3 8;"/>
+                            <StackPane.alignment>TOP_LEFT</StackPane.alignment>
+                            <padding><Insets top="8" left="8"/></padding>
+                        </StackPane>
+                        <VBox style="-fx-padding: 12; -fx-spacing: 4;">
+                            <Label text="Tacos al Pastor"
+                                   style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+                            <Label text="Tres tacos con piña, cebolla y cilantro..."
+                                   style="-fx-font-size: 11; -fx-text-fill: #888888; -fx-wrap-text: true;" maxWidth="196"/>
+                            <HBox alignment="CENTER_LEFT" style="-fx-padding: 8 0 0 0;">
+                                <Label text="$145.00"
+                                       style="-fx-font-size: 15; -fx-font-weight: BOLD; -fx-text-fill: #C8552A;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button text="+"
+                                        style="-fx-background-color: transparent; -fx-text-fill: #C8552A; -fx-font-size: 22; -fx-cursor: HAND; -fx-padding: 0 4; -fx-border-color: #C8552A; -fx-border-radius: 50; -fx-border-width: 1.5; -fx-background-radius: 50; -fx-min-width: 28; -fx-min-height: 28;"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+
+                    <!-- Card 2 -->
+                    <VBox prefWidth="220" prefHeight="300"
+                          style="-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-border-color: #E8DDD5; -fx-border-radius: 12; -fx-border-width: 1; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+                        <StackPane prefHeight="150" style="-fx-background-color: #D4C0A8; -fx-background-radius: 12 12 0 0;">
+                            <Label text="CHEF"
+                                   style="-fx-background-color: #555555; -fx-text-fill: white; -fx-font-size: 10; -fx-font-weight: BOLD; -fx-background-radius: 4; -fx-padding: 3 8;"/>
+                            <StackPane.alignment>TOP_LEFT</StackPane.alignment>
+                            <padding><Insets top="8" left="8"/></padding>
+                        </StackPane>
+                        <VBox style="-fx-padding: 12; -fx-spacing: 4;">
+                            <Label text="Enchiladas Verdes"
+                                   style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+                            <Label text="Pollo desmenuzado, salsa verde y queso..."
+                                   style="-fx-font-size: 11; -fx-text-fill: #888888; -fx-wrap-text: true;" maxWidth="196"/>
+                            <HBox alignment="CENTER_LEFT" style="-fx-padding: 8 0 0 0;">
+                                <Label text="$185.00"
+                                       style="-fx-font-size: 15; -fx-font-weight: BOLD; -fx-text-fill: #C8552A;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button text="+"
+                                        style="-fx-background-color: transparent; -fx-text-fill: #C8552A; -fx-font-size: 22; -fx-cursor: HAND; -fx-padding: 0 4; -fx-border-color: #C8552A; -fx-border-radius: 50; -fx-border-width: 1.5; -fx-background-radius: 50; -fx-min-width: 28; -fx-min-height: 28;"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+
+                    <!-- Card 3 (selected) -->
+                    <VBox prefWidth="220" prefHeight="300"
+                          style="-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-border-color: #C8552A; -fx-border-radius: 12; -fx-border-width: 2; -fx-effect: dropshadow(gaussian, rgba(200,85,42,0.2), 10, 0, 0, 2);">
+                        <StackPane prefHeight="150" style="-fx-background-color: #C8B09A; -fx-background-radius: 12 12 0 0;"/>
+                        <VBox style="-fx-padding: 12; -fx-spacing: 4;">
+                            <Label text="Pozole Rojo"
+                                   style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+                            <Label text="Receta tradicional con cerdo y rábano..."
+                                   style="-fx-font-size: 11; -fx-text-fill: #888888; -fx-wrap-text: true;" maxWidth="196"/>
+                            <HBox alignment="CENTER_LEFT" style="-fx-padding: 8 0 0 0;">
+                                <Label text="$210.00"
+                                       style="-fx-font-size: 15; -fx-font-weight: BOLD; -fx-text-fill: #C8552A;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button text="✓"
+                                        style="-fx-background-color: #C8552A; -fx-text-fill: white; -fx-font-size: 14; -fx-cursor: HAND; -fx-background-radius: 50; -fx-min-width: 28; -fx-min-height: 28;"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+
+                    <!-- Card 4 -->
+                    <VBox prefWidth="220" prefHeight="300"
+                          style="-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-border-color: #E8DDD5; -fx-border-radius: 12; -fx-border-width: 1; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+                        <StackPane prefHeight="150" style="-fx-background-color: #B89880; -fx-background-radius: 12 12 0 0;"/>
+                        <VBox style="-fx-padding: 12; -fx-spacing: 4;">
+                            <Label text="Corte Arrachera"
+                                   style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+                            <Label text="300g de arrachera Prime con chiles..."
+                                   style="-fx-font-size: 11; -fx-text-fill: #888888; -fx-wrap-text: true;" maxWidth="196"/>
+                            <HBox alignment="CENTER_LEFT" style="-fx-padding: 8 0 0 0;">
+                                <Label text="$340.00"
+                                       style="-fx-font-size: 15; -fx-font-weight: BOLD; -fx-text-fill: #C8552A;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button text="+"
+                                        style="-fx-background-color: transparent; -fx-text-fill: #C8552A; -fx-font-size: 22; -fx-cursor: HAND; -fx-padding: 0 4; -fx-border-color: #C8552A; -fx-border-radius: 50; -fx-border-width: 1.5; -fx-background-radius: 50; -fx-min-width: 28; -fx-min-height: 28;"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+                </HBox>
+
+                <!-- Row 2 -->
+                <HBox spacing="16">
+                    <!-- Card 5 -->
+                    <VBox prefWidth="220" prefHeight="300"
+                          style="-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-border-color: #E8DDD5; -fx-border-radius: 12; -fx-border-width: 1; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+                        <StackPane prefHeight="150" style="-fx-background-color: #9A8060; -fx-background-radius: 12 12 0 0;"/>
+                        <VBox style="-fx-padding: 12; -fx-spacing: 4;">
+                            <Label text="Guacamole Esp..."
+                                   style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+                            <Label text="Aguacate Hass con granada y totopos..."
+                                   style="-fx-font-size: 11; -fx-text-fill: #888888; -fx-wrap-text: true;" maxWidth="196"/>
+                            <HBox alignment="CENTER_LEFT" style="-fx-padding: 8 0 0 0;">
+                                <Label text="$120.00"
+                                       style="-fx-font-size: 15; -fx-font-weight: BOLD; -fx-text-fill: #C8552A;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button text="+"
+                                        style="-fx-background-color: transparent; -fx-text-fill: #C8552A; -fx-font-size: 22; -fx-cursor: HAND; -fx-padding: 0 4; -fx-border-color: #C8552A; -fx-border-radius: 50; -fx-border-width: 1.5; -fx-background-radius: 50; -fx-min-width: 28; -fx-min-height: 28;"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+
+                    <!-- Card 6 -->
+                    <VBox prefWidth="220" prefHeight="300"
+                          style="-fx-background-color: #FFFFFF; -fx-background-radius: 12; -fx-border-color: #E8DDD5; -fx-border-radius: 12; -fx-border-width: 1; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+                        <StackPane prefHeight="150" style="-fx-background-color: #6A4838; -fx-background-radius: 12 12 0 0;"/>
+                        <VBox style="-fx-padding: 12; -fx-spacing: 4;">
+                            <Label text="Agua de Jamaica"
+                                   style="-fx-font-size: 14; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+                            <Label text="Infusión natural de flor de jamaica..."
+                                   style="-fx-font-size: 11; -fx-text-fill: #888888; -fx-wrap-text: true;" maxWidth="196"/>
+                            <HBox alignment="CENTER_LEFT" style="-fx-padding: 8 0 0 0;">
+                                <Label text="$45.00"
+                                       style="-fx-font-size: 15; -fx-font-weight: BOLD; -fx-text-fill: #C8552A;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button text="+"
+                                        style="-fx-background-color: transparent; -fx-text-fill: #C8552A; -fx-font-size: 22; -fx-cursor: HAND; -fx-padding: 0 4; -fx-border-color: #C8552A; -fx-border-radius: 50; -fx-border-width: 1.5; -fx-background-radius: 50; -fx-min-width: 28; -fx-min-height: 28;"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+                </HBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+    <!-- ===== RIGHT: Order Panel ===== -->
+    <right>
+        <VBox prefWidth="320" prefHeight="960"
+              style="-fx-background-color: #FDF5EF; -fx-border-color: #E8DDD5; -fx-border-width: 0 0 0 1; -fx-padding: 24 20 0 20; -fx-spacing: 0;">
+
+            <!-- Header -->
+            <HBox alignment="CENTER_LEFT" style="-fx-spacing: 8;">
+                <Label text="Orden #425"
+                       style="-fx-font-size: 18; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="Mesa 12"
+                       style="-fx-font-size: 13; -fx-text-fill: #888888;"/>
+            </HBox>
+            <Label text="Mesero: Ana Martínez"
+                   style="-fx-font-size: 12; -fx-text-fill: #888888; -fx-padding: 2 0 16 0;"/>
+
+            <Separator style="-fx-padding: 0 0 16 0;"/>
+
+            <!-- Order items -->
+            <VBox style="-fx-spacing: 12; -fx-padding: 16 0;">
+
+                <!-- Item 1 -->
+                <VBox style="-fx-spacing: 4;">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="Tacos al Pastor"
+                               style="-fx-font-size: 13; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;" HBox.hgrow="ALWAYS"/>
+                        <Label text="$145.00"
+                               style="-fx-font-size: 13; -fx-text-fill: #1A1A1A;"/>
+                    </HBox>
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <Button text="−" style="-fx-background-color: #F0E4DC; -fx-text-fill: #1A1A1A; -fx-background-radius: 4; -fx-min-width: 26; -fx-min-height: 26; -fx-cursor: HAND; -fx-font-size: 14;"/>
+                        <Label text="1" style="-fx-font-size: 13; -fx-text-fill: #1A1A1A;"/>
+                        <Button text="+" style="-fx-background-color: #F0E4DC; -fx-text-fill: #1A1A1A; -fx-background-radius: 4; -fx-min-width: 26; -fx-min-height: 26; -fx-cursor: HAND; -fx-font-size: 14;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="🗑" style="-fx-background-color: transparent; -fx-text-fill: #C8552A; -fx-cursor: HAND; -fx-font-size: 14;"/>
+                    </HBox>
+                </VBox>
+
+                <!-- Item 2 -->
+                <VBox style="-fx-spacing: 4;">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="Pozole Rojo"
+                               style="-fx-font-size: 13; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;" HBox.hgrow="ALWAYS"/>
+                        <Label text="$210.00"
+                               style="-fx-font-size: 13; -fx-text-fill: #1A1A1A;"/>
+                    </HBox>
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <Button text="−" style="-fx-background-color: #F0E4DC; -fx-text-fill: #1A1A1A; -fx-background-radius: 4; -fx-min-width: 26; -fx-min-height: 26; -fx-cursor: HAND; -fx-font-size: 14;"/>
+                        <Label text="1" style="-fx-font-size: 13; -fx-text-fill: #1A1A1A;"/>
+                        <Button text="+" style="-fx-background-color: #F0E4DC; -fx-text-fill: #1A1A1A; -fx-background-radius: 4; -fx-min-width: 26; -fx-min-height: 26; -fx-cursor: HAND; -fx-font-size: 14;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="🗑" style="-fx-background-color: transparent; -fx-text-fill: #C8552A; -fx-cursor: HAND; -fx-font-size: 14;"/>
+                    </HBox>
+                    <!-- Modifiers -->
+                    <HBox spacing="6" style="-fx-padding: 4 0 0 0;">
+                        <Button text="Sin cebolla"
+                                style="-fx-background-color: #F5EDE6; -fx-text-fill: #C8552A; -fx-font-size: 10; -fx-background-radius: 20; -fx-padding: 3 10; -fx-cursor: HAND;"/>
+                        <Button text="Extra limón"
+                                style="-fx-background-color: #F5EDE6; -fx-text-fill: #C8552A; -fx-font-size: 10; -fx-background-radius: 20; -fx-padding: 3 10; -fx-cursor: HAND;"/>
+                    </HBox>
+                </VBox>
+
+                <!-- Item 3 -->
+                <VBox style="-fx-spacing: 4;">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="Agua de Jamaica"
+                               style="-fx-font-size: 13; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;" HBox.hgrow="ALWAYS"/>
+                        <Label text="$90.00"
+                               style="-fx-font-size: 13; -fx-text-fill: #1A1A1A;"/>
+                    </HBox>
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <Button text="−" style="-fx-background-color: #F0E4DC; -fx-text-fill: #1A1A1A; -fx-background-radius: 4; -fx-min-width: 26; -fx-min-height: 26; -fx-cursor: HAND; -fx-font-size: 14;"/>
+                        <Label text="2" style="-fx-font-size: 13; -fx-text-fill: #1A1A1A;"/>
+                        <Button text="+" style="-fx-background-color: #F0E4DC; -fx-text-fill: #1A1A1A; -fx-background-radius: 4; -fx-min-width: 26; -fx-min-height: 26; -fx-cursor: HAND; -fx-font-size: 14;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="🗑" style="-fx-background-color: transparent; -fx-text-fill: #C8552A; -fx-cursor: HAND; -fx-font-size: 14;"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <!-- Totals + Pay button -->
+            <VBox style="-fx-border-color: #E8DDD5; -fx-border-width: 1 0 0 0; -fx-padding: 16 0 24 0; -fx-spacing: 8;">
+                <HBox>
+                    <Label text="Subtotal" style="-fx-font-size: 13; -fx-text-fill: #888888;" HBox.hgrow="ALWAYS"/>
+                    <Label text="$445.00" style="-fx-font-size: 13; -fx-text-fill: #1A1A1A;"/>
+                </HBox>
+                <HBox>
+                    <Label text="IVA (16%)" style="-fx-font-size: 13; -fx-text-fill: #888888;" HBox.hgrow="ALWAYS"/>
+                    <Label text="$71.20" style="-fx-font-size: 13; -fx-text-fill: #1A1A1A;"/>
+                </HBox>
+                <Separator/>
+                <HBox>
+                    <Label text="Total" style="-fx-font-size: 15; -fx-font-weight: BOLD; -fx-text-fill: #1A1A1A;" HBox.hgrow="ALWAYS"/>
+                    <Label text="$516.20" style="-fx-font-size: 15; -fx-font-weight: BOLD; -fx-text-fill: #C8552A;"/>
+                </HBox>
+                <Button text="💳  Cobrar Cuenta" maxWidth="Infinity" prefHeight="48"
+                        style="-fx-background-color: #C8552A; -fx-text-fill: #FFFFFF; -fx-font-size: 15; -fx-font-weight: BOLD; -fx-background-radius: 10; -fx-cursor: HAND; -fx-padding: 12 0;">
+                    <VBox.margin><Insets top="8"/></VBox.margin>
+                </Button>
+            </VBox>
+        </VBox>
+    </right>
+
+</BorderPane>
