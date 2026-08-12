@@ -66,87 +66,19 @@
             <!-- Encabezado de analítica -->
             <Label text="Análisis de Domicilios" styleClass="text-title-sm"/>
 
-            <!-- Fila de métricas -->
-            <HBox spacing="0">
-                <VBox HBox.hgrow="ALWAYS" spacing="4">
-                    <Label text="84%" styleClass="stat-value-lg"/>
-                    <Label text="Entregas a Tiempo" styleClass="text-muted"/>
-                </VBox>
-                <VBox alignment="TOP_RIGHT" spacing="4">
-                    <Label text="24" styleClass="stat-value-accent"/>
-                    <Label text="Repartidores Activos" styleClass="text-muted"/>
-                </VBox>
-            </HBox>
+            <!--
+              Nota: no hay entidad "repartidor" en el esquema todavía, así que
+              no existen métricas de entregas a tiempo ni asignación de
+              repartidores que mostrar aquí (ver CLAUDE.md). Esta vista solo
+              lista, de forma dinámica, las órdenes de domicilio activas.
+            -->
 
             <Separator/>
 
-            <!-- Nuevo pedido -->
-            <VBox spacing="12">
-                <HBox alignment="CENTER_LEFT">
-                    <Label text="Nuevo Pedido" styleClass="text-body-strong" HBox.hgrow="ALWAYS"/>
-                    <Label text="Sin Asignar" styleClass="text-muted-sm"/>
-                </HBox>
-
-                <!-- Tarjeta de destino -->
-                <VBox styleClass="dest-card">
-                    <Label text="Destino" styleClass="text-muted-sm"/>
-                    <Label text="Av. Tecnológico 1234" styleClass="text-body-strong"/>
-                    <Label text="Cliente: María Rodríguez (VIP)" styleClass="text-muted"/>
-                </VBox>
-
-                <!-- Distancia / Tiempo / Precio -->
-                <HBox spacing="8">
-                    <VBox styleClass="mini-stat-box" HBox.hgrow="ALWAYS">
-                        <Label text="📍" styleClass="text-body"/>
-                        <Label text="4.2km" styleClass="text-body-strong"/>
-                        <Label text="Distancia" styleClass="text-muted-sm"/>
-                    </VBox>
-                    <VBox styleClass="mini-stat-box" HBox.hgrow="ALWAYS">
-                        <Label text="⏱" styleClass="text-body"/>
-                        <Label text="11 min" styleClass="text-body-strong"/>
-                        <Label text="Tiempo" styleClass="text-muted-sm"/>
-                    </VBox>
-                    <VBox styleClass="mini-stat-box-accent" HBox.hgrow="ALWAYS">
-                        <Label text="💵" styleClass="text-body"/>
-                        <Label text="\$35" styleClass="text-price"/>
-                        <Label text="Sugerido" styleClass="text-price"/>
-                    </VBox>
-                </HBox>
-
-                <Button text="Asignar Repartidor" maxWidth="Infinity" styleClass="btn-primary"/>
-            </VBox>
-
-            <Separator/>
-
-            <!-- Pedidos activos -->
+            <!-- Pedidos activos: se generan en tiempo de ejecución (ver DeliveryController) -->
             <VBox spacing="12">
                 <Label text="Pedidos Activos" styleClass="text-body-strong"/>
-
-                <!-- Pedido 8892 -->
-                <VBox styleClass="order-card">
-                    <HBox alignment="CENTER_LEFT">
-                        <Label text="Pedido #8892" styleClass="text-body-strong" HBox.hgrow="ALWAYS"/>
-                        <Label text="● En Camino" styleClass="badge badge-success"/>
-                    </HBox>
-                    <Label text="Repartidor: Carlos M." styleClass="text-muted"/>
-                    <HBox spacing="6" alignment="CENTER_LEFT">
-                        <Label text="📍" styleClass="text-muted"/>
-                        <Label text="Blvd. Independencia 445" styleClass="text-muted"/>
-                    </HBox>
-                </VBox>
-
-                <!-- Pedido 8891 -->
-                <VBox styleClass="order-card">
-                    <HBox alignment="CENTER_LEFT">
-                        <Label text="Pedido #8891" styleClass="text-body-strong" HBox.hgrow="ALWAYS"/>
-                        <Label text="● Recolección" styleClass="badge badge-accent"/>
-                    </HBox>
-                    <Label text="Repartidora: Ana G." styleClass="text-muted"/>
-                    <HBox spacing="6" alignment="CENTER_LEFT">
-                        <Label text="📍" styleClass="text-muted"/>
-                        <Label text="Calle 12, Zona Centro" styleClass="text-muted"/>
-                    </HBox>
-                </VBox>
+                <VBox fx:id="contenedorPedidos" spacing="12"/>
             </VBox>
         </VBox>
     </right>

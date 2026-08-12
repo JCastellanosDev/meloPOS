@@ -20,9 +20,8 @@
         <VBox styleClass="topbar">
             <HBox prefHeight="64" alignment="CENTER_LEFT" spacing="12">
                 <Label text="Pantalla de Cocina - Terminal 1" styleClass="topbar-title"/>
-                <!-- Insignias -->
-                <Label fx:id="lblActivas" text="4 Activas" styleClass="badge badge-muted"/>
-                <Label text="2 Urgentes" styleClass="badge badge-urgent"/>
+                <!-- Insignia: se actualiza en tiempo de ejecución (ver KitchenDisplayController) -->
+                <Label fx:id="lblActivas" text="0 Activas" styleClass="badge badge-muted"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Label fx:id="lblClock" text="23:34:43" styleClass="text-muted"/>
                 <Button text="🔄" styleClass="icon-button"/>
@@ -44,104 +43,12 @@
     <center>
         <StackPane styleClass="kds-surface">
             <ScrollPane fitToHeight="true" styleClass="kds-scroll">
-                <HBox fx:id="contenedorTickets" styleClass="pad-16-20 gap-16" alignment="TOP_LEFT">
-
-                    <!-- Orden #151 - Normal -->
-                    <VBox styleClass="ticket">
-                        <HBox styleClass="ticket-header">
-                            <Label text="Orden #151" styleClass="ticket-title" HBox.hgrow="ALWAYS"/>
-                            <VBox alignment="CENTER_RIGHT">
-                                <Label text="12:05" styleClass="text-time-ok"/>
-                                <Label text="Transcurrido" styleClass="text-muted-sm"/>
-                            </VBox>
-                        </HBox>
-                        <Label text="Mesa 4 • Comedor" styleClass="ticket-meta"/>
-                        <Separator styleClass="ticket-separator"/>
-                        <VBox styleClass="ticket-items">
-                            <Label text="1x Hamburguesa Clásica" styleClass="ticket-item"/>
-                            <Label text="1x Papas Fritas" styleClass="ticket-item"/>
-                            <Label text="2x Coca-Cola Light" styleClass="ticket-item"/>
-                        </VBox>
-                        <Region VBox.vgrow="ALWAYS"/>
-                        <Button text="✓  Completar Pedido" maxWidth="Infinity" styleClass="ticket-bump-btn" onAction="#onCompletarPedido">
-                            <VBox.margin><Insets top="8"/></VBox.margin>
-                        </Button>
-                    </VBox>
-
-                    <!-- Orden #154 - Activa (borde de acento) -->
-                    <VBox styleClass="ticket-active">
-                        <HBox styleClass="ticket-header">
-                            <Label text="Orden #154" styleClass="ticket-title" HBox.hgrow="ALWAYS"/>
-                            <VBox alignment="CENTER_RIGHT">
-                                <Label text="08:42" styleClass="text-time-warn"/>
-                                <Label text="Transcurrido" styleClass="text-muted-sm"/>
-                            </VBox>
-                        </HBox>
-                        <Label text="Para Llevar • UberEats" styleClass="ticket-meta"/>
-                        <Separator styleClass="ticket-separator-active"/>
-                        <VBox styleClass="ticket-items">
-                            <!-- Artículo con modificación -->
-                            <VBox styleClass="ticket-mod-flag">
-                                <HBox spacing="8" alignment="CENTER_LEFT">
-                                    <Label text="1x Hamburguesa" styleClass="ticket-item-strong"/>
-                                    <Label text="MODIFICACIÓN" styleClass="mod-tag"/>
-                                </HBox>
-                                <Label text="+ Queso extra" styleClass="ticket-mod-add"/>
-                                <Label text="− Sin cebolla" styleClass="ticket-mod-remove"/>
-                            </VBox>
-                            <Label text="1x Papas Fritas (Grande)" styleClass="ticket-item"/>
-                        </VBox>
-                        <Region VBox.vgrow="ALWAYS"/>
-                        <Button text="✓  Completar Pedido" maxWidth="Infinity" styleClass="ticket-bump-btn-active" onAction="#onCompletarPedido">
-                            <VBox.margin><Insets top="8"/></VBox.margin>
-                        </Button>
-                    </VBox>
-
-                    <!-- Orden #148 - Urgente (borde rojo) -->
-                    <VBox styleClass="ticket-urgent">
-                        <HBox styleClass="ticket-header">
-                            <Label text="Orden #148" styleClass="ticket-title" HBox.hgrow="ALWAYS"/>
-                            <VBox alignment="CENTER_RIGHT">
-                                <Label text="24:15" styleClass="text-time-urgent"/>
-                                <Label text="Transcurrido" styleClass="text-muted-sm"/>
-                            </VBox>
-                        </HBox>
-                        <Label text="Mesa 12 • Comedor" styleClass="ticket-meta"/>
-                        <Separator styleClass="ticket-separator-urgent"/>
-                        <VBox styleClass="ticket-items">
-                            <VBox spacing="2">
-                                <Label text="1x Corte Ribeye" styleClass="ticket-item-strong"/>
-                                <Label text="Término Medio" styleClass="ticket-item-note"/>
-                            </VBox>
-                            <Label text="1x Ensalada César" styleClass="ticket-item"/>
-                        </VBox>
-                        <Region VBox.vgrow="ALWAYS"/>
-                        <Button text="✓  Completar Pedido" maxWidth="Infinity" styleClass="ticket-bump-btn-urgent" onAction="#onCompletarPedido">
-                            <VBox.margin><Insets top="8"/></VBox.margin>
-                        </Button>
-                    </VBox>
-
-                    <!-- Orden #156 - Normal -->
-                    <VBox styleClass="ticket">
-                        <HBox styleClass="ticket-header">
-                            <Label text="Orden #156" styleClass="ticket-title" HBox.hgrow="ALWAYS"/>
-                            <VBox alignment="CENTER_RIGHT">
-                                <Label text="02:10" styleClass="text-time-ok"/>
-                                <Label text="Transcurrido" styleClass="text-muted-sm"/>
-                            </VBox>
-                        </HBox>
-                        <Label text="Mesa 2 • Comedor" styleClass="ticket-meta"/>
-                        <Separator styleClass="ticket-separator"/>
-                        <VBox styleClass="ticket-items">
-                            <Label text="3x Limonada" styleClass="ticket-item"/>
-                        </VBox>
-                        <Region VBox.vgrow="ALWAYS"/>
-                        <Button text="✓  Completar Pedido" maxWidth="Infinity" styleClass="ticket-bump-btn" onAction="#onCompletarPedido">
-                            <VBox.margin><Insets top="8"/></VBox.margin>
-                        </Button>
-                    </VBox>
-
-                </HBox>
+                <!--
+                  Contenedor dinámico: el controlador (KitchenDisplayController) llena este
+                  HBox con los tickets de las órdenes en preparación leídas desde la base de
+                  datos (ver TicketFactory). No debe contener tickets escritos de forma estática aquí.
+                -->
+                <HBox fx:id="contenedorTickets" styleClass="pad-16-20 gap-16" alignment="TOP_LEFT"/>
             </ScrollPane>
         </StackPane>
     </center>

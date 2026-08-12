@@ -12,9 +12,9 @@ class TotalesTest {
     @Test
     void subtotalSumaPrecioPorCantidadDeCadaArticulo() {
         List<ItemOrden> articulos = List.of(
-                new ItemOrden("Tacos al Pastor", 145.00, 1),
-                new ItemOrden("Pozole Rojo", 210.00, 1),
-                new ItemOrden("Agua de Jamaica", 90.00, 2)
+                new ItemOrden(1, "Tacos al Pastor", 145.00, 1),
+                new ItemOrden(2, "Pozole Rojo", 210.00, 1),
+                new ItemOrden(3, "Agua de Jamaica", 90.00, 2)
         );
 
         assertEquals(535.00, Totales.subtotal(articulos), 0.001);
@@ -37,7 +37,7 @@ class TotalesTest {
 
     @Test
     void cambiarCantidadAfectaElSubtotalDelArticulo() {
-        ItemOrden item = new ItemOrden("Agua de Jamaica", 90.00, 2);
+        ItemOrden item = new ItemOrden(3, "Agua de Jamaica", 90.00, 2);
         item.cantidadProperty().set(3);
 
         assertEquals(270.00, item.getSubtotal(), 0.001);

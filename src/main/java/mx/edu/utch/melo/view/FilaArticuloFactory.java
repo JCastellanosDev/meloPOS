@@ -13,12 +13,7 @@ import mx.edu.utch.melo.util.Dinero;
 
 import java.util.function.IntConsumer;
 
-/**
- * Construye la fila visual de un {@link ItemOrden} para el panel de orden.
- * Responsabilidad única: traducir un artículo a nodos JavaFX. No conoce la
- * lista de artículos ni recalcula totales -- eso lo decide quien la use a
- * través de los callbacks.
- */
+
 public final class FilaArticuloFactory {
 
     private FilaArticuloFactory() {

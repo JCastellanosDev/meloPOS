@@ -48,29 +48,16 @@
             <VBox prefWidth="340" minHeight="700" styleClass="card-lg gap-0">
                 <!-- Encabezado -->
                 <VBox alignment="CENTER" styleClass="gap-4 pad-bottom-16">
-                    <Label text="L'Étoile Noir" styleClass="text-body-strong"/>
-                    <Label text="ORDEN #15925" styleClass="text-muted"/>
-                    <Label text="24 Oct 2023, 19:42" styleClass="text-muted"/>
-                    <Label text="Usuario: [Nombre de usuario]" styleClass="text-muted"/>
-                    <Label text="Cajero: Vakero" styleClass="text-muted"/>
+                    <Label text="melo POS" styleClass="text-body-strong"/>
+                    <Label fx:id="lblNumeroOrden" text="Orden #—" styleClass="text-muted"/>
+                    <Label fx:id="lblFecha" text="—" styleClass="text-muted"/>
+                    <Label fx:id="lblCajero" text="Cajero: —" styleClass="text-muted"/>
                 </VBox>
 
                 <Separator styleClass="pad-bottom-16"/>
 
-                <!-- Artículos -->
-                <VBox styleClass="gap-12 pad-y-16">
-                    <HBox>
-                        <VBox HBox.hgrow="ALWAYS">
-                            <Label text="1x  Hamburguesa con Tocino y Queso" styleClass="text-body"/>
-                            <Label text="Extra queso, término medio" styleClass="text-muted-sm"/>
-                        </VBox>
-                        <Label text="\$104.00" styleClass="text-body"/>
-                    </HBox>
-                    <HBox>
-                        <Label text="2x  Espresso Doble" styleClass="text-body" HBox.hgrow="ALWAYS"/>
-                        <Label text="\$72.00" styleClass="text-body"/>
-                    </HBox>
-                </VBox>
+                <!-- Artículos: se generan en tiempo de ejecución (ver PaymentPortalController) -->
+                <VBox fx:id="listaArticulos" styleClass="gap-12 pad-y-16"/>
 
                 <Region VBox.vgrow="ALWAYS"/>
 
@@ -78,15 +65,15 @@
                 <VBox styleClass="totals-box">
                     <HBox>
                         <Label text="Subtotal" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
-                        <Label text="\$176.00" styleClass="text-body"/>
+                        <Label fx:id="lblSubtotalCuenta" text="\$0.00" styleClass="text-body"/>
                     </HBox>
                     <HBox>
-                        <Label text="IVA (16%)" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
-                        <Label text="\$28.16" styleClass="text-body"/>
+                        <Label text="IVA" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="lblImpuestosCuenta" text="\$0.00" styleClass="text-body"/>
                     </HBox>
                     <HBox>
                         <Label text="Total" styleClass="text-price-lg" HBox.hgrow="ALWAYS"/>
-                        <Label fx:id="lblTotalCuenta" text="\$204.16" styleClass="text-price-lg"/>
+                        <Label fx:id="lblTotalCuenta" text="\$0.00" styleClass="text-price-lg"/>
                     </HBox>
                 </VBox>
             </VBox>
@@ -133,10 +120,12 @@
                         </HBox>
                     </VBox>
 
+                    <Label fx:id="lblErrorPago" styleClass="form-error" wrapText="true" visible="false" managed="false"/>
+
                     <!-- Botones de acción -->
                     <HBox spacing="12" styleClass="pad-top-8">
                         <Button text="🖨  No imprimir" prefWidth="140" prefHeight="56" styleClass="btn-outline-accent" HBox.hgrow="ALWAYS"/>
-                        <Button fx:id="btnConfirmarPago" text="✅  Confirmar Pago" prefWidth="140" prefHeight="56" styleClass="btn-accent" HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="btnConfirmarPago" text="✅  Confirmar Pago" prefWidth="140" prefHeight="56" styleClass="btn-accent" HBox.hgrow="ALWAYS" onAction="#onConfirmarPago"/>
                     </HBox>
                 </VBox>
             </VBox>

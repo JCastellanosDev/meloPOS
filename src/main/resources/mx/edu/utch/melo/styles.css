@@ -702,10 +702,15 @@
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 8, 0, 0, 2);
     -fx-pref-width: 220;
 }
+/* Autocontenida (no se combina con .menu-card) por la misma razón que .card-lg -- ver el aviso al inicio del archivo. */
 .menu-card-selected {
+    -fx-background-color: -bg-white;
+    -fx-background-radius: 12;
     -fx-border-color: -accent;
+    -fx-border-radius: 12;
     -fx-border-width: 2;
     -fx-effect: dropshadow(gaussian, rgba(200, 85, 42, 0.2), 10, 0, 0, 2);
+    -fx-pref-width: 220;
 }
 .menu-card-image {
     -fx-background-color: #E8D5C4;

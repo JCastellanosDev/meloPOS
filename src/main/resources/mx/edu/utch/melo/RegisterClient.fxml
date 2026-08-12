@@ -88,7 +88,7 @@
                 <!-- Botones de acción -->
                 <HBox spacing="12" styleClass="pad-top-16">
                     <Button text="Cancelar" prefWidth="140" styleClass="btn-outline" onAction="#onCancelar"/>
-                    <Button text="💾  Guardar Cliente" HBox.hgrow="ALWAYS" styleClass="btn-primary" onAction="#onGuardarCliente"/>
+                    <Button fx:id="btnGuardar" text="💾  Guardar Cliente" HBox.hgrow="ALWAYS" styleClass="btn-primary" onAction="#onGuardarCliente"/>
                 </HBox>
             </VBox>
 

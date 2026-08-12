@@ -84,7 +84,8 @@
                     <Label text="Total" styleClass="text-price-lg" HBox.hgrow="ALWAYS"/>
                     <Label fx:id="lblTotal" text="\$0.00" styleClass="text-price-lg"/>
                 </HBox>
-                <Button text="💳  Cobrar Cuenta" maxWidth="Infinity" styleClass="btn-accent-block">
+                <Label fx:id="lblErrorCobro" styleClass="form-error" wrapText="true" visible="false" managed="false"/>
+                <Button fx:id="btnCobrar" text="💳  Cobrar Cuenta" maxWidth="Infinity" styleClass="btn-accent-block" onAction="#onCobrarCuenta">
                     <VBox.margin><Insets top="8"/></VBox.margin>
                 </Button>
             </VBox>

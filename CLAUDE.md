@@ -8,7 +8,9 @@ Este documento se construyó por entrevista directa con el dueño del proyecto. 
 
 Sistema de punto de venta (POS) de escritorio para un restaurante, hecho en JavaFX. Opera en español (México), en pesos (MXN).
 
-**Tipo de negocio**: melo es un **POS genérico para negocios de comida** — pensado para operar tanto en un local individual como en cadenas de restaurantes. No es el sistema interno de un único restaurante con identidad propia; es una plataforma de punto de venta que cualquier negocio de comida (fonda, restaurante, cadena) podría usar. Ten esto en cuenta al nombrar cosas o al decidir si algo debe ser configurable por negocio (ej. no asumas un solo logo, una sola sucursal, o un menú fijo "quemado" en el código — el menú, precios y catálogo deben poder variar por negocio/sucursal cuando se diseñe la base de datos).
+**Tipo de negocio**: melo es un **POS genérico para negocios de comida** — pensado para operar tanto en un local individual como en cadenas de restaurantes. No es el sistema interno de un único restaurante con identidad propia; es una plataforma de punto de venta que cualquier negocio de comida (fonda, restaurante, cadena) podría usar.
+
+**Multi-sucursal: CONFIRMADO, ya está en el esquema (`db/schema.sql`).** No asumas un solo menú, un solo inventario o una sola caja global — cada sucursal tiene sus propios `productos` (precio, disponibilidad e inventario propios), `usuarios`, `mesas` y `turnos`. `categorias`, `modificadores` y `clientes` son compartidos por toda la cadena. `ordenes` NO guarda `sucursal_id` propio: se deriva de `usuario_id → usuarios.sucursal_id` (evita duplicidad, ver el comentario al inicio de `schema.sql`).
 
 ## Roles de usuario
 
@@ -35,7 +37,7 @@ El flujo **es distinto por canal** y el orden de "pagar" respecto a "preparar" c
 
 Nota la diferencia clave: en comedor y para llevar se **cobra antes de preparar**; en pickup/domicilio se **cobra al momento de recoger o entregar**. Cualquier máquina de estados de pedido debe ser consciente del canal — no uses un único flujo universal.
 
-Hoy en el código no existe una máquina de estados para pedidos — `KitchenDisplay` solo permite "Completar Pedido" (quita el ticket de la vista), sin más estados intermedios, y no distingue canal.
+Hoy en el código no existe una máquina de estados completa por canal — `KitchenDisplay` muestra las órdenes reales en `EN_PREPARACION` (ver `OrdenDAO.obtenerPorEstado`) y "Completar Pedido" las avanza directo a `ENTREGADA`, sin estados intermedios (p.ej. `LISTA`) ni distinción de canal todavía.
 
 ## Pagos
 
@@ -59,7 +61,11 @@ El botón "Cerrar Turno" ya existe visualmente en `PaymentPortal.fxml` (`sidebar
 
 ## Domicilios
 
-El costo de envío es **variable por distancia/zona** — consistente con lo que ya insinúa `DeliveryView.fxml` (zonas con demanda, tiempos estimados, todo con datos de ejemplo estáticos hoy). Falta: la regla real de cálculo (tarifa por km, por zona fija, mínimo de envío, etc.) — pendiente de definir con el dueño cuando se implemente de verdad.
+**CONFIRMADO: el costo de envío se calcula por distancia real, no por zona fija.** Fórmula ya en el esquema: `costo_envio = sucursales.tarifa_base_envio + sucursales.tarifa_por_km * distancia_km`, configurable por sucursal. Requiere coordenadas (`latitud`/`longitud`) tanto en `sucursales` (origen) como en `clientes` (destino).
+
+**Geocodificación: implementada con Mapbox** (`mx.edu.utch.melo.geo.MapboxGeocodificador`, Geocoding API v5). `RegisterClientController` geocodifica la dirección capturada al guardar un cliente y llena `clientes.latitud`/`clientes.longitud` — de forma "best effort": si falla (sin token configurado, sin internet, dirección no encontrada), el cliente se guarda igual sin coordenadas, nunca bloquea el registro. **Requiere `mapbox.token=<tu token>` en el `.env` local** (no committeado); sin esa línea, `MapboxGeocodificador` lanza `IllegalStateException` al construirse y el registro de clientes queda sin geocodificar (capturado y absorbido, no rompe la UI). `mx.edu.utch.melo.geo.CalculadorDistancia` (fórmula de Haversine) ya existe para calcular distancia entre dos coordenadas, pero **todavía no hay ninguna pantalla que cree órdenes de tipo DOMICILIO** — `ordenes.distancia_km` y `costo_envio` siguen sin llenarse en la práctica porque ese flujo de creación no está implementado (ver más abajo).
+
+`DeliveryView.fxml`: el panel derecho ("Pedidos Activos") **ya muestra órdenes reales** de `TipoOrden.DOMICILIO` activas vía `DeliveryController` (solo lectura — no crea ni asigna repartidores, no existe esa entidad en el esquema). El mapa central sigue siendo una maqueta visual estática (superficie sin mapa real, pin de "Zona Norte" de ejemplo, banner de sugerencia de IA) — eso es trabajo aparte, no de esta conexión.
 
 ## Promociones y descuentos
 
@@ -99,22 +105,23 @@ No se pidió reporte de desempeño por mesero/cajero — no es prioridad. El nav
 - Reportes de desempeño por empleado.
 - Rol de "Repartidor" con acceso propio a la app.
 
-## Base de datos: NO TOCAR sin permiso explícito
 
-El dueño está diseñando el modelo relacional y evaluando SGBD por su cuenta, **fuera de estas sesiones**. No propongas ni crees esquemas, tablas, entidades JPA/Hibernate, DAOs/Repositories, ni elijas MySQL/PostgreSQL/SQLite/etc. a menos que te lo pida explícitamente en esa conversación.
 
-Lo que sí es útil dejar aquí son los **requisitos de datos que ya salieron de esta entrevista**, para que el dueño los tenga a la mano cuando diseñe el modelo:
+**El esquema relacional ya existe y está aplicado**: `src/main/resources/db/schema.sql`, con todas las llaves foráneas conectadas (sucursales, categorias, clientes, modificadores, usuarios, mesas, turnos, productos, producto_modificador, ordenes, detalle_orden, detalle_orden_modificador, pagos). Ya cubre: IVA por producto, modificadores con precio propio, inventario con cantidades y stock mínimo, historial/notas de cliente, turno de caja, envío por distancia, división de pago entre métodos, y multi-sucursal. El script hace `DROP TABLE` antes de crear -- pensado para seguir iterando el diseño, no para correr contra datos reales que se quieran conservar.
 
-- Tasa de IVA **por producto**, no global.
-- Modificadores con **precio propio** (no solo texto).
-- Inventario con **cantidades reales** y umbral de stock bajo.
-- Historial de pedidos por cliente.
-- Notas por cliente (texto libre).
-- Turno de caja: monto de apertura, ventas del turno, monto contado al cierre, diferencia.
-- Domicilio: tarifa de envío variable por zona/distancia.
-- División de una cuenta entre varios métodos de pago (probablemente una tabla de "pagos" 1-a-muchos por orden, no un solo método por orden).
-- Al ser un POS pensado para cadenas, el modelo probablemente necesita un concepto de **negocio/sucursal** desde la base (menú, precios, inventario y turnos aislados por sucursal) — no un menú único global como hoy en el código.
-- El estado de una orden depende del **canal** (comedor/para llevar/domicilio-pickup): el momento en que se cobra cambia según el canal, así que "pagado" no siempre es el mismo paso en la secuencia.
+**La capa Java (`model`/`dao`/`dao.impl`) ya existe completa y está verificada contra la base real** (inserción + lectura de punta a punta en las 13 tablas, incluyendo las dos tablas de relación). Un modelo/DAO/DAOImpl por cada tabla: `Sucursal`, `Categoria`, `Cliente`, `Modificador`, `Usuario`, `Mesa`, `Turno`, `Producto`, `Orden`, `DetalleOrden`, `Pago`, más `ModificadorAplicado` (representa una fila de `detalle_orden_modificador`, con el precio que tenía al momento de la venta). Las relaciones N:M (`producto_modificador`, `detalle_orden_modificador`) no tienen clase de entidad propia -- se manejan como métodos en `ProductoDAO`/`DetalleOrdenDAO` (`obtenerModificadores`, `asignarModificador`, `agregarModificador`), porque son relaciones puras sin ciclo de vida independiente.
+
+**Ya conectado a los controladores de JavaFX** (vía `AppContext`, inyectado por `ControllerFactory`; consultas siempre en un hilo aparte con `mx.edu.utch.melo.async.Async`, nunca bloqueando el hilo de FX):
+
+- `RegisterClientController` → `ClienteDAO` + `Geocodificador` (crea cliente, geocodifica dirección best-effort).
+- `MenuPOSController` → `ProductoDAO` (carga el menú real por sucursal), `OrdenDAO`/`DetalleOrdenDAO` (cobrar cuenta crea una orden COMEDOR real con su detalle).
+- `PaymentPortalController` → `OrdenDAO`/`DetalleOrdenDAO`/`ProductoDAO` (recibo real de la orden en curso vía `SesionActual`), `PagoDAO` (registra el pago y avanza el estado a `EN_PREPARACION`).
+- `KitchenDisplayController` → `OrdenDAO`/`DetalleOrdenDAO`/`ProductoDAO` (tickets reales de órdenes en `EN_PREPARACION`; "Completar Pedido" avanza la orden a `ENTREGADA`).
+- `DeliveryController` → `OrdenDAO`/`ClienteDAO`, **solo lectura** (lista órdenes DOMICILIO activas con cliente/dirección real).
+
+**Todavía NO existe**: login por PIN (`SesionActual` hoy se inicia sin validar contra `usuarios`, cualquiera puede operar como el usuario semilla), apertura/cierre de turno con lógica de negocio (el botón "Cerrar Turno" sigue sin acción), y ninguna pantalla que **cree** una orden DOMICILIO o PARA_RECOGER (solo existe creación de orden COMEDOR desde MenuPOS) — por lo tanto el cálculo de `distancia_km`/`costo_envio` con `CalculadorDistancia` todavía no se invoca desde ningún flujo real, aunque la pieza ya existe.
+
+El estado de una orden depende del **canal** (comedor/para llevar/domicilio-pickup): el momento en que se cobra cambia según el canal, así que "pagado" no siempre es el mismo paso en la secuencia.
 
 ## Convenciones técnicas ya establecidas
 
@@ -122,7 +129,8 @@ Lo que sí es útil dejar aquí son los **requisitos de datos que ya salieron de
 
 - Todo el texto de UI en español; formato de moneda vía `util.Dinero` (`$#,##0.00`, `Locale.US` para el separador de miles).
 - Paquetes por responsabilidad: `nav` (navegación/DI), `model` (datos en memoria), `util` (helpers puros), `validation`, `view` (factories de nodos JavaFX), `controller`.
-- Navegación entre pantallas vía `Navigator` (interfaz) + `SceneManager`, inyectado por constructor a través de `ControllerFactory` — no uses `SceneManager.getInstance()` ni estáticos, sigue el patrón de inyección existente.
+- Navegación entre pantallas vía `Navigator` (interfaz) + `SceneManager`, inyectado por constructor a través de `ControllerFactory` — no uses `SceneManager.getInstance()` ni estáticos, sigue el patrón de inyección existente. Los controladores que solo navegan reciben `Navigator`; los que tocan base de datos reciben `AppContext` completo (registro de servicios con todos los DAO, la sesión y el geocodificador — ver `mx.edu.utch.melo.app.AppContext`).
 - Estilos centralizados en `styles.css` con variables de color; **no combines dos `styleClass` que redeclaren la misma propiedad `-fx-*` en el mismo nodo** (ver el comentario al inicio de `styles.css` — hay un bug de JavaFX documentado ahí).
-- Todo el estado de negocio (órdenes, tickets, turno) vive en memoria (`ObservableList`, campos del controlador) — se pierde al cerrar la app. Así es a propósito hasta que exista base de datos.
-- Hay 33 tests (`src/test/java`) cubriendo lógica pura (`Totales`, `Dinero`, `ClienteValidator`, `EntradaMonetaria`) y carga de las 6 pantallas (`FxmlSmokeTest`). Si agregas lógica de negocio nueva, sepárala en una clase sin dependencias de JavaFX UI para poder probarla igual.
+- Las órdenes, su detalle y los pagos ya se persisten en MySQL (ver arriba); lo que sigue en memoria y se pierde al cerrar la app es el carrito de una mesa antes de cobrar (`ItemOrden` en `MenuPOSController`) y el estado del numpad de cobro (`EntradaMonetaria`).
+- Toda consulta o escritura a la base de datos desde un controlador debe ir en un `Supplier`/`Runnable` pasado a `mx.edu.utch.melo.async.Async.ejecutar(...)` (hilo aparte); nunca llames a un DAO directamente en el hilo de FX ni dentro de un callback de éxito/error de `Async` (eso reintroduce el bloqueo). Ver el patrón ya usado en `PaymentPortalController.construirDatosRecibo`.
+- Hay 33 tests (`src/test/java`) cubriendo lógica pura (`Totales`, `Dinero`, `ClienteValidator`, `EntradaMonetaria`) y carga de las 6 pantallas (`FxmlSmokeTest`, con un `AppContext` de prueba cuyos DAO son proxies que nunca tocan la base real). Si agregas lógica de negocio nueva, sepárala en una clase sin dependencias de JavaFX UI para poder probarla igual.

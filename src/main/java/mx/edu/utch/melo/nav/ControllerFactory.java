@@ -1,21 +1,24 @@
 package mx.edu.utch.melo.nav;
 
 import javafx.util.Callback;
+import mx.edu.utch.melo.app.AppContext;
 
 import java.lang.reflect.Constructor;
 
 /**
- * Fábrica de controladores para FXMLLoader: si el controlador declara un
- * constructor que recibe un {@link Navigator}, se lo inyecta; si no,
- * usa el constructor sin argumentos. Esto permite que los controladores
- * dependan de la abstracción Navigator en vez de buscarla ellos mismos.
+ * Fábrica de controladores para FXMLLoader: si el controlador declara
+ * un constructor que recibe {@link AppContext}, se lo inyecta; si
+ * declara uno que recibe solo {@link Navigator} (controladores que
+ * únicamente navegan, sin tocar la base de datos), le da eso; si no
+ * declara ninguno de los dos, usa el constructor sin argumentos. Así
+ * cada controlador pide justo lo que necesita, no más.
  */
 public class ControllerFactory implements Callback<Class<?>, Object> {
 
-    private final Navigator navigator;
+    private final AppContext contexto;
 
-    public ControllerFactory(Navigator navigator) {
-        this.navigator = navigator;
+    public ControllerFactory(AppContext contexto) {
+        this.contexto = contexto;
     }
 
     @Override
@@ -23,8 +26,11 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
         try {
             for (Constructor<?> constructor : tipoControlador.getConstructors()) {
                 Class<?>[] parametros = constructor.getParameterTypes();
+                if (parametros.length == 1 && parametros[0] == AppContext.class) {
+                    return constructor.newInstance(contexto);
+                }
                 if (parametros.length == 1 && parametros[0] == Navigator.class) {
-                    return constructor.newInstance(navigator);
+                    return constructor.newInstance(contexto.getNavigator());
                 }
             }
             return tipoControlador.getDeclaredConstructor().newInstance();

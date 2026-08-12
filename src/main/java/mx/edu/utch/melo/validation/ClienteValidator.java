@@ -3,13 +3,7 @@ package mx.edu.utch.melo.validation;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-/**
- * Reglas de validación para el registro de clientes. Separado del
- * controlador para poder probarlas de forma unitaria y para que agregar o
- * cambiar una regla no requiera tocar la pantalla (Abierto/Cerrado).
- * Validación de UI solamente: sin verificación de duplicados (requiere base
- * de datos).
- */
+
 public final class ClienteValidator {
 
     private static final Pattern PATRON_TELEFONO = Pattern.compile("^\\+?\\d{7,15}$");

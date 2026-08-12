@@ -5,23 +5,34 @@ import javafx.beans.property.SimpleIntegerProperty;
 
 import java.util.List;
 
-/** Artículo de una orden en memoria (sin persistencia). */
+/**
+ * Artículo del carrito en memoria de MenuPOS (sin persistencia hasta que
+ * se cobra la cuenta). productoId enlaza con el {@link Producto} real en
+ * base de datos -- lo necesita MenuPOSController para crear el
+ * {@link DetalleOrden} correspondiente al momento de cobrar.
+ */
 public class ItemOrden {
 
+    private final int productoId;
     private final String nombre;
     private final double precioUnitario;
     private final IntegerProperty cantidad;
     private final List<String> modificadores;
 
-    public ItemOrden(String nombre, double precioUnitario, int cantidadInicial, List<String> modificadores) {
+    public ItemOrden(int productoId, String nombre, double precioUnitario, int cantidadInicial, List<String> modificadores) {
+        this.productoId = productoId;
         this.nombre = nombre;
         this.precioUnitario = precioUnitario;
         this.cantidad = new SimpleIntegerProperty(cantidadInicial);
         this.modificadores = modificadores;
     }
 
-    public ItemOrden(String nombre, double precioUnitario, int cantidadInicial) {
-        this(nombre, precioUnitario, cantidadInicial, List.of());
+    public ItemOrden(int productoId, String nombre, double precioUnitario, int cantidadInicial) {
+        this(productoId, nombre, precioUnitario, cantidadInicial, List.of());
+    }
+
+    public int getProductoId() {
+        return productoId;
     }
 
     public String getNombre() {
