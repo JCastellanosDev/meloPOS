@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="mx.edu.utch.melo.controller.CajaController"
+            prefWidth="1280" prefHeight="960"
+            stylesheets="@styles.css">
+
+    <!-- ===== MENÚ LATERAL ===== -->
+    <left>
+        <fx:include fx:id="sidebar" source="Sidebar.fxml"/>
+    </left>
+
+    <!-- ===== BARRA SUPERIOR ===== -->
+    <top>
+        <HBox prefHeight="64" alignment="CENTER_LEFT" styleClass="topbar">
+            <Label text="Caja" styleClass="topbar-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <fx:include fx:id="topbar" source="Topbar.fxml"/>
+        </HBox>
+    </top>
+
+    <!-- ===== CENTRO ===== -->
+    <center>
+        <VBox alignment="TOP_CENTER" styleClass="pad-32">
+            <VBox prefWidth="520" styleClass="card-lg gap-0">
+
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <FontIcon iconLiteral="mdi2c-cash-register" iconSize="20" styleClass="text-icon-accent"/>
+                    <Label text="Corte de Caja" styleClass="text-subtitle"/>
+                </HBox>
+                <Label text="Abre tu turno con el fondo inicial y ciérralo al terminar para cuadrar la caja." styleClass="text-muted" wrapText="true">
+                    <VBox.margin><Insets top="4" bottom="20"/></VBox.margin>
+                </Label>
+
+                <!-- ===== PANEL 1: sin turno abierto ===== -->
+                <VBox fx:id="panelApertura" spacing="6">
+                    <Label text="MONTO INICIAL DE CAJA" styleClass="text-label-caps"/>
+                    <HBox alignment="CENTER_LEFT" styleClass="input-wrapper">
+                        <VBox.margin><Insets top="6" bottom="4"/></VBox.margin>
+                        <FontIcon iconLiteral="mdi2c-cash" iconSize="16" styleClass="input-icon"/>
+                        <TextField fx:id="txtMontoApertura" promptText="0.00" prefWidth="480" styleClass="input-plain"/>
+                    </HBox>
+                    <Label fx:id="lblErrorApertura" styleClass="form-error" wrapText="true" visible="false" managed="false">
+                        <VBox.margin><Insets top="8" bottom="4"/></VBox.margin>
+                    </Label>
+                    <Button fx:id="btnAbrirTurno" text="Abrir Turno" graphicTextGap="8" maxWidth="Infinity" styleClass="btn-primary" onAction="#onAbrirTurno">
+                        <graphic><FontIcon iconLiteral="mdi2c-cash-plus" iconSize="16" /></graphic>
+                        <VBox.margin><Insets top="16"/></VBox.margin>
+                    </Button>
+                </VBox>
+
+                <!-- ===== PANEL 2: turno abierto (resumen en vivo + cierre) ===== -->
+                <VBox fx:id="panelTurnoAbierto" spacing="0" visible="false" managed="false">
+
+                    <VBox styleClass="totals-box gap-12">
+                        <HBox>
+                            <Label text="Abierto desde" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="lblFechaApertura" text="—" styleClass="text-body"/>
+                        </HBox>
+                        <HBox>
+                            <Label text="Fondo inicial" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="lblMontoApertura" text="—" styleClass="text-body"/>
+                        </HBox>
+                        <Separator/>
+                        <HBox>
+                            <Label text="Ventas totales" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="lblVentasTotales" text="—" styleClass="text-body-strong"/>
+                        </HBox>
+                        <HBox>
+                            <Label text="Efectivo" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="lblTotalEfectivo" text="—" styleClass="text-body"/>
+                        </HBox>
+                        <HBox>
+                            <Label text="Tarjeta" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="lblTotalTarjeta" text="—" styleClass="text-body"/>
+                        </HBox>
+                        <HBox>
+                            <Label text="Transferencia" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="lblTotalTransferencia" text="—" styleClass="text-body"/>
+                        </HBox>
+                        <HBox>
+                            <Label text="Órdenes cobradas" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="lblNumeroOrdenes" text="—" styleClass="text-body"/>
+                        </HBox>
+                    </VBox>
+
+                    <Separator styleClass="pad-16"/>
+
+                    <Label text="CERRAR TURNO" styleClass="text-label-caps"/>
+                    <Label text="Cuenta el efectivo físico en caja y captúralo aquí para cuadrar el turno." styleClass="text-muted-lighter" wrapText="true">
+                        <VBox.margin><Insets top="4" bottom="8"/></VBox.margin>
+                    </Label>
+                    <HBox alignment="CENTER_LEFT" styleClass="input-wrapper">
+                        <FontIcon iconLiteral="mdi2c-cash-check" iconSize="16" styleClass="input-icon"/>
+                        <TextField fx:id="txtMontoContado" promptText="0.00" prefWidth="480" styleClass="input-plain"/>
+                    </HBox>
+                    <Label fx:id="lblErrorCierre" styleClass="form-error" wrapText="true" visible="false" managed="false">
+                        <VBox.margin><Insets top="8" bottom="4"/></VBox.margin>
+                    </Label>
+                    <Button fx:id="btnCerrarTurno" text="Cerrar Turno" graphicTextGap="8" maxWidth="Infinity" styleClass="btn-primary" onAction="#onCerrarTurno">
+                        <graphic><FontIcon iconLiteral="mdi2c-cash-remove" iconSize="16" /></graphic>
+                        <VBox.margin><Insets top="16"/></VBox.margin>
+                    </Button>
+                </VBox>
+
+                <!-- ===== PANEL 3: resultado del cierre ===== -->
+                <VBox fx:id="panelCierre" spacing="12" visible="false" managed="false">
+                    <Label text="Turno cerrado correctamente." styleClass="form-success" wrapText="true"/>
+                    <VBox styleClass="totals-box gap-12">
+                        <HBox>
+                            <Label text="Ventas totales" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="lblCierreVentas" text="—" styleClass="text-body"/>
+                        </HBox>
+                        <HBox>
+                            <Label text="Esperado en caja" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="lblCierreEsperado" text="—" styleClass="text-body"/>
+                        </HBox>
+                        <HBox>
+                            <Label text="Contado" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="lblCierreContado" text="—" styleClass="text-body"/>
+                        </HBox>
+                        <Separator/>
+                        <HBox>
+                            <Label text="Diferencia" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="lblCierreDiferencia" text="—" styleClass="text-price-lg"/>
+                        </HBox>
+                    </VBox>
+                    <Button text="Abrir Nuevo Turno" graphicTextGap="8" maxWidth="Infinity" styleClass="btn-primary" onAction="#onNuevoTurno">
+                        <graphic><FontIcon iconLiteral="mdi2c-cash-plus" iconSize="16" /></graphic>
+                        <VBox.margin><Insets top="8"/></VBox.margin>
+                    </Button>
+                </VBox>
+
+            </VBox>
+        </VBox>
+    </center>
+
+</BorderPane>

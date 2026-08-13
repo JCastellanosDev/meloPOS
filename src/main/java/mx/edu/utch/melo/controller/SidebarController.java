@@ -12,9 +12,6 @@ import java.util.Map;
 public class SidebarController {
 
     @FXML
-    private Button btnOrdenes;
-
-    @FXML
     private Button btnMesas;
 
     @FXML
@@ -27,7 +24,7 @@ public class SidebarController {
     private Button btnDomicilio;
 
     @FXML
-    private Button btnClientes;
+    private Button btnPedidos;
 
     @FXML
     private Button btnPersonal;
@@ -37,6 +34,9 @@ public class SidebarController {
 
     @FXML
     private Button btnReportes;
+
+    @FXML
+    private Button btnCaja;
 
     @FXML
     private Button btnAjustes;
@@ -52,24 +52,41 @@ public class SidebarController {
 
     @FXML
     void initialize() {
-        botonesNav = List.of(btnOrdenes, btnMesas, btnMenu, btnCocina, btnDomicilio,
-                btnClientes, btnPersonal, btnInventario, btnReportes, btnAjustes);
+        botonesNav = List.of(btnMesas, btnMenu, btnCocina, btnDomicilio,
+                btnPedidos, btnPersonal, btnInventario, btnReportes, btnCaja, btnAjustes);
 
         mapaBotones = Map.of(
-                Pantalla.ORDENES, btnOrdenes,
                 Pantalla.MENU, btnMenu,
-                Pantalla.COCINA, btnCocina,
                 Pantalla.DOMICILIO, btnDomicilio,
-                Pantalla.CLIENTES, btnClientes
+                Pantalla.PEDIDOS, btnPedidos,
+                Pantalla.PERSONAL, btnPersonal,
+                Pantalla.INVENTARIO, btnInventario,
+                Pantalla.REPORTES, btnReportes,
+                Pantalla.CAJA, btnCaja,
+                Pantalla.AJUSTES, btnAjustes
         );
 
-        btnOrdenes.setOnAction(e -> navigator.navigateTo(Pantalla.ORDENES));
         btnMenu.setOnAction(e -> navigator.navigateTo(Pantalla.MENU));
-        btnCocina.setOnAction(e -> navigator.navigateTo(Pantalla.COCINA));
+        // Cocina no es una pestaña de la app: abre en su propia ventana (ver Navigator.abrirVentana),
+        // pensada para correr como un monitor/terminal aparte -- por eso no entra en mapaBotones.
+        // Órdenes tampoco es una pestaña: es la ventana emergente de cobro que abre MenuPOSController
+        // al presionar "Cobrar Cuenta" (ver Pantalla.ORDENES ahí) -- por eso no tiene botón propio aquí.
+        btnCocina.setOnAction(e -> navigator.abrirVentana(Pantalla.COCINA, "melo - Pantalla de Cocina"));
         btnDomicilio.setOnAction(e -> navigator.navigateTo(Pantalla.DOMICILIO));
-        btnClientes.setOnAction(e -> navigator.navigateTo(Pantalla.CLIENTES));
+        btnPedidos.setOnAction(e -> navigator.navigateTo(Pantalla.PEDIDOS));
+        btnPersonal.setOnAction(e -> navigator.navigateTo(Pantalla.PERSONAL));
+        btnInventario.setOnAction(e -> navigator.navigateTo(Pantalla.INVENTARIO));
+        btnReportes.setOnAction(e -> navigator.navigateTo(Pantalla.REPORTES));
+        btnCaja.setOnAction(e -> navigator.navigateTo(Pantalla.CAJA));
+        btnAjustes.setOnAction(e -> navigator.navigateTo(Pantalla.AJUSTES));
 
-        deshabilitarProximamente(btnMesas, btnPersonal, btnInventario, btnReportes, btnAjustes);
+        // Mesas sigue deshabilitado a propósito (ver CLAUDE.md: "no es prioridad ahora").
+        deshabilitarProximamente(btnMesas);
+    }
+
+    @FXML
+    private void onLogoClick() {
+        navigator.navigateTo(Pantalla.DASHBOARD);
     }
 
     /** Ítems de navegación que aún no tienen pantalla propia: se muestran pero no se pueden activar. */

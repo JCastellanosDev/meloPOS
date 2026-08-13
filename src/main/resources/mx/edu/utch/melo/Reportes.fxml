@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.BarChart?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="mx.edu.utch.melo.controller.ReportesController"
+            prefWidth="1280" prefHeight="960"
+            stylesheets="@styles.css">
+
+    <!-- ===== MENÚ LATERAL ===== -->
+    <left>
+        <fx:include fx:id="sidebar" source="Sidebar.fxml"/>
+    </left>
+
+    <!-- ===== BARRA SUPERIOR ===== -->
+    <top>
+        <HBox prefHeight="64" alignment="CENTER_LEFT" styleClass="topbar">
+            <Label text="Reportes" styleClass="topbar-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <fx:include fx:id="topbar" source="Topbar.fxml"/>
+        </HBox>
+    </top>
+
+    <!-- ===== CENTRO ===== -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="kds-scroll">
+            <VBox styleClass="pad-32 gap-24">
+
+                <!-- Selector de periodo -->
+                <HBox alignment="CENTER_LEFT" spacing="12" styleClass="card">
+                    <Label text="Desde" styleClass="text-label-caps"/>
+                    <DatePicker fx:id="fechaDesde"/>
+                    <Label text="Hasta" styleClass="text-label-caps"/>
+                    <DatePicker fx:id="fechaHasta"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="btnGenerar" text="Generar" graphicTextGap="8" styleClass="btn-accent" onAction="#onGenerar">
+                        <graphic><FontIcon iconLiteral="mdi2c-chart-line" iconSize="16" /></graphic>
+                    </Button>
+                </HBox>
+
+                <Label fx:id="lblError" styleClass="form-error" wrapText="true" visible="false" managed="false"/>
+
+                <!-- Ventas por periodo -->
+                <VBox styleClass="card-lg gap-12">
+                    <Label text="Ventas por Periodo" styleClass="text-subtitle"/>
+                    <BarChart fx:id="graficoVentas" legendVisible="false" prefHeight="320" animated="false">
+                        <xAxis>
+                            <CategoryAxis label="Día" side="BOTTOM"/>
+                        </xAxis>
+                        <yAxis>
+                            <NumberAxis label="Ventas (MXN)" side="LEFT"/>
+                        </yAxis>
+                    </BarChart>
+                </VBox>
+
+                <!-- Platillos más vendidos -->
+                <VBox styleClass="card-lg gap-12">
+                    <Label text="Platillos Más Vendidos" styleClass="text-subtitle"/>
+                    <!-- Contenedor dinámico: se llena en tiempo de ejecución (ver ReportesController) -->
+                    <VBox fx:id="listaPlatillos" spacing="8"/>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

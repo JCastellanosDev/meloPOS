@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="mx.edu.utch.melo.controller.InventarioController"
+            prefWidth="1280" prefHeight="960"
+            stylesheets="@styles.css">
+
+    <!-- ===== MENÚ LATERAL ===== -->
+    <left>
+        <fx:include fx:id="sidebar" source="Sidebar.fxml"/>
+    </left>
+
+    <!-- ===== BARRA SUPERIOR ===== -->
+    <top>
+        <HBox prefHeight="64" alignment="CENTER_LEFT" styleClass="topbar">
+            <Label text="Inventario" styleClass="topbar-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblStockBajo" text="0 con stock bajo" styleClass="badge badge-urgent"/>
+            <fx:include fx:id="topbar" source="Topbar.fxml"/>
+        </HBox>
+    </top>
+
+    <!-- ===== CENTRO ===== -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="kds-scroll">
+            <VBox styleClass="pad-32 gap-16" alignment="TOP_CENTER">
+                <VBox prefWidth="760" styleClass="gap-12">
+                    <Label text="Existencias de esta sucursal" styleClass="text-subtitle"/>
+                    <!-- Contenedor dinámico: se llena en tiempo de ejecución (ver InventarioController) -->
+                    <VBox fx:id="listaProductos" spacing="10"/>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

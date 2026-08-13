@@ -2,41 +2,30 @@
 
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.geometry.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
+<!--
+  Pantalla de Cocina (KDS): ventana independiente, no una pestaña de la app
+  (se abre vía Navigator.abrirVentana desde el Sidebar, ver SidebarController).
+  Por eso no incluye Sidebar.fxml ni Topbar.fxml: es una terminal aparte,
+  pensada para un monitor dedicado en cocina.
+-->
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="mx.edu.utch.melo.controller.KitchenDisplayController"
             prefWidth="1280" prefHeight="800"
             stylesheets="@styles.css">
 
-    <!-- ===== MENÚ LATERAL ===== -->
-    <left>
-        <fx:include fx:id="sidebar" source="Sidebar.fxml"/>
-    </left>
-
-    <!-- ===== BARRA SUPERIOR ===== -->
+    <!-- ===== FRANJA DE ESTADO ===== -->
     <top>
-        <VBox styleClass="topbar">
-            <HBox prefHeight="64" alignment="CENTER_LEFT" spacing="12">
-                <Label text="Pantalla de Cocina - Terminal 1" styleClass="topbar-title"/>
-                <!-- Insignia: se actualiza en tiempo de ejecución (ver KitchenDisplayController) -->
-                <Label fx:id="lblActivas" text="0 Activas" styleClass="badge badge-muted"/>
-                <Region HBox.hgrow="ALWAYS"/>
-                <Label fx:id="lblClock" text="23:34:43" styleClass="text-muted"/>
-                <Button text="🔄" styleClass="icon-button"/>
-                <Button text="🔔" styleClass="icon-button"/>
-                <Button text="⚙️" styleClass="icon-button"/>
-            </HBox>
-
-            <!-- Pestañas de estación -->
-            <HBox styleClass="pad-16 gap-8" alignment="CENTER_LEFT">
-                <Button text="Todas las Estaciones" styleClass="station-tab-active"/>
-                <Button text="Parrilla" styleClass="station-tab"/>
-                <Button text="Preparación" styleClass="station-tab"/>
-                <Button text="Freidora" styleClass="station-tab"/>
-            </HBox>
-        </VBox>
+        <HBox prefHeight="56" alignment="CENTER_LEFT" spacing="12" styleClass="kds-status-bar">
+            <FontIcon iconLiteral="mdi2c-chef-hat" iconSize="22" styleClass="kds-status-icon"/>
+            <Label text="Pantalla de Cocina" styleClass="kds-status-title"/>
+            <!-- Insignia: se actualiza en tiempo de ejecución (ver KitchenDisplayController) -->
+            <Label fx:id="lblActivas" text="0 Activas" styleClass="badge badge-muted"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblClock" text="--:--:--" styleClass="kds-status-clock"/>
+        </HBox>
     </top>
 
     <!-- ===== CENTRO: Tarjetas de órdenes (superficie oscura KDS) ===== -->

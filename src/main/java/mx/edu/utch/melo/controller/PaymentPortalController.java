@@ -4,15 +4,21 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.dao.DetalleOrdenDAO;
 import mx.edu.utch.melo.dao.OrdenDAO;
 import mx.edu.utch.melo.dao.PagoDAO;
 import mx.edu.utch.melo.dao.ProductoDAO;
+import mx.edu.utch.melo.dao.SucursalDAO;
+import mx.edu.utch.melo.dao.TurnoDAO;
 import mx.edu.utch.melo.dao.UsuarioDAO;
 import mx.edu.utch.melo.model.DetalleOrden;
 import mx.edu.utch.melo.model.EntradaMonetaria;
@@ -21,9 +27,8 @@ import mx.edu.utch.melo.model.MetodoPago;
 import mx.edu.utch.melo.model.Orden;
 import mx.edu.utch.melo.model.Pago;
 import mx.edu.utch.melo.model.Producto;
+import mx.edu.utch.melo.model.Sucursal;
 import mx.edu.utch.melo.model.Usuario;
-import mx.edu.utch.melo.nav.Navigator;
-import mx.edu.utch.melo.nav.Pantalla;
 import mx.edu.utch.melo.sesion.SesionActual;
 import mx.edu.utch.melo.util.Dinero;
 
@@ -37,16 +42,26 @@ import java.util.Map;
 
 public class PaymentPortalController {
 
+    private static final DateTimeFormatter FORMATO_FECHA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy · HH:mm");
+
+    @FXML
+    private BorderPane raiz;
     @FXML
     private Label lblNumeroOrden;
     @FXML
-    private Label lblFecha;
+    private Label lblSucursal;
+    @FXML
+    private Label lblTelefonoSucursal;
+    @FXML
+    private Label lblFechaHora;
     @FXML
     private Label lblCajero;
     @FXML
     private VBox listaArticulos;
     @FXML
     private Label lblSubtotalCuenta;
+    @FXML
+    private HBox filaImpuestos;
     @FXML
     private Label lblImpuestosCuenta;
     @FXML
@@ -74,15 +89,13 @@ public class PaymentPortalController {
     @FXML
     private Label lblTransferencia;
 
-    @FXML
-    private SidebarController sidebarController;
-
-    private final Navigator navigator;
     private final OrdenDAO ordenDAO;
     private final DetalleOrdenDAO detalleOrdenDAO;
     private final ProductoDAO productoDAO;
     private final PagoDAO pagoDAO;
     private final UsuarioDAO usuarioDAO;
+    private final TurnoDAO turnoDAO;
+    private final SucursalDAO sucursalDAO;
     private final SesionActual sesion;
 
     private final EntradaMonetaria entradaRecibido = new EntradaMonetaria();
@@ -90,19 +103,20 @@ public class PaymentPortalController {
     private MetodoPago metodoSeleccionado = MetodoPago.EFECTIVO;
 
     public PaymentPortalController(AppContext contexto) {
-        this.navigator = contexto.getNavigator();
         this.ordenDAO = contexto.getOrdenDAO();
         this.detalleOrdenDAO = contexto.getDetalleOrdenDAO();
         this.productoDAO = contexto.getProductoDAO();
         this.pagoDAO = contexto.getPagoDAO();
         this.usuarioDAO = contexto.getUsuarioDAO();
+        this.turnoDAO = contexto.getTurnoDAO();
+        this.sucursalDAO = contexto.getSucursalDAO();
         this.sesion = contexto.getSesion();
     }
 
     @FXML
     void initialize() {
-        sidebarController.activar(Pantalla.ORDENES);
         btnConfirmarPago.setDisable(true);
+        habilitarCapturaPorTeclado();
 
         Integer ordenId = sesion.getOrdenEnProceso().orElse(null);
         if (ordenId == null) {
@@ -112,9 +126,44 @@ public class PaymentPortalController {
         cargarOrden(ordenId);
     }
 
+    /** Además de los botones en pantalla, el cajero puede teclear el monto recibido con el teclado físico. */
+    private void habilitarCapturaPorTeclado() {
+        raiz.sceneProperty().addListener((obs, escenaAnterior, escenaNueva) -> {
+            if (escenaNueva == null) {
+                return;
+            }
+            escenaNueva.addEventFilter(KeyEvent.KEY_TYPED, this::onTeclaFisicaCaracter);
+            escenaNueva.addEventFilter(KeyEvent.KEY_PRESSED, this::onTeclaFisicaControl);
+        });
+    }
+
+    private void onTeclaFisicaCaracter(KeyEvent evento) {
+        String caracter = evento.getCharacter();
+        if (caracter.length() != 1) {
+            return;
+        }
+        char c = caracter.charAt(0);
+        if (Character.isDigit(c)) {
+            entradaRecibido.procesarTecla(String.valueOf(c));
+            actualizarRecibido();
+        } else if (c == '.') {
+            entradaRecibido.procesarTecla(".");
+            actualizarRecibido();
+        }
+    }
+
+    private void onTeclaFisicaControl(KeyEvent evento) {
+        if (evento.getCode() == KeyCode.BACK_SPACE) {
+            entradaRecibido.procesarTecla("⌫");
+            actualizarRecibido();
+        } else if (evento.getCode() == KeyCode.ENTER && !btnConfirmarPago.isDisable()) {
+            onConfirmarPago();
+        }
+    }
+
     private void mostrarSinOrden() {
         lblNumeroOrden.setText("Sin una orden activa");
-        lblFecha.setText("Ve a Menú para tomar un pedido primero.");
+        lblFechaHora.setText("Ve a Menú para tomar un pedido primero.");
     }
 
     private void cargarOrden(int ordenId) {
@@ -122,7 +171,7 @@ public class PaymentPortalController {
                 () -> construirDatosRecibo(ordenId),
                 datos -> {
                     this.ordenActiva = datos.orden();
-                    mostrarEncabezado(datos.orden(), datos.cajero());
+                    mostrarEncabezado(datos.orden(), datos.cajero(), datos.sucursal());
                     listaArticulos.getChildren().setAll(datos.lineas().stream().map(this::construirFilaRecibo).toList());
                     actualizarRecibido();
                 },
@@ -134,35 +183,56 @@ public class PaymentPortalController {
     private DatosRecibo construirDatosRecibo(int ordenId) {
         Orden orden = ordenDAO.obtenerPorId(ordenId).orElseThrow();
         Usuario cajero = usuarioDAO.obtenerPorId(orden.getUsuarioId()).orElse(null);
+        Sucursal sucursal = sucursalDAO.obtenerPorId(sesion.getSucursalActivaId()).orElse(null);
 
         List<LineaRecibo> lineas = new ArrayList<>();
         for (DetalleOrden detalle : detalleOrdenDAO.obtenerPorOrden(ordenId)) {
             Producto producto = productoDAO.obtenerPorId(detalle.getProductoId()).orElse(null);
             String nombre = producto == null ? "Producto #" + detalle.getProductoId() : producto.getNombre();
-            lineas.add(new LineaRecibo(detalle.getCantidad() + "x  " + nombre, detalle.getSubtotal()));
+            lineas.add(new LineaRecibo(nombre, detalle.getCantidad(), detalle.getSubtotal(), detalle.getNota()));
         }
-        return new DatosRecibo(orden, cajero, lineas);
+        return new DatosRecibo(orden, cajero, sucursal, lineas);
     }
 
-    private void mostrarEncabezado(Orden orden, Usuario cajero) {
+    /** Mismo encabezado que el ticket de Menú (ver MenuPOSController), para que el recibo se vea igual. */
+    private void mostrarEncabezado(Orden orden, Usuario cajero, Sucursal sucursal) {
         lblNumeroOrden.setText("Orden #" + orden.getId());
-        lblFecha.setText(orden.getFechaCreacion().format(
-                DateTimeFormatter.ofPattern("d MMM yyyy, HH:mm", new Locale("es", "MX"))));
+        lblSucursal.setText(sucursal == null ? "—" : sucursal.getNombre());
+        lblTelefonoSucursal.setText(sucursal == null || sucursal.getTelefono() == null || sucursal.getTelefono().isBlank()
+                ? "—" : sucursal.getTelefono());
+        lblFechaHora.setText(orden.getFechaCreacion().format(FORMATO_FECHA_HORA));
         lblCajero.setText("Cajero: " + (cajero == null ? "—" : cajero.getNombre()));
         lblSubtotalCuenta.setText(Dinero.formatear(orden.getSubtotal()));
         lblImpuestosCuenta.setText(Dinero.formatear(orden.getImpuestos()));
         lblTotalCuenta.setText(Dinero.formatear(orden.getTotal()));
+        boolean cobraIva = orden.getImpuestos().signum() > 0;
+        filaImpuestos.setVisible(cobraIva);
+        filaImpuestos.setManaged(cobraIva);
     }
 
-    private HBox construirFilaRecibo(LineaRecibo linea) {
-        Label lblNombre = new Label(linea.texto());
-        lblNombre.getStyleClass().add("text-body");
+    /** Misma tipografía que un artículo del ticket de Menú (ver FilaArticuloFactory), pero de solo lectura. */
+    private VBox construirFilaRecibo(LineaRecibo linea) {
+        Label lblNombre = new Label(linea.cantidad() + "×  " + linea.nombre());
+        lblNombre.getStyleClass().add("cart-item-name");
+        lblNombre.setWrapText(true);
         HBox.setHgrow(lblNombre, Priority.ALWAYS);
 
         Label lblMonto = new Label(Dinero.formatear(linea.monto()));
-        lblMonto.getStyleClass().add("text-body");
+        lblMonto.getStyleClass().add("text-price");
 
-        return new HBox(lblNombre, lblMonto);
+        HBox filaSuperior = new HBox(8, lblNombre, lblMonto);
+
+        VBox fila = new VBox(4, filaSuperior);
+        fila.getStyleClass().add("cart-item-row");
+
+        if (linea.nota() != null && !linea.nota().isBlank()) {
+            Label lblNota = new Label("↳ " + linea.nota());
+            lblNota.getStyleClass().add("receipt-item-note");
+            lblNota.setWrapText(true);
+            fila.getChildren().add(lblNota);
+        }
+
+        return fila;
     }
 
     @FXML
@@ -232,13 +302,18 @@ public class PaymentPortalController {
                 () -> registrarPago(ordenId, metodo, montoTotal),
                 exito -> {
                     sesion.setOrdenEnProceso(null);
-                    navigator.navigateTo(Pantalla.DASHBOARD);
+                    cerrarVentana();
                 },
                 error -> {
                     btnConfirmarPago.setDisable(false);
                     mostrarErrorPago("No se pudo confirmar el pago. Intenta de nuevo.");
                 }
         );
+    }
+
+    /** Esta pantalla es una ventana emergente (ver MenuPOSController.onCobrarCuenta), no una pestaña: al terminar, se cierra sola. */
+    private void cerrarVentana() {
+        ((Stage) btnConfirmarPago.getScene().getWindow()).close();
     }
 
     /** Se ejecuta en un hilo aparte (ver Async): registra el pago y avanza el estado de la orden. */
@@ -253,6 +328,10 @@ public class PaymentPortalController {
         // Para COMEDOR/PARA_LLEVAR se cobra antes de preparar (ver CLAUDE.md): al pagar, pasa a cocina.
         Orden orden = ordenDAO.obtenerPorId(ordenId).orElseThrow();
         orden.setEstado(EstadoOrden.EN_PREPARACION);
+        // Corte de caja: la venta se cuenta en el turno abierto del cajero, si tiene uno abierto.
+        // Si no (olvidó abrir turno), el cobro no se bloquea -- queda con turno_id null, igual que hoy.
+        turnoDAO.obtenerTurnoAbierto(sesion.getUsuarioActivo().getId())
+                .ifPresent(turno -> orden.setTurnoId(turno.getId()));
         ordenDAO.actualizar(orden);
         return Boolean.TRUE;
     }
@@ -290,9 +369,9 @@ public class PaymentPortalController {
         lblErrorPago.setManaged(false);
     }
 
-    private record LineaRecibo(String texto, BigDecimal monto) {
+    private record LineaRecibo(String nombre, int cantidad, BigDecimal monto, String nota) {
     }
 
-    private record DatosRecibo(Orden orden, Usuario cajero, List<LineaRecibo> lineas) {
+    private record DatosRecibo(Orden orden, Usuario cajero, Sucursal sucursal, List<LineaRecibo> lineas) {
     }
 }

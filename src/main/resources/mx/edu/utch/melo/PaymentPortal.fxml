@@ -3,40 +3,25 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<BorderPane xmlns="http://javafx.com/javafx/21"
+<!--
+  Ventana emergente de cobro: se abre desde MenuPOSController.onCobrarCuenta
+  (ver Navigator.abrirVentana), no es una pestaña del sidebar. Por eso no
+  incluye Sidebar.fxml ni Topbar.fxml: es una ventana de cobro aparte que
+  se cierra sola al confirmar el pago (ver PaymentPortalController.cerrarVentana).
+-->
+<BorderPane fx:id="raiz" xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="mx.edu.utch.melo.controller.PaymentPortalController"
-            prefWidth="1280" prefHeight="960"
+            prefWidth="1020" prefHeight="880"
             stylesheets="@styles.css">
-
-    <!-- ===== MENÚ LATERAL ===== -->
-    <left>
-        <VBox>
-            <fx:include fx:id="sidebar" source="Sidebar.fxml">
-                <VBox.vgrow>ALWAYS</VBox.vgrow>
-            </fx:include>
-            <!-- Cerrar turno -->
-            <VBox styleClass="sidebar-extra-section">
-                <Button text="Cerrar Turno" maxWidth="Infinity" styleClass="btn-accent-block"/>
-            </VBox>
-        </VBox>
-    </left>
 
     <!-- ===== BARRA SUPERIOR ===== -->
     <top>
-        <HBox prefHeight="64" alignment="CENTER_LEFT" styleClass="topbar">
-            <Label text="Portal de Pagos" styleClass="text-title-sm"/>
-            <!-- Pestañas -->
-            <HBox spacing="4" styleClass="pad-0-24">
-                <Button text="Comedor" styleClass="tab-item"/>
-                <Button text="Para Llevar" styleClass="tab-item-active"/>
-                <Button text="Domicilio" styleClass="tab-item"/>
-            </HBox>
-            <Region HBox.hgrow="ALWAYS"/>
-            <TextField promptText="Buscar orden..." prefWidth="240" styleClass="search-field"/>
-            <Button text="🔔" styleClass="icon-button"/>
-            <Button text="Nueva Orden" styleClass="btn-primary"/>
+        <HBox prefHeight="64" alignment="CENTER_LEFT" spacing="12" styleClass="topbar">
+            <FontIcon iconLiteral="mdi2c-cash" iconSize="20" styleClass="text-icon-accent"/>
+            <Label text="Cobrar" styleClass="text-title-sm"/>
         </HBox>
     </top>
 
@@ -44,20 +29,21 @@
     <center>
         <HBox styleClass="pad-24 gap-20" alignment="TOP_CENTER">
 
-            <!-- IZQUIERDA: Recibo / Resumen de la orden -->
-            <VBox prefWidth="340" minHeight="700" styleClass="card-lg gap-0">
+            <!-- IZQUIERDA: Recibo / Resumen de la orden, mismo encabezado y estilo que el ticket de Menú (ver MenuPOS.fxml) -->
+            <VBox prefWidth="340" minHeight="700" styleClass="receipt-card gap-0">
                 <!-- Encabezado -->
                 <VBox alignment="CENTER" styleClass="gap-4 pad-bottom-16">
-                    <Label text="melo POS" styleClass="text-body-strong"/>
-                    <Label fx:id="lblNumeroOrden" text="Orden #—" styleClass="text-muted"/>
-                    <Label fx:id="lblFecha" text="—" styleClass="text-muted"/>
+                    <Label fx:id="lblNumeroOrden" text="Orden #—" styleClass="text-title-sm"/>
+                    <Label fx:id="lblSucursal" text="—" styleClass="text-body-strong"/>
+                    <Label fx:id="lblTelefonoSucursal" text="—" styleClass="text-muted-lighter"/>
+                    <Label fx:id="lblFechaHora" text="—" styleClass="text-muted-lighter"/>
                     <Label fx:id="lblCajero" text="Cajero: —" styleClass="text-muted"/>
                 </VBox>
 
                 <Separator styleClass="pad-bottom-16"/>
 
                 <!-- Artículos: se generan en tiempo de ejecución (ver PaymentPortalController) -->
-                <VBox fx:id="listaArticulos" styleClass="gap-12 pad-y-16"/>
+                <VBox fx:id="listaArticulos" styleClass="gap-10 pad-y-16"/>
 
                 <Region VBox.vgrow="ALWAYS"/>
 
@@ -67,7 +53,7 @@
                         <Label text="Subtotal" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
                         <Label fx:id="lblSubtotalCuenta" text="\$0.00" styleClass="text-body"/>
                     </HBox>
-                    <HBox>
+                    <HBox fx:id="filaImpuestos">
                         <Label text="IVA" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
                         <Label fx:id="lblImpuestosCuenta" text="\$0.00" styleClass="text-body"/>
                     </HBox>
@@ -84,18 +70,18 @@
                 <!-- Métodos de pago -->
                 <HBox spacing="12">
                     <!-- Efectivo (activo) -->
-                    <VBox fx:id="tileEfectivo" prefWidth="100" prefHeight="110" styleClass="pay-method-active gap-8" onMouseClicked="#onEfectivoClick">
-                        <Label text="💵" styleClass="text-icon-lg-accent"/>
+                    <VBox fx:id="tileEfectivo" prefWidth="100" prefHeight="110" HBox.hgrow="ALWAYS" styleClass="pay-method-active gap-8" onMouseClicked="#onEfectivoClick">
+                        <FontIcon iconLiteral="mdi2c-cash" iconSize="28" styleClass="text-icon-lg-accent"/>
                         <Label fx:id="lblEfectivo" text="Efectivo" styleClass="pay-method-label-active"/>
                     </VBox>
                     <!-- Tarjeta -->
                     <VBox fx:id="tileTarjeta" prefWidth="100" prefHeight="110" styleClass="pay-method gap-8" HBox.hgrow="ALWAYS" onMouseClicked="#onTarjetaClick">
-                        <Label text="💳" styleClass="text-icon-lg-accent"/>
+                        <FontIcon iconLiteral="mdi2c-credit-card-outline" iconSize="28" styleClass="text-icon-lg-accent"/>
                         <Label fx:id="lblTarjeta" text="Tarjeta" styleClass="pay-method-label"/>
                     </VBox>
                     <!-- Transferencia -->
                     <VBox fx:id="tileTransferencia" prefWidth="100" prefHeight="110" styleClass="pay-method gap-8" HBox.hgrow="ALWAYS" onMouseClicked="#onTransferenciaClick">
-                        <Label text="📱" styleClass="text-icon-lg-accent"/>
+                        <FontIcon iconLiteral="mdi2b-bank-transfer" iconSize="28" styleClass="text-icon-lg-accent"/>
                         <Label fx:id="lblTransferencia" text="Transferencia" styleClass="pay-method-label" textAlignment="CENTER" wrapText="true"/>
                     </VBox>
                 </HBox>
@@ -116,7 +102,9 @@
                         <Label text="CAMBIO" styleClass="text-label-caps"/>
                         <HBox alignment="CENTER_LEFT">
                             <Label fx:id="lblCambio" text="\$295.84" styleClass="change-value" HBox.hgrow="ALWAYS"/>
-                            <Button text="🔄" styleClass="icon-button" onAction="#onReiniciarRecibido"/>
+                            <Button styleClass="icon-button" onAction="#onReiniciarRecibido">
+                                <graphic><FontIcon iconLiteral="mdi2r-refresh" iconSize="16" /></graphic>
+                            </Button>
                         </HBox>
                     </VBox>
 
@@ -124,8 +112,12 @@
 
                     <!-- Botones de acción -->
                     <HBox spacing="12" styleClass="pad-top-8">
-                        <Button text="🖨  No imprimir" prefWidth="140" prefHeight="56" styleClass="btn-outline-accent" HBox.hgrow="ALWAYS"/>
-                        <Button fx:id="btnConfirmarPago" text="✅  Confirmar Pago" prefWidth="140" prefHeight="56" styleClass="btn-accent" HBox.hgrow="ALWAYS" onAction="#onConfirmarPago"/>
+                        <Button text="No imprimir" graphicTextGap="8" prefWidth="140" prefHeight="56" styleClass="btn-outline-accent" HBox.hgrow="ALWAYS">
+                            <graphic><FontIcon iconLiteral="mdi2p-printer-outline" iconSize="16" /></graphic>
+                        </Button>
+                        <Button fx:id="btnConfirmarPago" text="Confirmar Pago" graphicTextGap="8" prefWidth="140" prefHeight="56" styleClass="btn-accent" HBox.hgrow="ALWAYS" onAction="#onConfirmarPago">
+                            <graphic><FontIcon iconLiteral="mdi2c-check-circle-outline" iconSize="16" /></graphic>
+                        </Button>
                     </HBox>
                 </VBox>
             </VBox>

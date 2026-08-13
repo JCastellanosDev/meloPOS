@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<!--
+  Ventana emergente para cambiar de usuario en la misma terminal (ver
+  Topbar.fxml/TopbarController), no es una pestaña del sidebar.
+-->
+<VBox fx:id="raiz" xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="mx.edu.utch.melo.controller.CambiarUsuarioController"
+      prefWidth="340" alignment="TOP_CENTER" styleClass="pad-32 gap-8"
+      stylesheets="@styles.css">
+
+    <FontIcon iconLiteral="mdi2a-account-switch-outline" iconSize="32" styleClass="text-icon-lg-accent">
+        <VBox.margin><Insets bottom="8"/></VBox.margin>
+    </FontIcon>
+    <Label text="Cambiar Usuario" styleClass="text-subtitle"/>
+    <Label text="Ingresa tu PIN para continuar." styleClass="text-muted" wrapText="true">
+        <VBox.margin><Insets bottom="12"/></VBox.margin>
+    </Label>
+
+    <Label fx:id="lblPin" text="—" styleClass="pin-display">
+        <VBox.margin><Insets bottom="8"/></VBox.margin>
+    </Label>
+
+    <Label fx:id="lblError" styleClass="form-error" wrapText="true" visible="false" managed="false">
+        <VBox.margin><Insets bottom="8"/></VBox.margin>
+    </Label>
+
+    <GridPane hgap="10" vgap="10" alignment="CENTER">
+        <VBox.margin><Insets bottom="16"/></VBox.margin>
+        <Button text="1" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="numpad-btn" onAction="#onTecla"/>
+        <Button text="2" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="numpad-btn" onAction="#onTecla"/>
+        <Button text="3" GridPane.columnIndex="2" GridPane.rowIndex="0" styleClass="numpad-btn" onAction="#onTecla"/>
+        <Button text="4" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="numpad-btn" onAction="#onTecla"/>
+        <Button text="5" GridPane.columnIndex="1" GridPane.rowIndex="1" styleClass="numpad-btn" onAction="#onTecla"/>
+        <Button text="6" GridPane.columnIndex="2" GridPane.rowIndex="1" styleClass="numpad-btn" onAction="#onTecla"/>
+        <Button text="7" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="numpad-btn" onAction="#onTecla"/>
+        <Button text="8" GridPane.columnIndex="1" GridPane.rowIndex="2" styleClass="numpad-btn" onAction="#onTecla"/>
+        <Button text="9" GridPane.columnIndex="2" GridPane.rowIndex="2" styleClass="numpad-btn" onAction="#onTecla"/>
+        <Button text="0" GridPane.columnIndex="1" GridPane.rowIndex="3" styleClass="numpad-btn" onAction="#onTecla"/>
+        <Button text="⌫" GridPane.columnIndex="2" GridPane.rowIndex="3" styleClass="numpad-btn-danger" onAction="#onBorrar"/>
+    </GridPane>
+
+    <Button fx:id="btnConfirmar" text="Confirmar" maxWidth="Infinity" styleClass="btn-primary" onAction="#onConfirmar" disable="true">
+        <VBox.margin><Insets bottom="10"/></VBox.margin>
+    </Button>
+    <Button text="Cancelar" maxWidth="Infinity" styleClass="btn-outline" onAction="#onCancelar"/>
+
+</VBox>

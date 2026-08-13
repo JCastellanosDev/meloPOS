@@ -12,11 +12,14 @@ import mx.edu.utch.melo.dao.ModificadorDAO;
 import mx.edu.utch.melo.dao.OrdenDAO;
 import mx.edu.utch.melo.dao.PagoDAO;
 import mx.edu.utch.melo.dao.ProductoDAO;
+import mx.edu.utch.melo.dao.ReporteDAO;
 import mx.edu.utch.melo.dao.SucursalDAO;
 import mx.edu.utch.melo.dao.TurnoDAO;
 import mx.edu.utch.melo.dao.UsuarioDAO;
+import mx.edu.utch.melo.geo.ServicioRutas;
 import mx.edu.utch.melo.nav.ControllerFactory;
 import mx.edu.utch.melo.nav.Navigator;
+import mx.edu.utch.melo.nav.Pantalla;
 import mx.edu.utch.melo.sesion.SesionActual;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -50,7 +53,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 class FxmlSmokeTest {
 
-    private static final Navigator NAVEGADOR_FALSO = pantalla -> { };
+    private static final Navigator NAVEGADOR_FALSO = new Navigator() {
+        @Override
+        public void navigateTo(Pantalla pantalla) {
+        }
+
+        @Override
+        public void abrirVentana(Pantalla pantalla, String titulo) {
+        }
+    };
 
     private static final AppContext CONTEXTO_FALSO = new AppContext(
             NAVEGADOR_FALSO,
@@ -66,7 +77,9 @@ class FxmlSmokeTest {
             daoInactivo(ProductoDAO.class),
             daoInactivo(OrdenDAO.class),
             daoInactivo(DetalleOrdenDAO.class),
-            daoInactivo(PagoDAO.class));
+            daoInactivo(PagoDAO.class),
+            daoInactivo(ReporteDAO.class),
+            (origen, destino) -> Optional.empty());
 
     /** DAO proxy que nunca toca la base de datos: solo devuelve valores vacíos/por defecto. */
     private static <T> T daoInactivo(Class<T> tipoDao) {
@@ -127,8 +140,43 @@ class FxmlSmokeTest {
     }
 
     @Test
-    void registerClientCarga() {
-        assertPantallaCarga("RegisterClient.fxml");
+    void pedidosCarga() {
+        assertPantallaCarga("Pedidos.fxml");
+    }
+
+    @Test
+    void menuPedidoCarga() {
+        assertPantallaCarga("MenuPedido.fxml");
+    }
+
+    @Test
+    void reportesCarga() {
+        assertPantallaCarga("Reportes.fxml");
+    }
+
+    @Test
+    void personalCarga() {
+        assertPantallaCarga("Personal.fxml");
+    }
+
+    @Test
+    void inventarioCarga() {
+        assertPantallaCarga("Inventario.fxml");
+    }
+
+    @Test
+    void ajustesCarga() {
+        assertPantallaCarga("Ajustes.fxml");
+    }
+
+    @Test
+    void cajaCarga() {
+        assertPantallaCarga("Caja.fxml");
+    }
+
+    @Test
+    void cambiarUsuarioCarga() {
+        assertPantallaCarga("CambiarUsuario.fxml");
     }
 
     private void assertPantallaCarga(String fxml) {

@@ -12,6 +12,7 @@ import mx.edu.utch.melo.dao.ModificadorDAO;
 import mx.edu.utch.melo.dao.OrdenDAO;
 import mx.edu.utch.melo.dao.PagoDAO;
 import mx.edu.utch.melo.dao.ProductoDAO;
+import mx.edu.utch.melo.dao.ReporteDAO;
 import mx.edu.utch.melo.dao.SucursalDAO;
 import mx.edu.utch.melo.dao.TurnoDAO;
 import mx.edu.utch.melo.dao.UsuarioDAO;
@@ -23,12 +24,15 @@ import mx.edu.utch.melo.dao.impl.ModificadorDAOImpl;
 import mx.edu.utch.melo.dao.impl.OrdenDAOImpl;
 import mx.edu.utch.melo.dao.impl.PagoDAOImpl;
 import mx.edu.utch.melo.dao.impl.ProductoDAOImpl;
+import mx.edu.utch.melo.dao.impl.ReporteDAOImpl;
 import mx.edu.utch.melo.dao.impl.SucursalDAOImpl;
 import mx.edu.utch.melo.dao.impl.TurnoDAOImpl;
 import mx.edu.utch.melo.dao.impl.UsuarioDAOImpl;
 import mx.edu.utch.melo.db.ConexionDB;
 import mx.edu.utch.melo.geo.Geocodificador;
 import mx.edu.utch.melo.geo.MapboxGeocodificador;
+import mx.edu.utch.melo.geo.MapboxServicioRutas;
+import mx.edu.utch.melo.geo.ServicioRutas;
 import mx.edu.utch.melo.model.Usuario;
 import mx.edu.utch.melo.nav.Navigator;
 import mx.edu.utch.melo.nav.Pantalla;
@@ -70,6 +74,7 @@ public class HelloApplication extends Application {
         OrdenDAO ordenDAO = new OrdenDAOImpl(conexionDB);
         DetalleOrdenDAO detalleOrdenDAO = new DetalleOrdenDAOImpl(conexionDB);
         PagoDAO pagoDAO = new PagoDAOImpl(conexionDB);
+        ReporteDAO reporteDAO = new ReporteDAOImpl(conexionDB);
 
         SesionActual sesion = new SesionActual();
         Usuario usuarioSemilla = usuarioDAO.obtenerPorPin(SUCURSAL_SEMILLA_ID, PIN_SEMILLA)
@@ -78,9 +83,12 @@ public class HelloApplication extends Application {
                                 + PIN_SEMILLA + "). ¿Se aplicó src/main/resources/db/schema.sql en esta base?"));
         sesion.iniciarSesion(usuarioSemilla);
 
-        Geocodificador geocodificador = new MapboxGeocodificador(Configuracion.obtener("mapbox.token", ""));
+        String mapboxToken = Configuracion.obtener("mapbox.token", "");
+        Geocodificador geocodificador = new MapboxGeocodificador(mapboxToken);
+        ServicioRutas servicioRutas = new MapboxServicioRutas(mapboxToken);
 
         return new AppContext(navigator, sesion, geocodificador, usuarioDAO, sucursalDAO, categoriaDAO,
-                clienteDAO, modificadorDAO, mesaDAO, turnoDAO, productoDAO, ordenDAO, detalleOrdenDAO, pagoDAO);
+                clienteDAO, modificadorDAO, mesaDAO, turnoDAO, productoDAO, ordenDAO, detalleOrdenDAO, pagoDAO,
+                reporteDAO, servicioRutas);
     }
 }

@@ -3,6 +3,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -21,16 +22,12 @@
             <HBox prefHeight="64" alignment="CENTER_LEFT" spacing="16">
                 <TextField promptText="Buscar platillo..." prefWidth="260" styleClass="search-field"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Button text="🪑  Mesa 12  ▾" styleClass="pill-button"/>
                 <fx:include fx:id="topbar" source="Topbar.fxml"/>
             </HBox>
 
-            <!-- Categorías del menú -->
-            <HBox styleClass="pad-16 gap-8" alignment="CENTER_LEFT">
-                <Button fx:id="btnCategoriaPlatillos" text="🍽  Platillos" styleClass="tab-item-active"/>
-                <Button fx:id="btnCategoriaBebidas" text="🍹  Bebidas" styleClass="tab-item"/>
-                <Button fx:id="btnCategoriaPostres" text="🍮  Postres" styleClass="tab-item"/>
-            </HBox>
+            <!-- Categorías del menú: se llenan en tiempo de ejecución con las categorías reales
+                 (ver MenuPOSController.renderizarCategorias), creadas por el usuario en Ajustes. -->
+            <HBox fx:id="filaCategorias" styleClass="pad-16 gap-8" alignment="CENTER_LEFT"/>
         </VBox>
     </top>
 
@@ -42,40 +39,45 @@
               FlowPane con las tarjetas de los platillos leídas desde la base de
               datos. No debe contener platillos escritos de forma estática aquí.
             -->
-            <FlowPane fx:id="contenedorMenu" hgap="16" vgap="16" styleClass="pad-24"/>
+            <FlowPane fx:id="contenedorMenu" hgap="16" vgap="16" alignment="TOP_LEFT" styleClass="pad-24"/>
         </ScrollPane>
     </center>
 
     <!-- ===== DERECHA: Panel de la orden ===== -->
     <right>
-        <VBox prefWidth="320" prefHeight="960" styleClass="order-panel pad-24 gap-0">
+        <VBox prefWidth="320" styleClass="order-panel">
 
-            <!-- Encabezado -->
-            <HBox alignment="CENTER_LEFT" spacing="8">
-                <Label text="Orden #425" styleClass="text-title-sm"/>
-                <Region HBox.hgrow="ALWAYS"/>
-                <Label text="Mesa 12" styleClass="text-muted"/>
-            </HBox>
-            <Label text="Mesero: Ana Martínez" styleClass="text-muted">
-                <VBox.margin><Insets top="2" bottom="16"/></VBox.margin>
-            </Label>
+            <!-- Órdenes en espera (ver MenuPOSController.onPonerEnEspera): oculto si no hay ninguna -->
+            <FlowPane fx:id="filaPedidosEnEspera" hgap="8" vgap="8" visible="false" managed="false">
+                <VBox.margin><Insets bottom="16"/></VBox.margin>
+            </FlowPane>
+
+            <!-- Encabezado: se ve como un ticket real -->
+            <VBox alignment="CENTER" styleClass="gap-4">
+                <Label fx:id="lblNumeroOrden" text="Orden #—" styleClass="text-title-sm"/>
+                <Label fx:id="lblSucursal" text="—" styleClass="text-body-strong"/>
+                <Label fx:id="lblTelefonoSucursal" text="—" styleClass="text-muted-lighter"/>
+                <Label fx:id="lblFechaHora" text="—" styleClass="text-muted-lighter"/>
+                <Label fx:id="lblCajero" text="Cajero: —" styleClass="text-muted"/>
+            </VBox>
 
             <Separator>
-                <VBox.margin><Insets bottom="16"/></VBox.margin>
+                <VBox.margin><Insets top="16" bottom="16"/></VBox.margin>
             </Separator>
 
             <!-- Artículos de la orden: se generan en tiempo de ejecución (ver MenuPOSController) -->
-            <VBox fx:id="listaArticulos" styleClass="gap-12 pad-y-16"/>
-
-            <Region VBox.vgrow="ALWAYS"/>
+            <ScrollPane fitToWidth="true" styleClass="kds-scroll" VBox.vgrow="ALWAYS">
+                <VBox fx:id="listaArticulos" styleClass="gap-10"/>
+            </ScrollPane>
 
             <!-- Totales + botón de pago -->
             <VBox styleClass="totals-box">
+                <VBox.margin><Insets top="16"/></VBox.margin>
                 <HBox>
                     <Label text="Subtotal" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
                     <Label fx:id="lblSubtotal" text="\$0.00" styleClass="text-body"/>
                 </HBox>
-                <HBox>
+                <HBox fx:id="filaIva">
                     <Label text="IVA (16%)" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
                     <Label fx:id="lblIva" text="\$0.00" styleClass="text-body"/>
                 </HBox>
@@ -85,9 +87,15 @@
                     <Label fx:id="lblTotal" text="\$0.00" styleClass="text-price-lg"/>
                 </HBox>
                 <Label fx:id="lblErrorCobro" styleClass="form-error" wrapText="true" visible="false" managed="false"/>
-                <Button fx:id="btnCobrar" text="💳  Cobrar Cuenta" maxWidth="Infinity" styleClass="btn-accent-block" onAction="#onCobrarCuenta">
+                <HBox spacing="10">
                     <VBox.margin><Insets top="8"/></VBox.margin>
-                </Button>
+                    <Button fx:id="btnEnEspera" text="En Espera" graphicTextGap="8" styleClass="btn-outline-accent" onAction="#onPonerEnEspera">
+                        <graphic><FontIcon iconLiteral="mdi2c-clock-outline" iconSize="16" /></graphic>
+                    </Button>
+                    <Button fx:id="btnCobrar" text="Cobrar Cuenta" graphicTextGap="10" maxWidth="Infinity" HBox.hgrow="ALWAYS" styleClass="btn-accent-block" onAction="#onCobrarCuenta">
+                        <graphic><FontIcon iconLiteral="mdi2c-credit-card-outline" iconSize="18" /></graphic>
+                    </Button>
+                </HBox>
             </VBox>
         </VBox>
     </right>

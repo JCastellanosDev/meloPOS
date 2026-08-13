@@ -2,6 +2,9 @@ package mx.edu.utch.melo.controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import mx.edu.utch.melo.app.AppContext;
+import mx.edu.utch.melo.nav.Navigator;
+import mx.edu.utch.melo.nav.Pantalla;
 
 public class TopbarController {
 
@@ -10,6 +13,17 @@ public class TopbarController {
 
     @FXML
     private Button btnUsuario;
+
+    private final Navigator navigator;
+
+    public TopbarController(AppContext contexto) {
+        this.navigator = contexto.getNavigator();
+    }
+
+    @FXML
+    void initialize() {
+        btnUsuario.setOnAction(e -> navigator.abrirVentana(Pantalla.CAMBIAR_USUARIO, "melo - Cambiar Usuario"));
+    }
 
     public Button getBtnNotificaciones() {
         return btnNotificaciones;

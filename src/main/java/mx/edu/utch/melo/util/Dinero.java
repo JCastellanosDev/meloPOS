@@ -3,7 +3,7 @@ package mx.edu.utch.melo.util;
 import java.math.BigDecimal;
 import java.util.Locale;
 
-/** Formato de moneda consistente para toda la app (MXN, sin símbolo de moneda regional). */
+
 public final class Dinero {
 
     private Dinero() {

@@ -18,6 +18,7 @@ public class ItemOrden {
     private final double precioUnitario;
     private final IntegerProperty cantidad;
     private final List<String> modificadores;
+    private String nota = "";
 
     public ItemOrden(int productoId, String nombre, double precioUnitario, int cantidadInicial, List<String> modificadores) {
         this.productoId = productoId;
@@ -53,6 +54,15 @@ public class ItemOrden {
 
     public List<String> getModificadores() {
         return modificadores;
+    }
+
+    /** Instrucción para cocina sobre este artículo (ej. "sin cebolla"); cadena vacía si no se capturó ninguna. */
+    public String getNota() {
+        return nota;
+    }
+
+    public void setNota(String nota) {
+        this.nota = nota == null ? "" : nota;
     }
 
     public double getSubtotal() {

@@ -8,6 +8,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <!--
   Menú lateral (Sidebar) reutilizable.
@@ -19,8 +20,8 @@
       xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="mx.edu.utch.melo.controller.SidebarController">
 
-    <!-- Logo -->
-    <VBox styleClass="sidebar-logo">
+    <!-- Logo: al hacer clic regresa al Dashboard (ver onLogoClick) -->
+    <VBox styleClass="sidebar-logo" onMouseClicked="#onLogoClick">
         <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
             <image>
                 <Image url="@img/melo1.png" />
@@ -30,22 +31,42 @@
 
     <!-- Navegación principal -->
     <VBox styleClass="sidebar-nav">
-        <Button fx:id="btnOrdenes" text="📋  Órdenes" maxWidth="Infinity" styleClass="nav-button" />
-        <Button fx:id="btnMesas" text="🪑  Mesas" maxWidth="Infinity" styleClass="nav-button" />
-        <Button fx:id="btnMenu" text="🍽  Menú" maxWidth="Infinity" styleClass="nav-button" />
-        <Button fx:id="btnCocina" text="🍴  Cocina" maxWidth="Infinity" styleClass="nav-button" />
-        <Button fx:id="btnDomicilio" text="🛵  Domicilio" maxWidth="Infinity" styleClass="nav-button" />
-        <Button fx:id="btnClientes" text="👥  Clientes" maxWidth="Infinity" styleClass="nav-button" />
-        <Button fx:id="btnPersonal" text="👤  Personal" maxWidth="Infinity" styleClass="nav-button" />
-        <Button fx:id="btnInventario" text="📦  Inventario" maxWidth="Infinity" styleClass="nav-button" />
-        <Button fx:id="btnReportes" text="📊  Reportes" maxWidth="Infinity" styleClass="nav-button" />
+        <Button fx:id="btnMesas" text="Mesas" graphicTextGap="12" maxWidth="Infinity" styleClass="nav-button">
+            <graphic><FontIcon iconLiteral="mdi2t-table-chair" iconSize="18" /></graphic>
+        </Button>
+        <Button fx:id="btnMenu" text="Menú" graphicTextGap="12" maxWidth="Infinity" styleClass="nav-button">
+            <graphic><FontIcon iconLiteral="mdi2s-silverware-fork-knife" iconSize="18" /></graphic>
+        </Button>
+        <Button fx:id="btnCocina" text="Cocina" graphicTextGap="12" maxWidth="Infinity" styleClass="nav-button">
+            <graphic><FontIcon iconLiteral="mdi2c-chef-hat" iconSize="18" /></graphic>
+        </Button>
+        <Button fx:id="btnDomicilio" text="Domicilio" graphicTextGap="12" maxWidth="Infinity" styleClass="nav-button">
+            <graphic><FontIcon iconLiteral="mdi2m-moped" iconSize="18" /></graphic>
+        </Button>
+        <Button fx:id="btnPedidos" text="Pedidos" graphicTextGap="12" maxWidth="Infinity" styleClass="nav-button">
+            <graphic><FontIcon iconLiteral="mdi2c-clipboard-list" iconSize="18" /></graphic>
+        </Button>
+        <Button fx:id="btnPersonal" text="Personal" graphicTextGap="12" maxWidth="Infinity" styleClass="nav-button">
+            <graphic><FontIcon iconLiteral="mdi2a-account-tie" iconSize="18" /></graphic>
+        </Button>
+        <Button fx:id="btnInventario" text="Inventario" graphicTextGap="12" maxWidth="Infinity" styleClass="nav-button">
+            <graphic><FontIcon iconLiteral="mdi2b-box" iconSize="18" /></graphic>
+        </Button>
+        <Button fx:id="btnReportes" text="Reportes" graphicTextGap="12" maxWidth="Infinity" styleClass="nav-button">
+            <graphic><FontIcon iconLiteral="mdi2c-chart-line" iconSize="18" /></graphic>
+        </Button>
+        <Button fx:id="btnCaja" text="Caja" graphicTextGap="12" maxWidth="Infinity" styleClass="nav-button">
+            <graphic><FontIcon iconLiteral="mdi2c-cash-register" iconSize="18" /></graphic>
+        </Button>
     </VBox>
 
     <Region VBox.vgrow="ALWAYS" />
 
     <!-- Navegación inferior -->
     <VBox styleClass="sidebar-nav-bottom">
-        <Button fx:id="btnAjustes" text="⚙️  Ajustes" maxWidth="Infinity" styleClass="nav-button" />
+        <Button fx:id="btnAjustes" text="Ajustes" graphicTextGap="12" maxWidth="Infinity" styleClass="nav-button">
+            <graphic><FontIcon iconLiteral="mdi2c-cog-outline" iconSize="18" /></graphic>
+        </Button>
     </VBox>
 
     <!-- Usuario en sesión -->

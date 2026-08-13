@@ -3,8 +3,11 @@ module mx.edu.utch.melo {
     requires javafx.fxml;
     requires java.sql;
     requires java.net.http;
+    requires java.desktop;
     requires mysql.connector.j;
     requires com.google.gson;
+    requires org.kordamp.ikonli.javafx;
+    requires org.kordamp.ikonli.materialdesign2;
 
     opens mx.edu.utch.melo.controller to javafx.fxml;
 

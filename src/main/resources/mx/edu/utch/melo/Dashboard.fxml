@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <BorderPane prefHeight="960" prefWidth="1280" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mx.edu.utch.melo.controller.DashboardController">
 
@@ -19,87 +21,85 @@
     <!-- ===== BARRA SUPERIOR ===== -->
     <top>
         <HBox alignment="CENTER_LEFT" prefHeight="64" styleClass="topbar">
+            <Label text="Panel Principal" styleClass="topbar-title" />
             <Region HBox.hgrow="ALWAYS" />
-            <TextField prefWidth="260" promptText="Buscar..." styleClass="search-field">
-                <HBox.margin>
-                    <Insets left="16" />
-                </HBox.margin>
-            </TextField>
             <fx:include fx:id="topbar" source="Topbar.fxml" />
         </HBox>
     </top>
 
-    <!-- ===== CONTENIDO CENTRAL ===== -->
+    <!-- ===== CONTENIDO CENTRAL: todo el bloque se centra, horizontal y verticalmente ===== -->
     <center>
-        <VBox styleClass="pad-dashboard gap-32">
+        <VBox alignment="CENTER" styleClass="pad-dashboard">
+            <VBox alignment="CENTER" prefWidth="900" spacing="24">
 
-            <!-- Saludo -->
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label fx:id="txtSaludo" styleClass="text-header" text="Buenos días" />
-                <Label fx:id="txtUsuario" styleClass="text-header" text="Usuario" />
-            </HBox>
+                <!-- Saludo: se llena con datos reales en tiempo de ejecución (ver DashboardController) -->
+                <HBox alignment="CENTER_LEFT" maxWidth="Infinity" styleClass="card-lg">
+                    <VBox spacing="10">
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label fx:id="txtSaludo" styleClass="text-header" text="Buenos días," />
+                            <Label fx:id="txtUsuario" styleClass="text-header-accent" text="—" />
+                        </HBox>
+                        <Label fx:id="txtFecha" styleClass="text-muted" text="—" />
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <FontIcon fx:id="iconoSaludo" iconLiteral="mdi2w-weather-sunny" iconSize="48" styleClass="text-icon-lg-accent" />
+                </HBox>
 
-            <!-- Fila superior: Comedor (grande) + Domicilio -->
-            <HBox spacing="20" HBox.hgrow="ALWAYS">
+                <!-- Las 4 opciones viven juntas dentro de un solo contenedor -->
+                <VBox alignment="CENTER" maxWidth="Infinity" styleClass="quick-access-panel">
 
-                <!-- Tarjeta Comedor -->
-                <VBox prefHeight="280" prefWidth="600" styleClass="card-lg">
-                    <Label styleClass="text-icon-lg-accent" text="🪑">
-                        <VBox.margin>
-                            <Insets bottom="16" />
-                        </VBox.margin>
-                    </Label>
-                    <Label styleClass="text-title" text="Comedor" />
-                    <Label maxWidth="320" styleClass="text-muted" text="Realiza pedidos al instante" wrapText="true" />
-                    <Region VBox.vgrow="ALWAYS" />
-                    <Button fx:id="btnComedor" styleClass="btn-primary" text="Realizar pedido" />
+                    <GridPane alignment="CENTER" hgap="20" vgap="20">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="50" />
+                            <ColumnConstraints percentWidth="50" />
+                        </columnConstraints>
+                        <rowConstraints>
+                            <RowConstraints percentHeight="50" />
+                            <RowConstraints percentHeight="50" />
+                        </rowConstraints>
+
+                        <!-- Comedor -->
+                        <VBox alignment="TOP_CENTER" styleClass="quick-tile quick-tile-accent gap-6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                            <FontIcon iconLiteral="mdi2t-table-chair" iconSize="28" styleClass="text-icon-lg-accent" />
+                            <Label styleClass="text-title-sm" text="Comedor" />
+                            <Label alignment="CENTER" maxWidth="240" styleClass="text-muted" text="Toma un pedido nuevo para comer en el local." textAlignment="CENTER" wrapText="true" />
+                            <Region VBox.vgrow="ALWAYS" />
+                            <Button fx:id="btnComedor" alignment="CENTER" graphicTextGap="10" maxWidth="Infinity" styleClass="btn-primary" text="Realizar pedido">
+                                <graphic><FontIcon iconLiteral="mdi2a-arrow-right" iconSize="16" /></graphic>
+                            </Button>
+                        </VBox>
+
+                        <!-- Domicilio -->
+                        <VBox alignment="TOP_CENTER" styleClass="quick-tile gap-6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                            <FontIcon iconLiteral="mdi2m-moped" iconSize="28" styleClass="text-icon-lg-accent" />
+                            <Label styleClass="text-title-sm" text="Domicilio" />
+                            <Label fx:id="txtPedidosActivos" styleClass="badge badge-accent" text="—" />
+                            <Label alignment="CENTER" maxWidth="240" styleClass="text-muted" text="Para recoger o domicilios." textAlignment="CENTER" wrapText="true" />
+                            <Region VBox.vgrow="ALWAYS" />
+                            <Button fx:id="btnDomicilio" alignment="CENTER" maxWidth="Infinity" styleClass="btn-primary" text="Realizar pedido" />
+                        </VBox>
+
+                        <!-- Reservaciones -->
+                        <VBox alignment="TOP_CENTER" styleClass="quick-tile gap-6" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                            <FontIcon iconLiteral="mdi2c-calendar" iconSize="28" styleClass="text-icon-lg-accent" />
+                            <Label styleClass="text-title-sm" text="Reservaciones" />
+                            <Label alignment="CENTER" maxWidth="240" styleClass="text-muted" text="Maneja las reservaciones de mesa." textAlignment="CENTER" wrapText="true" />
+                            <Region VBox.vgrow="ALWAYS" />
+                            <Button fx:id="btnReservaciones" alignment="CENTER" maxWidth="Infinity" styleClass="btn-primary" text="Próximamente" />
+                        </VBox>
+
+                        <!-- Reportes -->
+                        <VBox alignment="TOP_CENTER" styleClass="quick-tile gap-6" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                            <FontIcon iconLiteral="mdi2c-chart-line" iconSize="28" styleClass="text-icon-lg-accent" />
+                            <Label styleClass="text-title-sm" text="Reportes" />
+                            <Label fx:id="txtVentaActual" styleClass="text-price" text="—" />
+                            <Label alignment="CENTER" maxWidth="240" styleClass="text-muted" text="Ventas registradas hoy." textAlignment="CENTER" wrapText="true" />
+                            <Region VBox.vgrow="ALWAYS" />
+                            <Button fx:id="btnVerReportes" alignment="CENTER" maxWidth="Infinity" styleClass="btn-outline-accent" text="Ver reportes" />
+                        </VBox>
+                    </GridPane>
                 </VBox>
-
-                <!-- Tarjeta Domicilio -->
-                <VBox prefHeight="280" prefWidth="280" styleClass="card">
-                    <HBox alignment="TOP_RIGHT">
-                        <Region HBox.hgrow="ALWAYS" />
-                        <Label fx:id="txtPedidosActivos" styleClass="badge badge-accent" text="3 activos" />
-                    </HBox>
-                    <Label styleClass="text-icon-lg-accent" text="🛵" />
-                    <Region prefHeight="16.0" VBox.vgrow="ALWAYS" />
-                    <Label styleClass="text-title-sm" text="Domicilio" />
-                    <Label styleClass="text-muted" text="Para recoger o domicilios" />
-                    <Button fx:id="btnDomicilio" styleClass="btn-primary" text="Realizar pedido">
-                        <VBox.margin>
-                            <Insets top="12" />
-                        </VBox.margin>
-                    </Button>
-                </VBox>
-            </HBox>
-
-            <!-- Fila inferior: 3 tarjetas -->
-            <HBox spacing="20">
-
-                <!-- Reservaciones -->
-                <VBox prefHeight="160" prefWidth="280" styleClass="card" HBox.hgrow="ALWAYS">
-                    <Region VBox.vgrow="ALWAYS" />
-                    <Label styleClass="text-title-sm" text="Reservaciones" />
-                    <Label styleClass="text-muted" text="Maneja las reservaciones" />
-                    <Button fx:id="btnReservaciones" alignment="CENTER" styleClass="btn-primary" text="Realizar pedido">
-                        <VBox.margin>
-                            <Insets top="12" />
-                        </VBox.margin>
-                    </Button>
-                </VBox>
-
-                <!-- Reportes Rápidos -->
-                <VBox prefHeight="160" prefWidth="280" styleClass="card" HBox.hgrow="ALWAYS">
-                    <HBox alignment="CENTER_LEFT">
-                        <Label styleClass="text-icon-accent" text="📊" />
-                        <Region HBox.hgrow="ALWAYS" />
-                        <Label fx:id="txtVentaActual" styleClass="text-muted" text="\$1,240 hoy" />
-                    </HBox>
-                    <Region VBox.vgrow="ALWAYS" />
-                    <Label styleClass="text-title-sm" text="Reportes Rápidos" />
-                    <Label styleClass="text-muted" text="Ventas hasta el momento" />
-                </VBox>
-            </HBox>
+            </VBox>
         </VBox>
     </center>
 

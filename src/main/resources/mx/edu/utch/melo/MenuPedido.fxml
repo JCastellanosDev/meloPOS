@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<!--
+  Ventana emergente para armar un pedido a domicilio: se abre desde
+  PedidosController.abrirMenuPedido después de capturar/encontrar al
+  cliente (ver Pantalla.MENU_PEDIDO), no es una pestaña del sidebar. Por
+  eso no incluye Sidebar.fxml ni Topbar.fxml.
+-->
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="mx.edu.utch.melo.controller.MenuPedidoController"
+            prefWidth="1100" prefHeight="820"
+            stylesheets="@styles.css">
+
+    <!-- ===== BARRA SUPERIOR ===== -->
+    <top>
+        <HBox prefHeight="64" alignment="CENTER_LEFT" spacing="10" styleClass="topbar">
+            <FontIcon iconLiteral="mdi2c-clipboard-list" iconSize="20" styleClass="text-icon-accent"/>
+            <Label text="Nuevo Pedido" styleClass="text-title-sm"/>
+            <Label text="•" styleClass="text-muted"/>
+            <Label fx:id="lblCliente" text="—" styleClass="text-muted"/>
+        </HBox>
+    </top>
+
+    <!-- ===== CENTRO: Rejilla de platillos ===== -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="kds-scroll">
+            <!--
+              Contenedor dinámico: el controlador (MenuPedidoController) llena este
+              FlowPane con las tarjetas de los platillos leídas desde la base de
+              datos. No debe contener platillos escritos de forma estática aquí.
+            -->
+            <FlowPane fx:id="contenedorMenu" hgap="16" vgap="16" alignment="TOP_LEFT" styleClass="pad-24"/>
+        </ScrollPane>
+    </center>
+
+    <!-- ===== DERECHA: Panel del pedido ===== -->
+    <right>
+        <VBox prefWidth="320" styleClass="order-panel">
+
+            <!-- Encabezado -->
+            <Label text="Pedido a Domicilio" styleClass="text-title-sm">
+                <VBox.margin><Insets bottom="16"/></VBox.margin>
+            </Label>
+
+            <Separator>
+                <VBox.margin><Insets bottom="16"/></VBox.margin>
+            </Separator>
+
+            <!-- Artículos del pedido: se generan en tiempo de ejecución (ver MenuPedidoController) -->
+            <VBox fx:id="listaArticulos" styleClass="gap-12 pad-y-16"/>
+
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <!-- Totales + botón de enviar a cocina -->
+            <VBox styleClass="totals-box">
+                <HBox>
+                    <Label text="Subtotal" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="lblSubtotal" text="\$0.00" styleClass="text-body"/>
+                </HBox>
+                <HBox>
+                    <Label text="IVA (16%)" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="lblIva" text="\$0.00" styleClass="text-body"/>
+                </HBox>
+                <HBox>
+                    <Label text="Envío" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="lblEnvio" text="Sin ubicar" styleClass="text-body"/>
+                </HBox>
+                <Separator/>
+                <HBox>
+                    <Label text="Total" styleClass="text-price-lg" HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="lblTotal" text="\$0.00" styleClass="text-price-lg"/>
+                </HBox>
+                <Label fx:id="lblErrorPedido" styleClass="form-error" wrapText="true" visible="false" managed="false"/>
+                <Button fx:id="btnMandarCocina" text="Mandar a Cocina" graphicTextGap="10" maxWidth="Infinity" styleClass="btn-accent-block" onAction="#onMandarCocina">
+                    <graphic><FontIcon iconLiteral="mdi2c-chef-hat" iconSize="18" /></graphic>
+                    <VBox.margin><Insets top="8"/></VBox.margin>
+                </Button>
+            </VBox>
+        </VBox>
+    </right>
+
+</BorderPane>

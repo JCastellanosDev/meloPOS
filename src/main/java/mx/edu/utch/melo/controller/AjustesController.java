@@ -1,0 +1,567 @@
+package mx.edu.utch.melo.controller;
+
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import javafx.util.StringConverter;
+import mx.edu.utch.melo.app.AppContext;
+import mx.edu.utch.melo.async.Async;
+import mx.edu.utch.melo.dao.CategoriaDAO;
+import mx.edu.utch.melo.dao.ProductoDAO;
+import mx.edu.utch.melo.dao.SucursalDAO;
+import mx.edu.utch.melo.dao.UsuarioDAO;
+import mx.edu.utch.melo.model.Categoria;
+import mx.edu.utch.melo.model.Producto;
+import mx.edu.utch.melo.model.Rol;
+import mx.edu.utch.melo.model.Sucursal;
+import mx.edu.utch.melo.model.Usuario;
+import mx.edu.utch.melo.nav.Pantalla;
+import mx.edu.utch.melo.sesion.SesionActual;
+import mx.edu.utch.melo.util.AlmacenImagenesProducto;
+import mx.edu.utch.melo.util.Dinero;
+import org.kordamp.ikonli.javafx.FontIcon;
+
+import java.io.File;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+
+/** Datos de la sucursal activa (solo lectura) y alta de productos para el Menú. */
+public class AjustesController {
+
+    @FXML
+    private Label lblNombre;
+
+    @FXML
+    private Label lblDireccion;
+
+    @FXML
+    private Label lblTelefono;
+
+    @FXML
+    private Label lblTarifaBase;
+
+    @FXML
+    private Label lblTarifaPorKm;
+
+    @FXML
+    private Label lblEstado;
+
+    @FXML
+    private CheckBox chkAplicaIva;
+
+    @FXML
+    private Label lblErrorIva;
+
+    @FXML
+    private TextField txtNombreProducto;
+
+    @FXML
+    private TextArea txtDescripcionProducto;
+
+    @FXML
+    private TextField txtPrecioProducto;
+
+    @FXML
+    private TextField txtCantidadInicial;
+
+    @FXML
+    private ComboBox<Categoria> comboCategoriaProducto;
+
+    @FXML
+    private TextField txtNuevaCategoria;
+
+    @FXML
+    private Button btnAgregarCategoria;
+
+    @FXML
+    private Button btnSeleccionarImagen;
+
+    @FXML
+    private Label lblImagenSeleccionada;
+
+    @FXML
+    private Label lblErrorProducto;
+
+    @FXML
+    private Label lblExitoProducto;
+
+    @FXML
+    private Button btnGuardarProducto;
+
+    @FXML
+    private VBox listaProductosExistentes;
+
+    @FXML
+    private TextField txtNombrePersonal;
+
+    @FXML
+    private TextField txtPinPersonal;
+
+    @FXML
+    private ComboBox<Rol> comboRolPersonal;
+
+    @FXML
+    private Label lblErrorPersonal;
+
+    @FXML
+    private Label lblExitoPersonal;
+
+    @FXML
+    private Button btnRegistrarPersonal;
+
+    @FXML
+    private SidebarController sidebarController;
+
+    private final SucursalDAO sucursalDAO;
+    private final ProductoDAO productoDAO;
+    private final CategoriaDAO categoriaDAO;
+    private final UsuarioDAO usuarioDAO;
+    private final SesionActual sesion;
+
+    /** Tasa de IVA por defecto para productos dados de alta desde este formulario básico (ver CLAUDE.md). */
+    private static final BigDecimal TASA_IVA_DEFECTO = new BigDecimal("0.16");
+
+    /** Foto elegida con el FileChooser antes de guardar; null si no se eligió ninguna (ver onSeleccionarImagen). */
+    private File imagenSeleccionada;
+
+    /** Sucursal activa ya cargada (ver mostrarSucursal), para poder guardar el interruptor de IVA sin recargarla. */
+    private Sucursal sucursalActual;
+
+    public AjustesController(AppContext contexto) {
+        this.sucursalDAO = contexto.getSucursalDAO();
+        this.productoDAO = contexto.getProductoDAO();
+        this.categoriaDAO = contexto.getCategoriaDAO();
+        this.usuarioDAO = contexto.getUsuarioDAO();
+        this.sesion = contexto.getSesion();
+    }
+
+    @FXML
+    void initialize() {
+        sidebarController.activar(Pantalla.AJUSTES);
+        comboCategoriaProducto.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(Categoria categoria) {
+                return categoria == null ? "" : categoria.getNombre();
+            }
+
+            @Override
+            public Categoria fromString(String texto) {
+                return null;
+            }
+        });
+        comboRolPersonal.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(Rol rol) {
+                return rol == null ? "" : rol.getEtiqueta();
+            }
+
+            @Override
+            public Rol fromString(String texto) {
+                return null;
+            }
+        });
+        comboRolPersonal.setItems(FXCollections.observableArrayList(Rol.values()));
+        comboRolPersonal.getSelectionModel().select(Rol.MESERO);
+        cargarSucursal();
+        cargarCategorias();
+        cargarProductosExistentes();
+    }
+
+    private void cargarSucursal() {
+        Async.ejecutar(
+                () -> sucursalDAO.obtenerPorId(sesion.getSucursalActivaId()).orElseThrow(),
+                this::mostrarSucursal,
+                error -> mostrarError()
+        );
+    }
+
+    private void mostrarSucursal(Sucursal sucursal) {
+        this.sucursalActual = sucursal;
+        lblNombre.setText(sucursal.getNombre());
+        lblDireccion.setText(sucursal.getDireccionCompleta());
+        lblTelefono.setText(sucursal.getTelefono() == null || sucursal.getTelefono().isBlank() ? "—" : sucursal.getTelefono());
+        lblTarifaBase.setText(Dinero.formatear(sucursal.getTarifaBaseEnvio()));
+        lblTarifaPorKm.setText(Dinero.formatear(sucursal.getTarifaPorKm()) + " / km");
+        lblEstado.setText(sucursal.isActiva() ? "Activa" : "Inactiva");
+        lblEstado.getStyleClass().setAll("badge", sucursal.isActiva() ? "badge-success" : "badge-muted");
+        chkAplicaIva.setSelected(sucursal.isAplicaIva());
+    }
+
+    private void mostrarError() {
+        lblNombre.setText("No se pudo cargar la sucursal");
+        lblDireccion.setText("Revisa la conexión con la base de datos.");
+    }
+
+    /** Cada restaurante decide si cobra IVA o no (ver CLAUDE.md, sección Precios e IVA); se guarda al instante. */
+    @FXML
+    void onToggleAplicaIva() {
+        if (sucursalActual == null) {
+            return;
+        }
+        boolean nuevoValor = chkAplicaIva.isSelected();
+        sucursalActual.setAplicaIva(nuevoValor);
+        ocultarErrorIva();
+        chkAplicaIva.setDisable(true);
+
+        Async.ejecutar(
+                () -> sucursalDAO.actualizar(sucursalActual),
+                exito -> chkAplicaIva.setDisable(false),
+                error -> {
+                    chkAplicaIva.setDisable(false);
+                    sucursalActual.setAplicaIva(!nuevoValor);
+                    chkAplicaIva.setSelected(!nuevoValor);
+                    mostrarErrorIva("No se pudo guardar. Intenta de nuevo.");
+                }
+        );
+    }
+
+    private void mostrarErrorIva(String mensaje) {
+        lblErrorIva.setText("⚠ " + mensaje);
+        lblErrorIva.setVisible(true);
+        lblErrorIva.setManaged(true);
+    }
+
+    private void ocultarErrorIva() {
+        lblErrorIva.setVisible(false);
+        lblErrorIva.setManaged(false);
+    }
+
+    private void cargarCategorias() {
+        cargarCategorias(null);
+    }
+
+    /** idASeleccionar: útil tras crear una categoría nueva, para dejarla ya elegida en el combo. */
+    private void cargarCategorias(Integer idASeleccionar) {
+        Async.ejecutar(
+                categoriaDAO::obtenerTodos,
+                categorias -> {
+                    comboCategoriaProducto.setItems(FXCollections.observableArrayList(categorias));
+                    Optional<Categoria> aSeleccionar = categorias.stream()
+                            .filter(c -> idASeleccionar != null && c.getId() == idASeleccionar)
+                            .findFirst();
+                    if (aSeleccionar.isPresent()) {
+                        comboCategoriaProducto.getSelectionModel().select(aSeleccionar.get());
+                    } else if (!categorias.isEmpty()) {
+                        comboCategoriaProducto.getSelectionModel().selectFirst();
+                    }
+                },
+                error -> { }
+        );
+    }
+
+    /** Cada restaurante puede tener sus propias categorías de menú, no solo "General". */
+    @FXML
+    void onAgregarCategoria() {
+        String nombre = txtNuevaCategoria.getText();
+        if (nombre == null || nombre.isBlank()) {
+            mostrarErrorProducto("Captura el nombre de la nueva categoría.");
+            return;
+        }
+
+        ocultarMensajesProducto();
+        btnAgregarCategoria.setDisable(true);
+
+        Async.ejecutar(
+                () -> categoriaDAO.crear(nuevaCategoria(nombre)),
+                categoriaCreada -> {
+                    btnAgregarCategoria.setDisable(false);
+                    txtNuevaCategoria.clear();
+                    mostrarExitoProducto("Categoría \"" + categoriaCreada.getNombre() + "\" creada.");
+                    cargarCategorias(categoriaCreada.getId());
+                },
+                error -> {
+                    btnAgregarCategoria.setDisable(false);
+                    mostrarErrorProducto("No se pudo crear la categoría (¿ya existe una con ese nombre?).");
+                }
+        );
+    }
+
+    private Categoria nuevaCategoria(String nombre) {
+        Categoria categoria = new Categoria();
+        categoria.setNombre(nombre);
+        return categoria;
+    }
+
+    @FXML
+    void onSeleccionarImagen() {
+        FileChooser selector = new FileChooser();
+        selector.setTitle("Elegir foto del producto");
+        selector.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Imágenes", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp"));
+
+        File elegido = selector.showOpenDialog(btnSeleccionarImagen.getScene().getWindow());
+        if (elegido != null) {
+            imagenSeleccionada = elegido;
+            lblImagenSeleccionada.setText(elegido.getName());
+        }
+    }
+
+    @FXML
+    void onGuardarProducto() {
+        String nombre = txtNombreProducto.getText();
+        Optional<BigDecimal> precio = parsearPrecio(txtPrecioProducto.getText());
+        Optional<Integer> cantidadInicial = parsearCantidad(txtCantidadInicial.getText());
+        Categoria categoria = comboCategoriaProducto.getValue();
+
+        if (nombre == null || nombre.isBlank()) {
+            mostrarErrorProducto("Captura el nombre del producto.");
+            return;
+        }
+        if (precio.isEmpty()) {
+            mostrarErrorProducto("Captura un precio válido.");
+            return;
+        }
+        if (cantidadInicial.isEmpty()) {
+            mostrarErrorProducto("Captura la cantidad inicial en existencia (puede ser 0).");
+            return;
+        }
+        if (categoria == null) {
+            mostrarErrorProducto("Selecciona una categoría.");
+            return;
+        }
+
+        ocultarMensajesProducto();
+        btnGuardarProducto.setDisable(true);
+
+        String descripcion = txtDescripcionProducto.getText();
+        int categoriaId = categoria.getId();
+        BigDecimal precioValor = precio.get();
+        int cantidadValor = cantidadInicial.get();
+        File imagen = imagenSeleccionada;
+
+        Async.ejecutar(
+                () -> productoDAO.crear(nuevoProducto(categoriaId, nombre, descripcion, precioValor, cantidadValor, imagen)),
+                productoCreado -> {
+                    btnGuardarProducto.setDisable(false);
+                    limpiarFormularioProducto();
+                    mostrarExitoProducto("\"" + productoCreado.getNombre() + "\" se agregó al Menú.");
+                    cargarProductosExistentes();
+                },
+                error -> {
+                    btnGuardarProducto.setDisable(false);
+                    mostrarErrorProducto("No se pudo guardar el producto. Intenta de nuevo.");
+                }
+        );
+    }
+
+    /** Se ejecuta en un hilo aparte (ver Async): getSucursalActivaId() no debe leerse antes de despachar. */
+    private Producto nuevoProducto(int categoriaId, String nombre, String descripcion, BigDecimal precio,
+                                    int cantidadInicial, File imagen) {
+        Producto producto = new Producto();
+        producto.setSucursalId(sesion.getSucursalActivaId());
+        producto.setCategoriaId(categoriaId);
+        producto.setNombre(nombre);
+        producto.setDescripcion(descripcion == null || descripcion.isBlank() ? null : descripcion);
+        producto.setPrecio(precio);
+        producto.setTasaIva(TASA_IVA_DEFECTO);
+        producto.setDisponible(true);
+        producto.setCantidadDisponible(cantidadInicial);
+        producto.setStockMinimo(0);
+        producto.setImagenPath(imagen == null ? null : AlmacenImagenesProducto.guardar(imagen));
+        return producto;
+    }
+
+    private Optional<BigDecimal> parsearPrecio(String texto) {
+        if (texto == null || texto.isBlank()) {
+            return Optional.empty();
+        }
+        try {
+            BigDecimal precio = new BigDecimal(texto.trim());
+            return precio.compareTo(BigDecimal.ZERO) > 0 ? Optional.of(precio) : Optional.empty();
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<Integer> parsearCantidad(String texto) {
+        if (texto == null || texto.isBlank()) {
+            return Optional.empty();
+        }
+        try {
+            int cantidad = Integer.parseInt(texto.trim());
+            return cantidad >= 0 ? Optional.of(cantidad) : Optional.empty();
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
+    }
+
+    private void limpiarFormularioProducto() {
+        txtNombreProducto.clear();
+        txtDescripcionProducto.clear();
+        txtPrecioProducto.clear();
+        txtCantidadInicial.clear();
+        imagenSeleccionada = null;
+        lblImagenSeleccionada.setText("Sin imagen seleccionada");
+    }
+
+    private void cargarProductosExistentes() {
+        Async.ejecutar(
+                () -> productoDAO.obtenerPorSucursal(sesion.getSucursalActivaId()),
+                this::renderizarProductosExistentes,
+                error -> { }
+        );
+    }
+
+    private void renderizarProductosExistentes(List<Producto> productos) {
+        if (productos.isEmpty()) {
+            Label etiqueta = new Label("Todavía no hay productos registrados en esta sucursal.");
+            etiqueta.getStyleClass().add("text-muted");
+            listaProductosExistentes.getChildren().setAll(etiqueta);
+            return;
+        }
+        listaProductosExistentes.getChildren().setAll(productos.stream().map(this::construirFilaProductoExistente).toList());
+    }
+
+    private HBox construirFilaProductoExistente(Producto producto) {
+        Label lblNombre = new Label(producto.getNombre());
+        lblNombre.getStyleClass().add("text-body-strong");
+
+        Label lblPrecio = new Label(Dinero.formatear(producto.getPrecio()));
+        lblPrecio.getStyleClass().add("text-muted");
+
+        VBox columnaNombre = new VBox(2, lblNombre, lblPrecio);
+        HBox.setHgrow(columnaNombre, Priority.ALWAYS);
+
+        Button btnEliminar = new Button();
+        btnEliminar.getStyleClass().add("icon-button");
+        btnEliminar.setGraphic(new FontIcon("mdi2t-trash-can-outline"));
+        btnEliminar.setOnAction(e -> confirmarEliminarProducto(producto));
+
+        HBox fila = new HBox(14, columnaNombre, btnEliminar);
+        fila.setAlignment(Pos.CENTER_LEFT);
+        fila.getStyleClass().add("order-card");
+        return fila;
+    }
+
+    private void confirmarEliminarProducto(Producto producto) {
+        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION,
+                "¿Eliminar \"" + producto.getNombre() + "\" del Menú? Esta acción no se puede deshacer.",
+                ButtonType.OK, ButtonType.CANCEL);
+        confirmacion.setHeaderText(null);
+        confirmacion.showAndWait().filter(boton -> boton == ButtonType.OK)
+                .ifPresent(boton -> eliminarProducto(producto));
+    }
+
+    private void eliminarProducto(Producto producto) {
+        Async.ejecutar(
+                () -> productoDAO.eliminar(producto.getId()),
+                exito -> cargarProductosExistentes(),
+                error -> mostrarErrorProducto(
+                        "No se pudo eliminar \"" + producto.getNombre() + "\": probablemente ya tiene pedidos registrados.")
+        );
+    }
+
+    private void mostrarErrorProducto(String mensaje) {
+        lblExitoProducto.setVisible(false);
+        lblExitoProducto.setManaged(false);
+        lblErrorProducto.setText("⚠ " + mensaje);
+        lblErrorProducto.setVisible(true);
+        lblErrorProducto.setManaged(true);
+    }
+
+    private void mostrarExitoProducto(String mensaje) {
+        lblErrorProducto.setVisible(false);
+        lblErrorProducto.setManaged(false);
+        lblExitoProducto.setText("✔ " + mensaje);
+        lblExitoProducto.setVisible(true);
+        lblExitoProducto.setManaged(true);
+    }
+
+    private void ocultarMensajesProducto() {
+        lblErrorProducto.setVisible(false);
+        lblErrorProducto.setManaged(false);
+        lblExitoProducto.setVisible(false);
+        lblExitoProducto.setManaged(false);
+    }
+
+    /** Alta de personal con su PIN de acceso a la terminal (ver CambiarUsuarioController, que lo consume). */
+    @FXML
+    void onRegistrarPersonal() {
+        String nombre = txtNombrePersonal.getText();
+        String pin = txtPinPersonal.getText();
+        Rol rol = comboRolPersonal.getValue();
+
+        if (nombre == null || nombre.isBlank()) {
+            mostrarErrorPersonal("Captura el nombre del empleado.");
+            return;
+        }
+        if (pin == null || pin.isBlank() || !pin.chars().allMatch(Character::isDigit)) {
+            mostrarErrorPersonal("El PIN debe ser solo números.");
+            return;
+        }
+        if (rol == null) {
+            mostrarErrorPersonal("Selecciona un rol.");
+            return;
+        }
+
+        ocultarMensajesPersonal();
+        btnRegistrarPersonal.setDisable(true);
+        Rol rolValor = rol;
+
+        Async.ejecutar(
+                () -> usuarioDAO.crear(nuevoUsuario(nombre, pin, rolValor)),
+                usuarioCreado -> {
+                    btnRegistrarPersonal.setDisable(false);
+                    limpiarFormularioPersonal();
+                    mostrarExitoPersonal("\"" + usuarioCreado.getNombre() + "\" se registró correctamente.");
+                },
+                error -> {
+                    btnRegistrarPersonal.setDisable(false);
+                    mostrarErrorPersonal("No se pudo registrar (¿el PIN ya está en uso en esta sucursal?).");
+                }
+        );
+    }
+
+    /** Se ejecuta en un hilo aparte (ver Async): getSucursalActivaId() no debe leerse antes de despachar. */
+    private Usuario nuevoUsuario(String nombre, String pin, Rol rol) {
+        Usuario usuario = new Usuario();
+        usuario.setSucursalId(sesion.getSucursalActivaId());
+        usuario.setNombre(nombre);
+        usuario.setPinAcceso(pin);
+        usuario.setRol(rol);
+        usuario.setActivo(true);
+        return usuario;
+    }
+
+    private void limpiarFormularioPersonal() {
+        txtNombrePersonal.clear();
+        txtPinPersonal.clear();
+        comboRolPersonal.getSelectionModel().select(Rol.MESERO);
+    }
+
+    private void mostrarErrorPersonal(String mensaje) {
+        lblExitoPersonal.setVisible(false);
+        lblExitoPersonal.setManaged(false);
+        lblErrorPersonal.setText("⚠ " + mensaje);
+        lblErrorPersonal.setVisible(true);
+        lblErrorPersonal.setManaged(true);
+    }
+
+    private void mostrarExitoPersonal(String mensaje) {
+        lblErrorPersonal.setVisible(false);
+        lblErrorPersonal.setManaged(false);
+        lblExitoPersonal.setText("✔ " + mensaje);
+        lblExitoPersonal.setVisible(true);
+        lblExitoPersonal.setManaged(true);
+    }
+
+    private void ocultarMensajesPersonal() {
+        lblErrorPersonal.setVisible(false);
+        lblErrorPersonal.setManaged(false);
+        lblExitoPersonal.setVisible(false);
+        lblExitoPersonal.setManaged(false);
+    }
+}

@@ -8,7 +8,14 @@ public enum Pantalla {
     MENU("MenuPOS.fxml"),
     COCINA("KitchenDisplay.fxml"),
     DOMICILIO("DeliveryView.fxml"),
-    CLIENTES("RegisterClient.fxml");
+    PEDIDOS("Pedidos.fxml"),
+    MENU_PEDIDO("MenuPedido.fxml"),
+    REPORTES("Reportes.fxml"),
+    PERSONAL("Personal.fxml"),
+    INVENTARIO("Inventario.fxml"),
+    CAJA("Caja.fxml"),
+    AJUSTES("Ajustes.fxml"),
+    CAMBIAR_USUARIO("CambiarUsuario.fxml");
 
     private final String archivoFxml;
 

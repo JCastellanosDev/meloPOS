@@ -7,6 +7,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import org.kordamp.ikonli.javafx.FontIcon;
 import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.dao.ClienteDAO;
@@ -93,14 +94,14 @@ public class DeliveryController {
         Label lblCliente = new Label("Cliente: " + (cliente == null ? "Sin registrar" : cliente.getNombre()));
         lblCliente.getStyleClass().add("text-muted");
 
-        Label lblIcono = new Label("📍");
+        FontIcon lblIcono = new FontIcon("mdi2m-map-marker-outline");
         lblIcono.getStyleClass().add("text-muted");
         Label lblDireccion = new Label(cliente == null ? "Dirección no registrada" : cliente.getDireccion());
         lblDireccion.getStyleClass().add("text-muted");
         HBox filaDireccion = new HBox(6, lblIcono, lblDireccion);
         filaDireccion.setAlignment(Pos.CENTER_LEFT);
 
-        VBox tarjeta = new VBox(encabezado, lblCliente, filaDireccion);
+        VBox tarjeta = new VBox(6, encabezado, lblCliente, filaDireccion);
         tarjeta.getStyleClass().add("order-card");
         VBox.setMargin(tarjeta, new Insets(0));
         return tarjeta;

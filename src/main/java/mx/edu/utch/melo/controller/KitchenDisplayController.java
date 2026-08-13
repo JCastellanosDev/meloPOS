@@ -1,8 +1,12 @@
 package mx.edu.utch.melo.controller;
 
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.util.Duration;
 import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.dao.DetalleOrdenDAO;
@@ -12,13 +16,17 @@ import mx.edu.utch.melo.model.DetalleOrden;
 import mx.edu.utch.melo.model.EstadoOrden;
 import mx.edu.utch.melo.model.Orden;
 import mx.edu.utch.melo.model.Producto;
-import mx.edu.utch.melo.nav.Pantalla;
 import mx.edu.utch.melo.view.TicketFactory;
+import mx.edu.utch.melo.view.TicketFactory.LineaTicket;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class KitchenDisplayController {
+
+    private static final DateTimeFormatter FORMATO_RELOJ = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     @FXML
     private Label lblClock;
@@ -28,9 +36,6 @@ public class KitchenDisplayController {
 
     @FXML
     private HBox contenedorTickets;
-
-    @FXML
-    private SidebarController sidebarController;
 
     private final OrdenDAO ordenDAO;
     private final DetalleOrdenDAO detalleOrdenDAO;
@@ -44,8 +49,20 @@ public class KitchenDisplayController {
 
     @FXML
     void initialize() {
-        sidebarController.activar(Pantalla.COCINA);
+        iniciarReloj();
         cargarTickets();
+    }
+
+    /** Ventana siempre encendida en cocina: el reloj real ayuda a estimar tiempos a simple vista. */
+    private void iniciarReloj() {
+        actualizarReloj();
+        Timeline reloj = new Timeline(new KeyFrame(Duration.seconds(1), evento -> actualizarReloj()));
+        reloj.setCycleCount(Animation.INDEFINITE);
+        reloj.play();
+    }
+
+    private void actualizarReloj() {
+        lblClock.setText(LocalTime.now().format(FORMATO_RELOJ));
     }
 
     private void cargarTickets() {
@@ -60,11 +77,11 @@ public class KitchenDisplayController {
     private List<DatosTicket> construirDatosTickets() {
         List<DatosTicket> resultado = new ArrayList<>();
         for (Orden orden : ordenDAO.obtenerPorEstado(EstadoOrden.EN_PREPARACION)) {
-            List<String> lineas = new ArrayList<>();
+            List<LineaTicket> lineas = new ArrayList<>();
             for (DetalleOrden detalle : detalleOrdenDAO.obtenerPorOrden(orden.getId())) {
                 Producto producto = productoDAO.obtenerPorId(detalle.getProductoId()).orElse(null);
                 String nombre = producto == null ? "Producto #" + detalle.getProductoId() : producto.getNombre();
-                lineas.add(detalle.getCantidad() + "x " + nombre);
+                lineas.add(new LineaTicket(detalle.getCantidad() + "x " + nombre, detalle.getNota()));
             }
             resultado.add(new DatosTicket(orden, lineas));
         }
@@ -103,6 +120,6 @@ public class KitchenDisplayController {
         contenedorTickets.getChildren().setAll(mensaje);
     }
 
-    private record DatosTicket(Orden orden, List<String> lineas) {
+    private record DatosTicket(Orden orden, List<LineaTicket> lineas) {
     }
 }

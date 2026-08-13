@@ -3,6 +3,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -21,7 +22,9 @@
             <Label text="Terminal 01" styleClass="topbar-title"/>
             <Region HBox.hgrow="ALWAYS"/>
             <TextField prefWidth="220" promptText="Buscar..." styleClass="search-field"/>
-            <Button text="🔄" styleClass="icon-button"/>
+            <Button styleClass="icon-button">
+                <graphic><FontIcon iconLiteral="mdi2r-refresh" iconSize="18" /></graphic>
+            </Button>
             <fx:include fx:id="topbar" source="Topbar.fxml"/>
         </HBox>
     </top>
@@ -46,7 +49,7 @@
             <VBox alignment="BOTTOM_CENTER" styleClass="pad-24">
                 <VBox styleClass="ai-banner" maxWidth="560">
                     <HBox spacing="12" alignment="CENTER_LEFT">
-                        <Label text="🤖" styleClass="text-icon-accent"/>
+                        <FontIcon iconLiteral="mdi2r-robot-outline" iconSize="18" styleClass="text-icon-accent"/>
                         <Label text="Sugerencia de Ruta (IA)" styleClass="text-body-strong"/>
                     </HBox>
                     <Label text="Se detectó alta demanda en Zona Norte. Se recomienda asignar 2 repartidores adicionales para mantener tiempos de entrega menores a 15 min."

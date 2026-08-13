@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="mx.edu.utch.melo.controller.AjustesController"
+            prefWidth="1280" prefHeight="960"
+            stylesheets="@styles.css">
+
+    <!-- ===== MENÚ LATERAL ===== -->
+    <left>
+        <fx:include fx:id="sidebar" source="Sidebar.fxml"/>
+    </left>
+
+    <!-- ===== BARRA SUPERIOR ===== -->
+    <top>
+        <HBox prefHeight="64" alignment="CENTER_LEFT" styleClass="topbar">
+            <Label text="Ajustes" styleClass="topbar-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <fx:include fx:id="topbar" source="Topbar.fxml"/>
+        </HBox>
+    </top>
+
+    <!-- ===== CENTRO: sub-pestañas (ver aviso de TabPane al inicio de styles.css) ===== -->
+    <center>
+        <TabPane tabClosingPolicy="UNAVAILABLE">
+
+            <!-- ===== PESTAÑA: Sucursal ===== -->
+            <Tab text="Sucursal" closable="false">
+                <ScrollPane fitToWidth="true" styleClass="kds-scroll">
+                    <VBox alignment="TOP_CENTER" styleClass="pad-32">
+                        <VBox prefWidth="520" maxWidth="520" styleClass="card-lg gap-0">
+                            <Label text="Datos de la Sucursal" styleClass="text-subtitle">
+                                <VBox.margin><Insets bottom="4"/></VBox.margin>
+                            </Label>
+                            <Label text="La mayoría de estos datos todavía son de solo lectura, excepto Cobrar IVA." styleClass="text-muted" wrapText="true">
+                                <VBox.margin><Insets bottom="20"/></VBox.margin>
+                            </Label>
+
+                            <VBox styleClass="totals-box gap-12">
+                                <HBox>
+                                    <Label text="Nombre" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                                    <Label fx:id="lblNombre" text="—" styleClass="text-body-strong"/>
+                                </HBox>
+                                <HBox>
+                                    <Label text="Dirección" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                                    <Label fx:id="lblDireccion" text="—" styleClass="text-body" wrapText="true" maxWidth="300"/>
+                                </HBox>
+                                <HBox>
+                                    <Label text="Teléfono" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                                    <Label fx:id="lblTelefono" text="—" styleClass="text-body"/>
+                                </HBox>
+                                <HBox>
+                                    <Label text="Tarifa base de envío" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                                    <Label fx:id="lblTarifaBase" text="—" styleClass="text-body"/>
+                                </HBox>
+                                <HBox>
+                                    <Label text="Tarifa por km" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                                    <Label fx:id="lblTarifaPorKm" text="—" styleClass="text-body"/>
+                                </HBox>
+                                <HBox>
+                                    <Label text="Estado" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                                    <Label fx:id="lblEstado" text="—" styleClass="badge badge-success"/>
+                                </HBox>
+                                <HBox alignment="CENTER_LEFT">
+                                    <Label text="Cobrar IVA" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                                    <CheckBox fx:id="chkAplicaIva" onAction="#onToggleAplicaIva"/>
+                                </HBox>
+                            </VBox>
+                            <Label fx:id="lblErrorIva" styleClass="form-error" wrapText="true" visible="false" managed="false">
+                                <VBox.margin><Insets top="12"/></VBox.margin>
+                            </Label>
+                        </VBox>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+
+            <!-- ===== PESTAÑA: Productos ===== -->
+            <Tab text="Productos" closable="false">
+                <ScrollPane fitToWidth="true" styleClass="kds-scroll">
+                    <VBox alignment="TOP_CENTER" styleClass="pad-32 gap-24">
+
+                        <!-- Alta de productos: el resto de columnas de `productos` (IVA, disponible)
+                             quedan con valores por defecto (ver AjustesController.nuevoProducto). -->
+                        <VBox prefWidth="520" maxWidth="520" styleClass="card-lg gap-0">
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <FontIcon iconLiteral="mdi2s-silverware-fork-knife" iconSize="18" styleClass="text-icon-accent"/>
+                                <Label text="Agregar Producto al Menú" styleClass="text-subtitle"/>
+                            </HBox>
+                            <Label text="Se agrega a la sucursal activa y aparece de inmediato en el Menú." styleClass="text-muted" wrapText="true">
+                                <VBox.margin><Insets top="4" bottom="20"/></VBox.margin>
+                            </Label>
+
+                            <Label text="NOMBRE" styleClass="text-label-caps"/>
+                            <HBox alignment="CENTER_LEFT" styleClass="input-wrapper">
+                                <VBox.margin><Insets top="6" bottom="16"/></VBox.margin>
+                                <FontIcon iconLiteral="mdi2f-food-outline" iconSize="16" styleClass="input-icon"/>
+                                <TextField fx:id="txtNombreProducto" promptText="Ej. Crepa de Nutella" prefWidth="440" styleClass="input-plain"/>
+                            </HBox>
+
+                            <Label text="DESCRIPCIÓN" styleClass="text-label-caps"/>
+                            <TextArea fx:id="txtDescripcionProducto" promptText="Ej. Crepa rellena de Nutella con fresas" prefRowCount="2" wrapText="true">
+                                <VBox.margin><Insets top="6" bottom="16"/></VBox.margin>
+                            </TextArea>
+
+                            <HBox spacing="16">
+                                <VBox.margin><Insets bottom="16"/></VBox.margin>
+                                <VBox HBox.hgrow="ALWAYS">
+                                    <Label text="PRECIO" styleClass="text-label-caps"/>
+                                    <HBox alignment="CENTER_LEFT" styleClass="input-wrapper">
+                                        <VBox.margin><Insets top="6"/></VBox.margin>
+                                        <FontIcon iconLiteral="mdi2c-cash" iconSize="16" styleClass="input-icon"/>
+                                        <TextField fx:id="txtPrecioProducto" promptText="0.00" styleClass="input-plain"/>
+                                    </HBox>
+                                </VBox>
+                                <VBox HBox.hgrow="ALWAYS">
+                                    <Label text="CANTIDAD INICIAL" styleClass="text-label-caps"/>
+                                    <HBox alignment="CENTER_LEFT" styleClass="input-wrapper">
+                                        <VBox.margin><Insets top="6"/></VBox.margin>
+                                        <FontIcon iconLiteral="mdi2b-box" iconSize="16" styleClass="input-icon"/>
+                                        <TextField fx:id="txtCantidadInicial" promptText="Ej. 20" styleClass="input-plain"/>
+                                    </HBox>
+                                </VBox>
+                            </HBox>
+
+                            <Label text="CATEGORÍA" styleClass="text-label-caps"/>
+                            <ComboBox fx:id="comboCategoriaProducto" maxWidth="Infinity">
+                                <VBox.margin><Insets top="6" bottom="16"/></VBox.margin>
+                            </ComboBox>
+
+                            <Label text="¿NO ESTÁ TU CATEGORÍA? CRÉALA" styleClass="text-label-caps"/>
+                            <HBox alignment="CENTER_LEFT" spacing="8">
+                                <VBox.margin><Insets top="6" bottom="16"/></VBox.margin>
+                                <HBox alignment="CENTER_LEFT" styleClass="input-wrapper" HBox.hgrow="ALWAYS">
+                                    <FontIcon iconLiteral="mdi2s-shape-outline" iconSize="16" styleClass="input-icon"/>
+                                    <TextField fx:id="txtNuevaCategoria" promptText="Ej. Postres" styleClass="input-plain"/>
+                                </HBox>
+                                <Button fx:id="btnAgregarCategoria" text="Agregar" graphicTextGap="6" styleClass="btn-outline-accent" onAction="#onAgregarCategoria">
+                                    <graphic><FontIcon iconLiteral="mdi2p-plus" iconSize="14" /></graphic>
+                                </Button>
+                            </HBox>
+
+                            <Label text="FOTO (OPCIONAL)" styleClass="text-label-caps"/>
+                            <HBox alignment="CENTER_LEFT" spacing="12">
+                                <VBox.margin><Insets top="6"/></VBox.margin>
+                                <Button fx:id="btnSeleccionarImagen" text="Elegir Imagen" graphicTextGap="8" styleClass="btn-outline" onAction="#onSeleccionarImagen">
+                                    <graphic><FontIcon iconLiteral="mdi2i-image-plus-outline" iconSize="16" /></graphic>
+                                </Button>
+                                <Label fx:id="lblImagenSeleccionada" text="Sin imagen seleccionada" styleClass="text-muted-lighter"/>
+                            </HBox>
+
+                            <Label fx:id="lblErrorProducto" styleClass="form-error" wrapText="true" visible="false" managed="false">
+                                <VBox.margin><Insets top="16"/></VBox.margin>
+                            </Label>
+                            <Label fx:id="lblExitoProducto" styleClass="form-success" wrapText="true" visible="false" managed="false">
+                                <VBox.margin><Insets top="16"/></VBox.margin>
+                            </Label>
+
+                            <Button fx:id="btnGuardarProducto" text="Guardar Producto" graphicTextGap="8" maxWidth="Infinity" styleClass="btn-primary" onAction="#onGuardarProducto">
+                                <graphic><FontIcon iconLiteral="mdi2c-content-save-outline" iconSize="16" /></graphic>
+                                <VBox.margin><Insets top="20"/></VBox.margin>
+                            </Button>
+                        </VBox>
+
+                        <!-- Productos ya registrados en esta sucursal, con opción de eliminarlos (ver AjustesController) -->
+                        <VBox prefWidth="1064" maxWidth="1064" styleClass="card-lg gap-0">
+                            <Label text="Productos en el Menú" styleClass="text-subtitle">
+                                <VBox.margin><Insets bottom="4"/></VBox.margin>
+                            </Label>
+                            <Label text="Productos activos de esta sucursal. Eliminar uno lo quita del Menú." styleClass="text-muted" wrapText="true">
+                                <VBox.margin><Insets bottom="16"/></VBox.margin>
+                            </Label>
+                            <!-- Contenedor dinámico: se llena en tiempo de ejecución (ver AjustesController) -->
+                            <VBox fx:id="listaProductosExistentes" spacing="10"/>
+                        </VBox>
+
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+
+            <!-- ===== PESTAÑA: Personal ===== -->
+            <Tab text="Personal" closable="false">
+                <ScrollPane fitToWidth="true" styleClass="kds-scroll">
+                    <VBox alignment="TOP_CENTER" styleClass="pad-32">
+                        <VBox prefWidth="520" maxWidth="520" styleClass="card-lg gap-0">
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <FontIcon iconLiteral="mdi2a-account-plus-outline" iconSize="18" styleClass="text-icon-accent"/>
+                                <Label text="Registrar Personal" styleClass="text-subtitle"/>
+                            </HBox>
+                            <Label text="Se agrega a la sucursal activa con su PIN de acceso a la terminal (ver botón de usuario, arriba a la derecha)." styleClass="text-muted" wrapText="true">
+                                <VBox.margin><Insets top="4" bottom="20"/></VBox.margin>
+                            </Label>
+
+                            <Label text="NOMBRE" styleClass="text-label-caps"/>
+                            <HBox alignment="CENTER_LEFT" styleClass="input-wrapper">
+                                <VBox.margin><Insets top="6" bottom="16"/></VBox.margin>
+                                <FontIcon iconLiteral="mdi2a-account-outline" iconSize="16" styleClass="input-icon"/>
+                                <TextField fx:id="txtNombrePersonal" promptText="Ej. Juan Pérez" prefWidth="440" styleClass="input-plain"/>
+                            </HBox>
+
+                            <HBox spacing="16">
+                                <VBox.margin><Insets bottom="16"/></VBox.margin>
+                                <VBox HBox.hgrow="ALWAYS">
+                                    <Label text="PIN" styleClass="text-label-caps"/>
+                                    <HBox alignment="CENTER_LEFT" styleClass="input-wrapper">
+                                        <VBox.margin><Insets top="6"/></VBox.margin>
+                                        <FontIcon iconLiteral="mdi2l-lock-outline" iconSize="16" styleClass="input-icon"/>
+                                        <TextField fx:id="txtPinPersonal" promptText="Ej. 1234" styleClass="input-plain"/>
+                                    </HBox>
+                                </VBox>
+                                <VBox HBox.hgrow="ALWAYS">
+                                    <Label text="ROL" styleClass="text-label-caps"/>
+                                    <ComboBox fx:id="comboRolPersonal" maxWidth="Infinity">
+                                        <VBox.margin><Insets top="6"/></VBox.margin>
+                                    </ComboBox>
+                                </VBox>
+                            </HBox>
+
+                            <Label fx:id="lblErrorPersonal" styleClass="form-error" wrapText="true" visible="false" managed="false">
+                                <VBox.margin><Insets bottom="4"/></VBox.margin>
+                            </Label>
+                            <Label fx:id="lblExitoPersonal" styleClass="form-success" wrapText="true" visible="false" managed="false">
+                                <VBox.margin><Insets bottom="4"/></VBox.margin>
+                            </Label>
+
+                            <Button fx:id="btnRegistrarPersonal" text="Registrar Personal" graphicTextGap="8" maxWidth="Infinity" styleClass="btn-primary" onAction="#onRegistrarPersonal">
+                                <graphic><FontIcon iconLiteral="mdi2c-content-save-outline" iconSize="16" /></graphic>
+                                <VBox.margin><Insets top="20"/></VBox.margin>
+                            </Button>
+                        </VBox>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+
+        </TabPane>
+    </center>
+
+</BorderPane>

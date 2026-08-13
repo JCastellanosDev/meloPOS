@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.geometry.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="mx.edu.utch.melo.controller.PedidosController"
+            prefWidth="1280" prefHeight="960"
+            stylesheets="@styles.css">
+
+    <!-- ===== MENÚ LATERAL ===== -->
+    <left>
+        <fx:include fx:id="sidebar" source="Sidebar.fxml"/>
+    </left>
+
+    <!-- ===== BARRA SUPERIOR ===== -->
+    <top>
+        <HBox prefHeight="64" alignment="CENTER_LEFT" styleClass="topbar">
+            <Label text="Pedidos" styleClass="breadcrumb-text"/>
+            <Label text="›" styleClass="breadcrumb-sep"/>
+            <Label text="Nuevo Pedido" styleClass="breadcrumb-active"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button styleClass="icon-button">
+                <graphic><FontIcon iconLiteral="mdi2m-magnify" iconSize="18" /></graphic>
+            </Button>
+            <fx:include fx:id="topbar" source="Topbar.fxml"/>
+        </HBox>
+    </top>
+
+    <!-- ===== CENTRO: Formulario para tomar un pedido ===== -->
+    <center>
+        <HBox styleClass="pad-32 gap-24" alignment="TOP_CENTER">
+
+            <!-- Panel del formulario -->
+            <VBox prefWidth="580" styleClass="card-lg gap-0">
+                <Label text="Nuevo Pedido" styleClass="text-subtitle"/>
+                <Label text="Captura los datos del cliente para tomar su pedido." styleClass="text-muted" wrapText="true">
+                    <VBox.margin><Insets top="4" bottom="24"/></VBox.margin>
+                </Label>
+
+                <!-- Teléfono -->
+                <Label text="NÚMERO DE CELULAR" styleClass="text-label-caps"/>
+                <HBox alignment="CENTER_LEFT" styleClass="input-wrapper">
+                    <VBox.margin><Insets top="6" bottom="4"/></VBox.margin>
+                    <FontIcon iconLiteral="mdi2p-phone-outline" iconSize="16" styleClass="input-icon"/>
+                    <TextField fx:id="txtPhone" promptText="Ej. 300 123 4567" prefWidth="480" styleClass="input-plain" onAction="#onBuscarPorTelefono"/>
+                </HBox>
+                <Label text="Presiona Enter para buscar si ya es cliente y autocompletar sus datos." styleClass="text-muted-lighter">
+                    <VBox.margin><Insets bottom="16"/></VBox.margin>
+                </Label>
+
+                <!-- Nombre -->
+                <Label text="NOMBRE Y APELLIDO" styleClass="text-label-caps"/>
+                <HBox alignment="CENTER_LEFT" styleClass="input-wrapper">
+                    <VBox.margin><Insets top="6" bottom="20"/></VBox.margin>
+                    <FontIcon iconLiteral="mdi2a-account-outline" iconSize="16" styleClass="input-icon"/>
+                    <TextField fx:id="txtNombre" promptText="Ej. Juan Pérez" prefWidth="480" styleClass="input-plain"/>
+                </HBox>
+
+                <!-- Dirección -->
+                <Label text="DIRECCIÓN DE ENTREGA" styleClass="text-label-caps"/>
+                <HBox alignment="CENTER" spacing="8">
+                    <VBox.margin><Insets top="6" bottom="6"/></VBox.margin>
+                    <HBox alignment="CENTER_LEFT" styleClass="input-wrapper" HBox.hgrow="ALWAYS">
+                        <FontIcon iconLiteral="mdi2m-map-marker-outline" iconSize="16" styleClass="input-icon"/>
+                        <TextField fx:id="txtAddress" promptText="Calle y número, o Calle, número y colonia" prefWidth="350" styleClass="input-plain"/>
+                    </HBox>
+                    <Button fx:id="btnUbicar" text="Ubicar" graphicTextGap="8" styleClass="btn-outline-accent" onAction="#onUbicar">
+                        <graphic><FontIcon iconLiteral="mdi2m-map-outline" iconSize="16" /></graphic>
+                    </Button>
+                </HBox>
+                <Label text="Presiona &quot;Ubicar&quot; para calcular la ruta real desde la sucursal y ver la distancia." styleClass="text-muted-lighter">
+                    <VBox.margin><Insets bottom="16"/></VBox.margin>
+                </Label>
+
+                <!-- Mapa: se dibuja con Mapbox al presionar "Ubicar" (ver PedidosController) -->
+                <StackPane prefHeight="200" styleClass="map-placeholder">
+                    <VBox.margin><Insets bottom="6"/></VBox.margin>
+                    <ImageView fx:id="imgMapa" fitWidth="516" fitHeight="200" preserveRatio="false" pickOnBounds="true" visible="false" managed="false"/>
+                    <VBox fx:id="mapaVacio" alignment="CENTER" spacing="6">
+                        <FontIcon iconLiteral="mdi2m-map-marker-outline" iconSize="28" styleClass="text-icon-lg-accent"/>
+                        <Label text="El mapa aparecerá aquí" styleClass="text-muted"/>
+                    </VBox>
+                </StackPane>
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <VBox.margin><Insets bottom="8"/></VBox.margin>
+                    <Label fx:id="lblDistancia" styleClass="text-muted-lighter" visible="false" managed="false"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="Ver en Google Maps" graphicTextGap="6" styleClass="btn-outline" onAction="#onVerEnGoogleMaps">
+                        <graphic><FontIcon iconLiteral="mdi2m-map-search-outline" iconSize="14" /></graphic>
+                    </Button>
+                </HBox>
+
+                <Separator styleClass="pad-8"/>
+
+                <!-- Mensaje de validación -->
+                <Label fx:id="lblError" styleClass="form-error" wrapText="true" visible="false" managed="false"/>
+
+                <!-- Botones de acción -->
+                <HBox spacing="12" styleClass="pad-top-16">
+                    <Button text="Cancelar" prefWidth="140" styleClass="btn-outline" onAction="#onCancelar"/>
+                    <Button fx:id="btnTomarPedido" text="Tomar Pedido" graphicTextGap="8" HBox.hgrow="ALWAYS" styleClass="btn-primary" onAction="#onTomarPedido">
+                        <graphic><FontIcon iconLiteral="mdi2c-clipboard-check-outline" iconSize="16" /></graphic>
+                    </Button>
+                </HBox>
+            </VBox>
+
+            <!-- Panel derecho -->
+            <VBox spacing="16" prefWidth="300">
+
+                <!-- Consejo de servicio -->
+                <VBox styleClass="tip-box">
+                    <HBox spacing="8" alignment="CENTER_LEFT">
+                        <FontIcon iconLiteral="mdi2a-alert-circle-outline" iconSize="16" styleClass="text-body"/>
+                        <Label text="Consejo de Servicio" styleClass="tip-title"/>
+                    </HBox>
+                    <Label text="Para entregas recurrentes, asegúrese de guardar referencias claras en la dirección. Un registro preciso reduce los tiempos de entrega."
+                           styleClass="text-muted" wrapText="true" maxWidth="260"/>
+                </VBox>
+            </VBox>
+        </HBox>
+    </center>
+
+</BorderPane>

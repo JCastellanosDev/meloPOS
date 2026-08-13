@@ -26,7 +26,7 @@
 
 /* ---------- Paleta (colores "looked-up", reutilizables) ---------- */
 .root {
-    -bg-app: #FDF5EF;
+    -bg-app: #F0E4D5;
     -bg-sidebar: #2C1A0E;
     -bg-sidebar-logo: #1E1208;
     -bg-white: #FFFFFF;
@@ -48,7 +48,7 @@
     -danger-soft: #FF6B6B;
 
     -fx-background-color: -bg-app;
-    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-font-family: "Helvetica Neue", "Segoe UI", Arial, sans-serif;
 }
 
 /* =========================================================
@@ -72,7 +72,7 @@
 .pad-20    { -fx-padding: 20; }
 .pad-24    { -fx-padding: 24; }
 .pad-32    { -fx-padding: 32; }
-.pad-dashboard { -fx-padding: 48 48 0 48; }
+.pad-dashboard { -fx-padding: 48; }
 .pad-y-16 { -fx-padding: 16 0; }
 .pad-bottom-16 { -fx-padding: 0 0 16 0; }
 .pad-top-8 { -fx-padding: 8 0 0 0; }
@@ -97,12 +97,12 @@
 
 .sidebar-nav {
     -fx-padding: 20 12 0 12;
-    -fx-spacing: 4;
+    -fx-spacing: 6;
 }
 
 .sidebar-nav-bottom {
     -fx-padding: 0 12 24 12;
-    -fx-spacing: 4;
+    -fx-spacing: 6;
 }
 
 /* Autocontenida (no se combina con .sidebar) para evitar conflictos de cascada CSS
@@ -228,7 +228,7 @@
     -fx-border-radius: 12;
     -fx-border-width: 1;
     -fx-padding: 24;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 8, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.14), 14, 0, 0, 4);
 }
 
 /* Variante de tarjeta con más "aire" interior. Autocontenida a propósito
@@ -240,13 +240,69 @@
     -fx-border-radius: 12;
     -fx-border-width: 1;
     -fx-padding: 32;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 8, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.14), 14, 0, 0, 4);
+}
+
+/* Autocontenida (no se combina con .card-lg) por la misma razón que .card-lg -- ver el aviso al inicio del archivo.
+   Recibo de PaymentPortal: mismo tratamiento visual que .order-panel (borde negro a la izquierda + sombra), para
+   que el ticket de cobro se vea igual que el de Menú (ver CLAUDE.md). */
+.receipt-card {
+    -fx-background-color: -bg-white;
+    -fx-background-radius: 12;
+    -fx-border-color: -border-soft -border-soft -border-soft black;
+    -fx-border-width: 1 1 1 3;
+    -fx-border-radius: 12;
+    -fx-padding: 32;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.18), 20, 0, -4, 0);
+}
+/* Nota de un artículo en el recibo de cobro -- solo lectura (ver .cart-item-note-input, la versión editable en Menú). */
+.receipt-item-note {
+    -fx-font-size: 11;
+    -fx-font-style: italic;
+    -fx-text-fill: -text-muted;
 }
 
 .card-selected {
     -fx-border-color: -accent;
     -fx-border-width: 2;
     -fx-effect: dropshadow(gaussian, rgba(200, 85, 42, 0.2), 10, 0, 0, 2);
+}
+
+/* Contenedor de "Accesos Rápidos" del Dashboard: como .card-lg pero con
+   contorno y sombra más marcados a propósito, para que se note como una
+   sección propia separada del fondo, no solo otra tarjeta más. Autocontenida
+   (no se combina con .card-lg) por la misma razón documentada arriba. */
+.quick-access-panel {
+    -fx-background-color: -bg-white;
+    -fx-background-radius: 16;
+    -fx-border-color: #B8A996;
+    -fx-border-radius: 16;
+    -fx-border-width: 2;
+    -fx-padding: 32;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.30), 28, 0, 0, 10);
+}
+
+/* Tile de "Accesos Rápidos" del Dashboard: vive DENTRO de un .card-lg, por eso
+   usa un fondo propio distinto del blanco del contenedor (para resaltar como
+   opción individual) en vez de sombra -- una tarjeta-dentro-de-tarjeta con
+   sombra propia se vería recargada. */
+.quick-tile {
+    -fx-background-color: -bg-soft-alt;
+    -fx-background-radius: 12;
+    -fx-border-color: -border-soft;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 20;
+}
+
+/* Variante para la opción principal (Comedor): mismo tile, con tinte de acento. */
+.quick-tile-accent {
+    -fx-background-color: -accent-soft-bg;
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(200, 85, 42, 0.25);
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 20;
 }
 
 /* =========================================================
@@ -338,6 +394,52 @@
     -fx-min-height: 44;
 }
 
+/* Versión pequeña de .btn-qty/.btn-icon-danger: en el ticket el nombre del
+   platillo debe dominar la fila, estos controles de edición van más discretos. */
+.btn-qty-sm {
+    -fx-background-color: #F0E4DC;
+    -fx-text-fill: -text-dark;
+    -fx-background-radius: 6;
+    -fx-min-width: 26;
+    -fx-min-height: 26;
+    -fx-cursor: hand;
+    -fx-font-size: 12;
+    -fx-padding: 0;
+}
+.btn-icon-danger-sm {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text-muted;
+    -fx-cursor: hand;
+    -fx-font-size: 13;
+    -fx-min-width: 26;
+    -fx-min-height: 26;
+}
+
+/* Fila de un artículo en el ticket (ver FilaArticuloFactory): línea de recibo real,
+   separada de la siguiente por un borde simple en vez de una tarjeta cerrada. */
+.cart-item-row {
+    -fx-border-color: transparent transparent -border-soft transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 0 0 10 0;
+}
+.cart-item-name {
+    -fx-font-size: 16;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-dark;
+}
+.cart-item-note-input {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent -border-soft transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-font-size: 11;
+    -fx-font-style: italic;
+    -fx-text-fill: -text-muted;
+    -fx-padding: 2 0 4 0;
+}
+.cart-item-note-input:focused {
+    -fx-border-color: transparent transparent -accent transparent;
+}
+
 /* Botón circular "+" / "✓" para agregar platillos (modificadores de platillos) */
 .btn-round-add {
     -fx-background-color: transparent;
@@ -418,6 +520,11 @@
     -fx-font-size: 36;
     -fx-font-weight: bold;
     -fx-text-fill: -text-dark;
+}
+.text-header-accent {
+    -fx-font-size: 36;
+    -fx-font-weight: bold;
+    -fx-text-fill: -accent;
 }
 .text-title {
     -fx-font-size: 26;
@@ -552,10 +659,14 @@
     -fx-padding: 14;
     -fx-spacing: 4;
 }
+/* Autocontenida (no se combina con .pad-N/.gap-N) por la misma razón que .card-lg -- ver el aviso al inicio del archivo. */
 .order-panel {
-    -fx-background-color: -bg-app;
-    -fx-border-color: transparent transparent transparent -border-soft;
-    -fx-border-width: 0 0 0 1;
+    -fx-background-color: -bg-white;
+    -fx-border-color: black;
+    -fx-border-width: 0 0 0 3;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.18), 24, 0, -8, 0);
+    -fx-padding: 24;
+    -fx-spacing: 0;
 }
 .totals-box {
     -fx-border-color: -border-soft transparent transparent transparent;
@@ -612,6 +723,14 @@
     -fx-font-size: 12;
     -fx-font-weight: bold;
     -fx-background-color: #FDE8E8;
+    -fx-background-radius: 8;
+    -fx-padding: 10 14;
+}
+.form-success {
+    -fx-text-fill: -success;
+    -fx-font-size: 12;
+    -fx-font-weight: bold;
+    -fx-background-color: #E8F5E8;
     -fx-background-radius: 8;
     -fx-padding: 10 14;
 }
@@ -684,6 +803,49 @@
 .breadcrumb-sep {
     -fx-text-fill: -text-muted;
 }
+
+/* TabPane (ver Ajustes.fxml): repinta las pestañas nativas de JavaFX (gris por
+   defecto) con el mismo lenguaje visual que .tab-item/.tab-item-active de arriba
+   -- subrayado de acento en la activa, texto apagado en las demás. */
+.tab-pane {
+    -fx-tab-min-width: 120;
+}
+.tab-pane .tab-header-area {
+    -fx-padding: 0 0 0 24;
+}
+.tab-pane .tab-header-background {
+    -fx-background-color: -bg-white;
+    -fx-border-color: transparent transparent -border-soft transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.tab-pane .tab {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 12 16;
+}
+.tab-pane .tab:selected {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent -accent transparent;
+    -fx-border-width: 0 0 2 0;
+}
+.tab-pane .tab .tab-label {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 13;
+}
+.tab-pane .tab:selected .tab-label {
+    -fx-text-fill: -accent;
+    -fx-font-weight: bold;
+}
+.tab-pane .tab-content-area {
+    -fx-background-color: -bg-app;
+}
+.tab-pane .tab-header-area .tab-down-button,
+.tab-pane .tab-header-area .control-buttons-tab {
+    -fx-opacity: 0;
+    -fx-max-width: 0;
+    -fx-pref-width: 0;
+}
 .breadcrumb-active {
     -fx-font-size: 13;
     -fx-font-weight: bold;
@@ -699,7 +861,7 @@
     -fx-border-color: -border-soft;
     -fx-border-radius: 12;
     -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 8, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.14), 14, 0, 0, 4);
     -fx-pref-width: 220;
 }
 /* Autocontenida (no se combina con .menu-card) por la misma razón que .card-lg -- ver el aviso al inicio del archivo. */
@@ -722,13 +884,9 @@
     -fx-spacing: 4;
 }
 .menu-card-title {
-    -fx-font-size: 14;
+    -fx-font-size: 18;
     -fx-font-weight: bold;
     -fx-text-fill: -text-dark;
-}
-.menu-card-desc {
-    -fx-font-size: 11;
-    -fx-text-fill: -text-muted;
     -fx-wrap-text: true;
 }
 .menu-card-footer {
@@ -740,13 +898,33 @@
     -fx-text-fill: -bg-white;
     -fx-font-size: 10;
     -fx-font-weight: bold;
-    -fx-background-radius: 4;
+    -fx-background-radius: 8;
     -fx-padding: 3 8;
 }
 
 /* =========================================================
-   PANEL DE COCINA (Kitchen Display System)
+   PANEL DE COCINA (Kitchen Display System) -- ventana independiente,
+   sin sidebar/topbar (ver KitchenDisplay.fxml), por eso tiene su
+   propia franja de estado en vez de reusar .topbar.
    ========================================================= */
+.kds-status-bar {
+    -fx-background-color: #1C1C1C;
+    -fx-padding: 0 20;
+    -fx-border-color: transparent transparent #3A3A3A transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.kds-status-icon {
+    -fx-icon-color: -accent;
+}
+.kds-status-title {
+    -fx-font-size: 16;
+    -fx-font-weight: bold;
+    -fx-text-fill: -bg-white;
+}
+.kds-status-clock {
+    -fx-font-size: 14;
+    -fx-text-fill: #CCCCCC;
+}
 .kds-surface {
     -fx-background-color: #1C1C1C;
 }
@@ -757,25 +935,25 @@
 }
 .ticket {
     -fx-background-color: #2A2A2A;
-    -fx-background-radius: 10;
+    -fx-background-radius: 12;
     -fx-border-color: #3A3A3A;
-    -fx-border-radius: 10;
+    -fx-border-radius: 12;
     -fx-border-width: 1.5;
     -fx-pref-width: 280;
 }
 .ticket-active {
     -fx-background-color: #2A2018;
-    -fx-background-radius: 10;
+    -fx-background-radius: 12;
     -fx-border-color: -accent;
-    -fx-border-radius: 10;
+    -fx-border-radius: 12;
     -fx-border-width: 2;
     -fx-pref-width: 280;
 }
 .ticket-urgent {
     -fx-background-color: #2A1A1A;
-    -fx-background-radius: 10;
+    -fx-background-radius: 12;
     -fx-border-color: -danger;
-    -fx-border-radius: 10;
+    -fx-border-radius: 12;
     -fx-border-width: 2;
     -fx-pref-width: 280;
 }
@@ -861,7 +1039,7 @@
     -fx-text-fill: #CCCCCC;
     -fx-font-size: 13;
     -fx-font-weight: bold;
-    -fx-background-radius: 0 0 10 10;
+    -fx-background-radius: 0 0 12 12;
     -fx-cursor: hand;
     -fx-min-height: 48;
 }
@@ -870,7 +1048,7 @@
     -fx-text-fill: #CCCCCC;
     -fx-font-size: 13;
     -fx-font-weight: bold;
-    -fx-background-radius: 0 0 10 10;
+    -fx-background-radius: 0 0 12 12;
     -fx-cursor: hand;
     -fx-min-height: 48;
 }
@@ -879,33 +1057,10 @@
     -fx-text-fill: -bg-white;
     -fx-font-size: 13;
     -fx-font-weight: bold;
-    -fx-background-radius: 0 0 10 10;
+    -fx-background-radius: 0 0 12 12;
     -fx-cursor: hand;
     -fx-min-height: 48;
 }
-.station-tab {
-    -fx-background-color: transparent;
-    -fx-text-fill: -text-muted;
-    -fx-font-size: 12;
-    -fx-background-radius: 6;
-    -fx-padding: 6 16;
-    -fx-cursor: hand;
-    -fx-border-color: -border-soft;
-    -fx-border-radius: 6;
-    -fx-border-width: 1;
-    -fx-min-height: 44;
-}
-.station-tab-active {
-    -fx-background-color: -text-dark;
-    -fx-text-fill: -bg-white;
-    -fx-font-size: 12;
-    -fx-font-weight: bold;
-    -fx-background-radius: 6;
-    -fx-padding: 6 16;
-    -fx-cursor: hand;
-    -fx-min-height: 44;
-}
-
 /* =========================================================
    PAGO / NUMPAD
    ========================================================= */
@@ -948,6 +1103,12 @@
 }
 .amount-value {
     -fx-font-size: 28;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-dark;
+}
+/* PIN capturado en CambiarUsuario.fxml -- cada dígito se muestra como "•", separados con espacios en el propio texto. */
+.pin-display {
+    -fx-font-size: 32;
     -fx-font-weight: bold;
     -fx-text-fill: -text-dark;
 }
