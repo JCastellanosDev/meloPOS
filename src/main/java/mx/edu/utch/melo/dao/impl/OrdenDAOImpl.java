@@ -53,8 +53,16 @@ public class OrdenDAOImpl implements OrdenDAO {
 
     @Override
     public Orden crear(Orden orden) {
-        try (Connection conexion = conexionDB.obtenerConexion();
-             PreparedStatement sentencia = conexion.prepareStatement(SQL_INSERTAR, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conexion = conexionDB.obtenerConexion()) {
+            return crear(orden, conexion);
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo crear la orden", e);
+        }
+    }
+
+    @Override
+    public Orden crear(Orden orden, Connection conexion) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(SQL_INSERTAR, Statement.RETURN_GENERATED_KEYS)) {
 
             sentencia.setString(1, orden.getTipoOrden().name());
             mapearEnteroNulo(sentencia, 2, orden.getMesaId());
@@ -83,8 +91,16 @@ public class OrdenDAOImpl implements OrdenDAO {
 
     @Override
     public Optional<Orden> obtenerPorId(Integer id) {
-        try (Connection conexion = conexionDB.obtenerConexion();
-             PreparedStatement sentencia = conexion.prepareStatement(SQL_POR_ID)) {
+        try (Connection conexion = conexionDB.obtenerConexion()) {
+            return obtenerPorId(id, conexion);
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo obtener la orden con id " + id, e);
+        }
+    }
+
+    @Override
+    public Optional<Orden> obtenerPorId(Integer id, Connection conexion) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(SQL_POR_ID)) {
 
             sentencia.setInt(1, id);
             try (ResultSet resultado = sentencia.executeQuery()) {
@@ -171,8 +187,16 @@ public class OrdenDAOImpl implements OrdenDAO {
 
     @Override
     public boolean actualizar(Orden orden) {
-        try (Connection conexion = conexionDB.obtenerConexion();
-             PreparedStatement sentencia = conexion.prepareStatement(SQL_ACTUALIZAR)) {
+        try (Connection conexion = conexionDB.obtenerConexion()) {
+            return actualizar(orden, conexion);
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo actualizar la orden con id " + orden.getId(), e);
+        }
+    }
+
+    @Override
+    public boolean actualizar(Orden orden, Connection conexion) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(SQL_ACTUALIZAR)) {
 
             sentencia.setString(1, orden.getTipoOrden().name());
             mapearEnteroNulo(sentencia, 2, orden.getMesaId());

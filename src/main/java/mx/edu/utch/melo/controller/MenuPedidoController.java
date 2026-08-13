@@ -11,18 +11,13 @@ import javafx.stage.Stage;
 import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.dao.ClienteDAO;
-import mx.edu.utch.melo.dao.DetalleOrdenDAO;
-import mx.edu.utch.melo.dao.OrdenDAO;
 import mx.edu.utch.melo.dao.ProductoDAO;
 import mx.edu.utch.melo.dao.SucursalDAO;
 import mx.edu.utch.melo.model.Cliente;
-import mx.edu.utch.melo.model.DetalleOrden;
-import mx.edu.utch.melo.model.EstadoOrden;
 import mx.edu.utch.melo.model.ItemOrden;
-import mx.edu.utch.melo.model.Orden;
 import mx.edu.utch.melo.model.Producto;
 import mx.edu.utch.melo.model.Sucursal;
-import mx.edu.utch.melo.model.TipoOrden;
+import mx.edu.utch.melo.service.VentaService;
 import mx.edu.utch.melo.sesion.SesionActual;
 import mx.edu.utch.melo.util.Dinero;
 import mx.edu.utch.melo.util.Totales;
@@ -30,7 +25,6 @@ import mx.edu.utch.melo.view.FilaArticuloFactory;
 import mx.edu.utch.melo.view.TarjetaProductoFactory;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -70,8 +64,7 @@ public class MenuPedidoController {
     private Button btnMandarCocina;
 
     private final ProductoDAO productoDAO;
-    private final OrdenDAO ordenDAO;
-    private final DetalleOrdenDAO detalleOrdenDAO;
+    private final VentaService ventaService;
     private final ClienteDAO clienteDAO;
     private final SucursalDAO sucursalDAO;
     private final SesionActual sesion;
@@ -90,8 +83,7 @@ public class MenuPedidoController {
 
     public MenuPedidoController(AppContext contexto) {
         this.productoDAO = contexto.getProductoDAO();
-        this.ordenDAO = contexto.getOrdenDAO();
-        this.detalleOrdenDAO = contexto.getDetalleOrdenDAO();
+        this.ventaService = contexto.getVentaService();
         this.clienteDAO = contexto.getClienteDAO();
         this.sucursalDAO = contexto.getSucursalDAO();
         this.sesion = contexto.getSesion();
@@ -123,10 +115,7 @@ public class MenuPedidoController {
         boolean iva = sucursal == null || sucursal.isAplicaIva();
 
         BigDecimal distanciaKm = sesion.getDistanciaKmEnProceso().orElse(null);
-        BigDecimal costoEnvio = BigDecimal.ZERO;
-        if (distanciaKm != null && sucursal != null && sucursal.getTarifaBaseEnvio() != null && sucursal.getTarifaPorKm() != null) {
-            costoEnvio = sucursal.getTarifaBaseEnvio().add(sucursal.getTarifaPorKm().multiply(distanciaKm));
-        }
+        BigDecimal costoEnvio = sucursal == null ? BigDecimal.ZERO : sucursal.calcularCostoEnvio(distanciaKm);
         return new DatosIniciales(productos, nombreCliente, distanciaKm, costoEnvio, iva);
     }
 
@@ -221,54 +210,14 @@ public class MenuPedidoController {
         boolean cobrarIva = aplicaIva;
 
         Async.ejecutar(
-                () -> crearOrdenDomicilio(copiaArticulos, cobrarIva),
+                () -> ventaService.crearOrdenDomicilio(sesion.getUsuarioActivo().getId(), clienteId, copiaArticulos,
+                        cobrarIva, distanciaKmActual, costoEnvioCalculado),
                 ordenCreada -> cerrarVentana(),
                 error -> {
                     btnMandarCocina.setDisable(false);
                     mostrarErrorPedido("No se pudo mandar el pedido a cocina. Intenta de nuevo.");
                 }
         );
-    }
-
-    /**
-     * Se ejecuta en un hilo aparte (ver Async): crea la orden DOMICILIO directo en
-     * EN_PREPARACION (aquí no se cobra antes de preparar) y su detalle. distanciaKm
-     * y costoEnvio son los que se calcularon en Pedidos con la ruta real de Mapbox
-     * (ver construirDatosIniciales); si no se presionó "Ubicar" ahí, quedan en
-     * null/0 -- el pedido se puede mandar a cocina igual, sin bloquear por eso.
-     */
-    private Orden crearOrdenDomicilio(List<ItemOrden> items, boolean cobrarIva) {
-        double subtotalDouble = Totales.subtotal(items);
-        BigDecimal subtotal = BigDecimal.valueOf(subtotalDouble);
-        BigDecimal impuestos = BigDecimal.valueOf(Totales.iva(subtotalDouble, cobrarIva));
-        BigDecimal total = BigDecimal.valueOf(Totales.total(subtotalDouble, cobrarIva)).add(costoEnvioCalculado);
-
-        Orden orden = new Orden();
-        orden.setTipoOrden(TipoOrden.DOMICILIO);
-        orden.setMesaId(null);
-        orden.setUsuarioId(sesion.getUsuarioActivo().getId());
-        orden.setClienteId(clienteId);
-        orden.setTurnoId(null);
-        orden.setEstado(EstadoOrden.EN_PREPARACION);
-        orden.setSubtotal(subtotal);
-        orden.setImpuestos(impuestos);
-        orden.setDistanciaKm(distanciaKmActual);
-        orden.setCostoEnvio(costoEnvioCalculado);
-        orden.setTotal(total);
-        orden.setFechaCreacion(LocalDateTime.now());
-        orden = ordenDAO.crear(orden);
-
-        for (ItemOrden item : items) {
-            DetalleOrden detalle = new DetalleOrden();
-            detalle.setOrdenId(orden.getId());
-            detalle.setProductoId(item.getProductoId());
-            detalle.setCantidad(item.getCantidad());
-            detalle.setPrecioUnitario(BigDecimal.valueOf(item.getPrecioUnitario()));
-            detalle.setNota(item.getNota().isBlank() ? null : item.getNota());
-            detalleOrdenDAO.crear(detalle);
-        }
-
-        return orden;
     }
 
     /** Esta pantalla es una ventana emergente (ver PedidosController.abrirMenuPedido): al terminar, se cierra sola. */

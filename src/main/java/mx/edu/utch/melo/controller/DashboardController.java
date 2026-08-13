@@ -25,6 +25,8 @@ import java.util.Locale;
 
 public class DashboardController {
 
+    private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(DashboardController.class.getName());
+
     @FXML
     private Button btnComedor;
 
@@ -94,7 +96,7 @@ public class DashboardController {
         Async.ejecutar(
                 this::construirResumen,
                 this::mostrarResumen,
-                error -> { }
+                error -> LOG.log(java.util.logging.Level.WARNING, "No se pudo cargar el resumen del dashboard", error)
         );
     }
 

@@ -18,18 +18,16 @@ import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
 import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
-import mx.edu.utch.melo.dao.CategoriaDAO;
-import mx.edu.utch.melo.dao.ProductoDAO;
-import mx.edu.utch.melo.dao.SucursalDAO;
-import mx.edu.utch.melo.dao.UsuarioDAO;
 import mx.edu.utch.melo.model.Categoria;
 import mx.edu.utch.melo.model.Producto;
 import mx.edu.utch.melo.model.Rol;
 import mx.edu.utch.melo.model.Sucursal;
-import mx.edu.utch.melo.model.Usuario;
 import mx.edu.utch.melo.nav.Pantalla;
+import mx.edu.utch.melo.service.CategoriaService;
+import mx.edu.utch.melo.service.ProductoService;
+import mx.edu.utch.melo.service.SucursalService;
+import mx.edu.utch.melo.service.UsuarioService;
 import mx.edu.utch.melo.sesion.SesionActual;
-import mx.edu.utch.melo.util.AlmacenImagenesProducto;
 import mx.edu.utch.melo.util.Dinero;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -40,6 +38,8 @@ import java.util.Optional;
 
 /** Datos de la sucursal activa (solo lectura) y alta de productos para el Menú. */
 public class AjustesController {
+
+    private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(AjustesController.class.getName());
 
     @FXML
     private Label lblNombre;
@@ -125,14 +125,11 @@ public class AjustesController {
     @FXML
     private SidebarController sidebarController;
 
-    private final SucursalDAO sucursalDAO;
-    private final ProductoDAO productoDAO;
-    private final CategoriaDAO categoriaDAO;
-    private final UsuarioDAO usuarioDAO;
+    private final SucursalService sucursalService;
+    private final ProductoService productoService;
+    private final CategoriaService categoriaService;
+    private final UsuarioService usuarioService;
     private final SesionActual sesion;
-
-    /** Tasa de IVA por defecto para productos dados de alta desde este formulario básico (ver CLAUDE.md). */
-    private static final BigDecimal TASA_IVA_DEFECTO = new BigDecimal("0.16");
 
     /** Foto elegida con el FileChooser antes de guardar; null si no se eligió ninguna (ver onSeleccionarImagen). */
     private File imagenSeleccionada;
@@ -141,10 +138,10 @@ public class AjustesController {
     private Sucursal sucursalActual;
 
     public AjustesController(AppContext contexto) {
-        this.sucursalDAO = contexto.getSucursalDAO();
-        this.productoDAO = contexto.getProductoDAO();
-        this.categoriaDAO = contexto.getCategoriaDAO();
-        this.usuarioDAO = contexto.getUsuarioDAO();
+        this.sucursalService = contexto.getSucursalService();
+        this.productoService = contexto.getProductoService();
+        this.categoriaService = contexto.getCategoriaService();
+        this.usuarioService = contexto.getUsuarioService();
         this.sesion = contexto.getSesion();
     }
 
@@ -182,7 +179,7 @@ public class AjustesController {
 
     private void cargarSucursal() {
         Async.ejecutar(
-                () -> sucursalDAO.obtenerPorId(sesion.getSucursalActivaId()).orElseThrow(),
+                () -> sucursalService.obtenerPorId(sesion.getSucursalActivaId()),
                 this::mostrarSucursal,
                 error -> mostrarError()
         );
@@ -212,12 +209,11 @@ public class AjustesController {
             return;
         }
         boolean nuevoValor = chkAplicaIva.isSelected();
-        sucursalActual.setAplicaIva(nuevoValor);
         ocultarErrorIva();
         chkAplicaIva.setDisable(true);
 
         Async.ejecutar(
-                () -> sucursalDAO.actualizar(sucursalActual),
+                () -> sucursalService.actualizarAplicaIva(sesion.getUsuarioActivo().getRol(), sucursalActual, nuevoValor),
                 exito -> chkAplicaIva.setDisable(false),
                 error -> {
                     chkAplicaIva.setDisable(false);
@@ -246,7 +242,7 @@ public class AjustesController {
     /** idASeleccionar: útil tras crear una categoría nueva, para dejarla ya elegida en el combo. */
     private void cargarCategorias(Integer idASeleccionar) {
         Async.ejecutar(
-                categoriaDAO::obtenerTodos,
+                categoriaService::obtenerTodos,
                 categorias -> {
                     comboCategoriaProducto.setItems(FXCollections.observableArrayList(categorias));
                     Optional<Categoria> aSeleccionar = categorias.stream()
@@ -258,7 +254,7 @@ public class AjustesController {
                         comboCategoriaProducto.getSelectionModel().selectFirst();
                     }
                 },
-                error -> { }
+                error -> LOG.log(java.util.logging.Level.WARNING, "No se pudieron cargar las categorías", error)
         );
     }
 
@@ -275,7 +271,7 @@ public class AjustesController {
         btnAgregarCategoria.setDisable(true);
 
         Async.ejecutar(
-                () -> categoriaDAO.crear(nuevaCategoria(nombre)),
+                () -> categoriaService.crear(sesion.getUsuarioActivo().getRol(), nombre),
                 categoriaCreada -> {
                     btnAgregarCategoria.setDisable(false);
                     txtNuevaCategoria.clear();
@@ -287,12 +283,6 @@ public class AjustesController {
                     mostrarErrorProducto("No se pudo crear la categoría (¿ya existe una con ese nombre?).");
                 }
         );
-    }
-
-    private Categoria nuevaCategoria(String nombre) {
-        Categoria categoria = new Categoria();
-        categoria.setNombre(nombre);
-        return categoria;
     }
 
     @FXML
@@ -343,7 +333,8 @@ public class AjustesController {
         File imagen = imagenSeleccionada;
 
         Async.ejecutar(
-                () -> productoDAO.crear(nuevoProducto(categoriaId, nombre, descripcion, precioValor, cantidadValor, imagen)),
+                () -> productoService.crear(sesion.getUsuarioActivo().getRol(), sesion.getSucursalActivaId(),
+                        categoriaId, nombre, descripcion, precioValor, cantidadValor, imagen),
                 productoCreado -> {
                     btnGuardarProducto.setDisable(false);
                     limpiarFormularioProducto();
@@ -355,23 +346,6 @@ public class AjustesController {
                     mostrarErrorProducto("No se pudo guardar el producto. Intenta de nuevo.");
                 }
         );
-    }
-
-    /** Se ejecuta en un hilo aparte (ver Async): getSucursalActivaId() no debe leerse antes de despachar. */
-    private Producto nuevoProducto(int categoriaId, String nombre, String descripcion, BigDecimal precio,
-                                    int cantidadInicial, File imagen) {
-        Producto producto = new Producto();
-        producto.setSucursalId(sesion.getSucursalActivaId());
-        producto.setCategoriaId(categoriaId);
-        producto.setNombre(nombre);
-        producto.setDescripcion(descripcion == null || descripcion.isBlank() ? null : descripcion);
-        producto.setPrecio(precio);
-        producto.setTasaIva(TASA_IVA_DEFECTO);
-        producto.setDisponible(true);
-        producto.setCantidadDisponible(cantidadInicial);
-        producto.setStockMinimo(0);
-        producto.setImagenPath(imagen == null ? null : AlmacenImagenesProducto.guardar(imagen));
-        return producto;
     }
 
     private Optional<BigDecimal> parsearPrecio(String texto) {
@@ -409,9 +383,9 @@ public class AjustesController {
 
     private void cargarProductosExistentes() {
         Async.ejecutar(
-                () -> productoDAO.obtenerPorSucursal(sesion.getSucursalActivaId()),
+                () -> productoService.obtenerPorSucursal(sesion.getSucursalActivaId()),
                 this::renderizarProductosExistentes,
-                error -> { }
+                error -> LOG.log(java.util.logging.Level.WARNING, "No se pudieron cargar los productos existentes", error)
         );
     }
 
@@ -457,7 +431,7 @@ public class AjustesController {
 
     private void eliminarProducto(Producto producto) {
         Async.ejecutar(
-                () -> productoDAO.eliminar(producto.getId()),
+                () -> productoService.eliminar(sesion.getUsuarioActivo().getRol(), producto.getId()),
                 exito -> cargarProductosExistentes(),
                 error -> mostrarErrorProducto(
                         "No se pudo eliminar \"" + producto.getNombre() + "\": probablemente ya tiene pedidos registrados.")
@@ -512,7 +486,8 @@ public class AjustesController {
         Rol rolValor = rol;
 
         Async.ejecutar(
-                () -> usuarioDAO.crear(nuevoUsuario(nombre, pin, rolValor)),
+                () -> usuarioService.registrar(sesion.getUsuarioActivo().getRol(), sesion.getSucursalActivaId(),
+                        nombre, pin, rolValor),
                 usuarioCreado -> {
                     btnRegistrarPersonal.setDisable(false);
                     limpiarFormularioPersonal();
@@ -523,17 +498,6 @@ public class AjustesController {
                     mostrarErrorPersonal("No se pudo registrar (¿el PIN ya está en uso en esta sucursal?).");
                 }
         );
-    }
-
-    /** Se ejecuta en un hilo aparte (ver Async): getSucursalActivaId() no debe leerse antes de despachar. */
-    private Usuario nuevoUsuario(String nombre, String pin, Rol rol) {
-        Usuario usuario = new Usuario();
-        usuario.setSucursalId(sesion.getSucursalActivaId());
-        usuario.setNombre(nombre);
-        usuario.setPinAcceso(pin);
-        usuario.setRol(rol);
-        usuario.setActivo(true);
-        return usuario;
     }
 
     private void limpiarFormularioPersonal() {

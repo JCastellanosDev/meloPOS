@@ -87,4 +87,16 @@ public class Turno {
     public boolean estaAbierto() {
         return fechaCierre == null;
     }
+
+    /**
+     * Monto que debería haber en caja al cierre: lo que había al abrir más lo vendido en efectivo
+     * durante el turno (tarjeta/transferencia no mueven el cajón físico, ver CLAUDE.md, "Turno y
+     * caja"). {@code totalEfectivo} viene de una agregación sobre pagos/órdenes (ver
+     * ReporteDAO.obtenerResumenTurno) que Turno no puede calcular por sí mismo -- por eso se recibe
+     * como parámetro en vez de ser un campo propio. Movido aquí desde TurnoService en la auditoría
+     * de Fase 7: la suma en sí (apertura + efectivo) es una regla propia de Turno.
+     */
+    public BigDecimal calcularMontoEsperado(BigDecimal totalEfectivo) {
+        return montoApertura.add(totalEfectivo);
+    }
 }

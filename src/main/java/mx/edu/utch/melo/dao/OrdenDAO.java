@@ -4,7 +4,9 @@ import mx.edu.utch.melo.model.EstadoOrden;
 import mx.edu.utch.melo.model.Orden;
 import mx.edu.utch.melo.model.TipoOrden;
 
+import java.sql.Connection;
 import java.util.List;
+import java.util.Optional;
 
 public interface OrdenDAO extends CrudDAO<Orden, Integer> {
 
@@ -18,4 +20,16 @@ public interface OrdenDAO extends CrudDAO<Orden, Integer> {
 
     /** id que tendrá la siguiente orden de esta sucursal (MAX(id)+1) -- para mostrarlo antes de crearla. */
     int siguienteNumeroOrden(int sucursalId);
+
+    /**
+     * Igual que {@link #crear(Orden)}, pero participa en una transacción ya abierta (ver
+     * ConexionDB#ejecutarEnTransaccion) -- no abre ni cierra su propia conexión.
+     */
+    Orden crear(Orden orden, Connection conexion);
+
+    /** Igual que {@link #actualizar(Orden)}, pero participa en una transacción ya abierta. */
+    boolean actualizar(Orden orden, Connection conexion);
+
+    /** Igual que {@link #obtenerPorId(Integer)}, pero participa en una transacción ya abierta. */
+    Optional<Orden> obtenerPorId(Integer id, Connection conexion);
 }

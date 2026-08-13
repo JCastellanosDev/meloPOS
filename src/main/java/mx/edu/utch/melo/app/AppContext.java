@@ -2,6 +2,7 @@ package mx.edu.utch.melo.app;
 
 import mx.edu.utch.melo.dao.CategoriaDAO;
 import mx.edu.utch.melo.dao.ClienteDAO;
+import mx.edu.utch.melo.dao.DashboardDAO;
 import mx.edu.utch.melo.dao.DetalleOrdenDAO;
 import mx.edu.utch.melo.dao.MesaDAO;
 import mx.edu.utch.melo.dao.ModificadorDAO;
@@ -12,9 +13,19 @@ import mx.edu.utch.melo.dao.ReporteDAO;
 import mx.edu.utch.melo.dao.SucursalDAO;
 import mx.edu.utch.melo.dao.TurnoDAO;
 import mx.edu.utch.melo.dao.UsuarioDAO;
+import mx.edu.utch.melo.db.ConexionDB;
 import mx.edu.utch.melo.geo.Geocodificador;
 import mx.edu.utch.melo.geo.ServicioRutas;
 import mx.edu.utch.melo.nav.Navigator;
+import mx.edu.utch.melo.service.CategoriaService;
+import mx.edu.utch.melo.service.ClienteService;
+import mx.edu.utch.melo.service.DashboardService;
+import mx.edu.utch.melo.service.PagoService;
+import mx.edu.utch.melo.service.ProductoService;
+import mx.edu.utch.melo.service.SucursalService;
+import mx.edu.utch.melo.service.TurnoService;
+import mx.edu.utch.melo.service.UsuarioService;
+import mx.edu.utch.melo.service.VentaService;
 import mx.edu.utch.melo.sesion.SesionActual;
 
 /**
@@ -49,13 +60,25 @@ public class AppContext {
     private final DetalleOrdenDAO detalleOrdenDAO;
     private final PagoDAO pagoDAO;
     private final ReporteDAO reporteDAO;
+    private final DashboardDAO dashboardDAO;
     private final ServicioRutas servicioRutas;
+
+    private final SucursalService sucursalService;
+    private final CategoriaService categoriaService;
+    private final ProductoService productoService;
+    private final UsuarioService usuarioService;
+    private final VentaService ventaService;
+    private final PagoService pagoService;
+    private final ClienteService clienteService;
+    private final TurnoService turnoService;
+    private final DashboardService dashboardService;
 
     public AppContext(Navigator navigator, SesionActual sesion, Geocodificador geocodificador,
                        UsuarioDAO usuarioDAO, SucursalDAO sucursalDAO, CategoriaDAO categoriaDAO,
                        ClienteDAO clienteDAO, ModificadorDAO modificadorDAO, MesaDAO mesaDAO, TurnoDAO turnoDAO,
                        ProductoDAO productoDAO, OrdenDAO ordenDAO, DetalleOrdenDAO detalleOrdenDAO, PagoDAO pagoDAO,
-                       ReporteDAO reporteDAO, ServicioRutas servicioRutas) {
+                       ReporteDAO reporteDAO, DashboardDAO dashboardDAO, ServicioRutas servicioRutas,
+                       ConexionDB conexionDB) {
         this.navigator = navigator;
         this.sesion = sesion;
         this.geocodificador = geocodificador;
@@ -71,7 +94,19 @@ public class AppContext {
         this.detalleOrdenDAO = detalleOrdenDAO;
         this.pagoDAO = pagoDAO;
         this.reporteDAO = reporteDAO;
+        this.dashboardDAO = dashboardDAO;
         this.servicioRutas = servicioRutas;
+
+        this.sucursalService = new SucursalService(sucursalDAO);
+        this.categoriaService = new CategoriaService(categoriaDAO);
+        this.productoService = new ProductoService(productoDAO);
+        this.usuarioService = new UsuarioService(usuarioDAO);
+        this.ventaService = new VentaService(ordenDAO, detalleOrdenDAO, conexionDB);
+        this.pagoService = new PagoService(ordenDAO, detalleOrdenDAO, productoDAO, pagoDAO, usuarioDAO, turnoDAO,
+                sucursalDAO, conexionDB);
+        this.clienteService = new ClienteService(clienteDAO, sucursalDAO, geocodificador, servicioRutas);
+        this.turnoService = new TurnoService(turnoDAO, reporteDAO);
+        this.dashboardService = new DashboardService(dashboardDAO, productoDAO, ordenDAO, this.turnoService);
     }
 
     public Navigator getNavigator() {
@@ -134,7 +169,47 @@ public class AppContext {
         return reporteDAO;
     }
 
+    public DashboardDAO getDashboardDAO() {
+        return dashboardDAO;
+    }
+
     public ServicioRutas getServicioRutas() {
         return servicioRutas;
+    }
+
+    public SucursalService getSucursalService() {
+        return sucursalService;
+    }
+
+    public CategoriaService getCategoriaService() {
+        return categoriaService;
+    }
+
+    public ProductoService getProductoService() {
+        return productoService;
+    }
+
+    public UsuarioService getUsuarioService() {
+        return usuarioService;
+    }
+
+    public VentaService getVentaService() {
+        return ventaService;
+    }
+
+    public PagoService getPagoService() {
+        return pagoService;
+    }
+
+    public ClienteService getClienteService() {
+        return clienteService;
+    }
+
+    public TurnoService getTurnoService() {
+        return turnoService;
+    }
+
+    public DashboardService getDashboardService() {
+        return dashboardService;
     }
 }

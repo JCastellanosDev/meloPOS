@@ -65,6 +65,118 @@
                     <!-- Contenedor dinámico: se llena en tiempo de ejecución (ver ReportesController) -->
                     <VBox fx:id="listaPlatillos" spacing="8"/>
                 </VBox>
+
+                <!-- ============================================================ -->
+                <!-- PANEL ANALÍTICO (ver ReportesController/DashboardService)      -->
+                <!-- ============================================================ -->
+
+                <!-- Ventas: hoy / semana / mes, cada una contra su periodo anterior equivalente -->
+                <VBox alignment="CENTER_LEFT" maxWidth="Infinity" spacing="14" styleClass="card-lg">
+                    <Label styleClass="text-title-sm" text="Ventas" />
+                    <HBox spacing="16">
+                        <VBox alignment="CENTER" styleClass="mini-stat-box-accent" HBox.hgrow="ALWAYS">
+                            <Label styleClass="text-label-caps" text="Hoy" />
+                            <Label fx:id="lblVentasHoyTotal" styleClass="stat-value-accent" text="—" />
+                            <Label fx:id="lblVentasHoyVariacion" styleClass="text-muted-sm" text="—" />
+                        </VBox>
+                        <VBox alignment="CENTER" styleClass="mini-stat-box" HBox.hgrow="ALWAYS">
+                            <Label styleClass="text-label-caps" text="Esta semana" />
+                            <Label fx:id="lblVentasSemanaTotal" styleClass="stat-value-lg" text="—" />
+                            <Label fx:id="lblVentasSemanaVariacion" styleClass="text-muted-sm" text="—" />
+                        </VBox>
+                        <VBox alignment="CENTER" styleClass="mini-stat-box" HBox.hgrow="ALWAYS">
+                            <Label styleClass="text-label-caps" text="Este mes" />
+                            <Label fx:id="lblVentasMesTotal" styleClass="stat-value-lg" text="—" />
+                            <Label fx:id="lblVentasMesVariacion" styleClass="text-muted-sm" text="—" />
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <!-- Operación: ticket promedio, número de órdenes, hora pico, métodos de pago (del mes en curso) -->
+                <VBox alignment="CENTER_LEFT" maxWidth="Infinity" spacing="14" styleClass="card-lg">
+                    <Label styleClass="text-title-sm" text="Operación (mes en curso)" />
+                    <HBox spacing="16">
+                        <VBox alignment="CENTER" styleClass="mini-stat-box" HBox.hgrow="ALWAYS">
+                            <Label styleClass="text-label-caps" text="Ticket promedio" />
+                            <Label fx:id="lblTicketPromedio" styleClass="stat-value-lg" text="—" />
+                        </VBox>
+                        <VBox alignment="CENTER" styleClass="mini-stat-box" HBox.hgrow="ALWAYS">
+                            <Label styleClass="text-label-caps" text="Órdenes" />
+                            <Label fx:id="lblNumeroOrdenes" styleClass="stat-value-lg" text="—" />
+                        </VBox>
+                        <VBox alignment="CENTER" styleClass="mini-stat-box" HBox.hgrow="ALWAYS">
+                            <Label styleClass="text-label-caps" text="Hora pico" />
+                            <Label fx:id="lblHoraPico" styleClass="stat-value-lg" text="—" />
+                        </VBox>
+                    </HBox>
+                    <Label styleClass="text-body-strong" text="Ventas por método de pago" />
+                    <VBox fx:id="listaMetodosPago" spacing="8" />
+                </VBox>
+
+                <!-- Productos: más vendidos, menos vendidos, categorías principales (mes en curso) -->
+                <VBox alignment="CENTER_LEFT" maxWidth="Infinity" spacing="14" styleClass="card-lg">
+                    <Label styleClass="text-title-sm" text="Productos (mes en curso)" />
+                    <HBox spacing="20">
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label styleClass="text-body-strong" text="Más vendidos" />
+                            <VBox fx:id="listaMasVendidos" spacing="6" />
+                        </VBox>
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label styleClass="text-body-strong" text="Menos vendidos" />
+                            <VBox fx:id="listaMenosVendidos" spacing="6" />
+                        </VBox>
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label styleClass="text-body-strong" text="Categorías principales" />
+                            <VBox fx:id="listaCategorias" spacing="6" />
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <!-- Inventario: bajo stock (alerta real) y sin ventas en el periodo (aproximación a "sin movimiento") -->
+                <VBox alignment="CENTER_LEFT" maxWidth="Infinity" spacing="14" styleClass="card-lg">
+                    <Label styleClass="text-title-sm" text="Inventario" />
+                    <HBox spacing="20">
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label styleClass="text-body-strong" text="Bajos en stock" />
+                            <VBox fx:id="listaBajoStock" spacing="6" />
+                        </VBox>
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label styleClass="text-body-strong" text="Sin ventas este mes" />
+                            <VBox fx:id="listaSinVentas" spacing="6" />
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <!-- Empleados: ventas por empleado (mes en curso) y el turno propio del usuario en sesión -->
+                <VBox alignment="CENTER_LEFT" maxWidth="Infinity" spacing="14" styleClass="card-lg">
+                    <Label styleClass="text-title-sm" text="Empleados" />
+                    <Label fx:id="lblTurnoPropio" styleClass="text-muted" text="—" />
+                    <VBox fx:id="listaVentasEmpleado" spacing="6" />
+                </VBox>
+
+                <!-- Delivery: solo si hubo pedidos a domicilio en el mes -->
+                <VBox fx:id="panelDelivery" alignment="CENTER_LEFT" maxWidth="Infinity" spacing="14" styleClass="card-lg">
+                    <Label styleClass="text-title-sm" text="Delivery (mes en curso)" />
+                    <HBox spacing="16">
+                        <VBox alignment="CENTER" styleClass="mini-stat-box" HBox.hgrow="ALWAYS">
+                            <Label styleClass="text-label-caps" text="Pedidos" />
+                            <Label fx:id="lblDeliveryPedidos" styleClass="stat-value-lg" text="—" />
+                        </VBox>
+                        <VBox alignment="CENTER" styleClass="mini-stat-box" HBox.hgrow="ALWAYS">
+                            <Label styleClass="text-label-caps" text="Distancia promedio" />
+                            <Label fx:id="lblDeliveryDistancia" styleClass="stat-value-lg" text="—" />
+                        </VBox>
+                        <VBox alignment="CENTER" styleClass="mini-stat-box" HBox.hgrow="ALWAYS">
+                            <Label styleClass="text-label-caps" text="Costo de envío prom." />
+                            <Label fx:id="lblDeliveryCosto" styleClass="stat-value-lg" text="—" />
+                        </VBox>
+                        <VBox alignment="CENTER" styleClass="mini-stat-box-accent" HBox.hgrow="ALWAYS">
+                            <Label styleClass="text-label-caps" text="Ingresos" />
+                            <Label fx:id="lblDeliveryIngresos" styleClass="stat-value-accent" text="—" />
+                        </VBox>
+                    </HBox>
+                </VBox>
+
             </VBox>
         </ScrollPane>
     </center>

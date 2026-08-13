@@ -32,6 +32,20 @@ public final class Configuracion {
         return PROPIEDADES.getProperty(clave, porDefecto);
     }
 
+    /**
+     * Igual que {@link #obtener(String, String)}, pero antes revisa una variable de entorno real
+     * del sistema operativo ({@code System.getenv}) -- en despliegues reales (Docker, CI) las
+     * credenciales casi siempre llegan así, no por archivo. Pensado para DB_URL/DB_USER/DB_PASSWORD
+     * (ver ConexionDB), donde una variable de entorno debe poder pisar cualquier archivo local.
+     */
+    public static String obtenerConVariableEntorno(String clave, String variableEntorno, String porDefecto) {
+        String desdeEntorno = System.getenv(variableEntorno);
+        if (desdeEntorno != null && !desdeEntorno.isBlank()) {
+            return desdeEntorno;
+        }
+        return obtener(clave, porDefecto);
+    }
+
     private static Properties cargarPropiedades() {
         Properties propiedades = new Properties();
         cargarDesdeClasspath(propiedades);

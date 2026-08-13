@@ -4,6 +4,7 @@ module mx.edu.utch.melo {
     requires java.sql;
     requires java.net.http;
     requires java.desktop;
+    requires java.logging;
     requires mysql.connector.j;
     requires com.google.gson;
     requires org.kordamp.ikonli.javafx;
@@ -24,6 +25,7 @@ module mx.edu.utch.melo {
     exports mx.edu.utch.melo.config;
     exports mx.edu.utch.melo.geo;
     exports mx.edu.utch.melo.sesion;
+    exports mx.edu.utch.melo.service;
     exports mx.edu.utch.melo.app;
     exports mx.edu.utch.melo.async;
 }

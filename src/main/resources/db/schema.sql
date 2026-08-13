@@ -128,17 +128,22 @@ CREATE TABLE modificadores (
 
 -- El mismo PIN puede repetirse en dos sucursales distintas (cada una
 -- opera independiente) pero no dos veces dentro de la misma.
+--
+-- pin_acceso guarda un hash PBKDF2 ("iteraciones:sal:hash", ver PinHasher), no el PIN en texto
+-- plano -- por eso VARCHAR(255) y no VARCHAR(20): un hash salado no cabe en 20 caracteres. La
+-- UNIQUE KEY sobre (sucursal_id, pin_acceso) ya no puede detectar PIN duplicados por sí sola (dos
+-- PIN iguales generan hashes distintos por la sal aleatoria) -- esa validación ahora vive en
+-- UsuarioService.registrar, en Java.
 CREATE TABLE usuarios (
     id           INT AUTO_INCREMENT PRIMARY KEY,
     sucursal_id  INT           NOT NULL,
     nombre       VARCHAR(120)  NOT NULL,
-    pin_acceso   VARCHAR(20)   NOT NULL,
+    pin_acceso   VARCHAR(255)  NOT NULL,
     rol          ENUM('MESERO', 'CAJERO', 'COCINA', 'ADMINISTRADOR') NOT NULL,
     activo       BOOLEAN       NOT NULL DEFAULT TRUE,
     CONSTRAINT fk_usuarios_sucursal
         FOREIGN KEY (sucursal_id) REFERENCES sucursales (id)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-    UNIQUE KEY uk_usuarios_sucursal_pin (sucursal_id, pin_acceso)
+        ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- La mesa "12" puede existir en varias sucursales a la vez, cada una la suya.

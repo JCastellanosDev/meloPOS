@@ -45,8 +45,16 @@ public class DetalleOrdenDAOImpl implements DetalleOrdenDAO {
 
     @Override
     public DetalleOrden crear(DetalleOrden detalle) {
-        try (Connection conexion = conexionDB.obtenerConexion();
-             PreparedStatement sentencia = conexion.prepareStatement(SQL_INSERTAR, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conexion = conexionDB.obtenerConexion()) {
+            return crear(detalle, conexion);
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo crear el detalle de la orden " + detalle.getOrdenId(), e);
+        }
+    }
+
+    @Override
+    public DetalleOrden crear(DetalleOrden detalle, Connection conexion) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(SQL_INSERTAR, Statement.RETURN_GENERATED_KEYS)) {
 
             mapearParametros(sentencia, detalle);
             sentencia.executeUpdate();

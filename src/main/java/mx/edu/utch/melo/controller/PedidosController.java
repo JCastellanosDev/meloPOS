@@ -9,16 +9,15 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
-import mx.edu.utch.melo.dao.ClienteDAO;
 import mx.edu.utch.melo.dao.SucursalDAO;
-import mx.edu.utch.melo.geo.Coordenadas;
-import mx.edu.utch.melo.geo.Geocodificador;
 import mx.edu.utch.melo.geo.Ruta;
-import mx.edu.utch.melo.geo.ServicioRutas;
 import mx.edu.utch.melo.model.Cliente;
 import mx.edu.utch.melo.model.Sucursal;
 import mx.edu.utch.melo.nav.Navigator;
 import mx.edu.utch.melo.nav.Pantalla;
+import mx.edu.utch.melo.service.ClienteService;
+import mx.edu.utch.melo.service.ClienteService.ClienteDuplicadoException;
+import mx.edu.utch.melo.service.ClienteService.SucursalSinCoordenadasException;
 import mx.edu.utch.melo.sesion.SesionActual;
 import mx.edu.utch.melo.validation.ClienteValidator;
 
@@ -32,6 +31,8 @@ import java.util.Optional;
 
 
 public class PedidosController {
+
+    private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(PedidosController.class.getName());
 
     @FXML
     private TextField txtNombre;
@@ -64,10 +65,8 @@ public class PedidosController {
     private SidebarController sidebarController;
 
     private final Navigator navigator;
-    private final ClienteDAO clienteDAO;
+    private final ClienteService clienteService;
     private final SucursalDAO sucursalDAO;
-    private final Geocodificador geocodificador;
-    private final ServicioRutas servicioRutas;
     private final SesionActual sesion;
 
     /** Cliente encontrado al buscar por teléfono (ver onBuscarPorTelefono); null si es un cliente nuevo. */
@@ -78,10 +77,8 @@ public class PedidosController {
 
     public PedidosController(AppContext contexto) {
         this.navigator = contexto.getNavigator();
-        this.clienteDAO = contexto.getClienteDAO();
+        this.clienteService = contexto.getClienteService();
         this.sucursalDAO = contexto.getSucursalDAO();
-        this.geocodificador = contexto.getGeocodificador();
-        this.servicioRutas = contexto.getServicioRutas();
         this.sesion = contexto.getSesion();
     }
 
@@ -102,9 +99,9 @@ public class PedidosController {
             return;
         }
         Async.ejecutar(
-                () -> clienteDAO.obtenerPorTelefono(telefono),
+                () -> clienteService.buscarPorTelefono(telefono),
                 this::autocompletarSiExiste,
-                error -> { }
+                error -> LOG.log(java.util.logging.Level.WARNING, "No se pudo buscar el cliente por teléfono", error)
         );
     }
 
@@ -128,7 +125,7 @@ public class PedidosController {
         btnUbicar.setDisable(true);
 
         Async.ejecutar(
-                () -> calcularRuta(direccion),
+                () -> clienteService.calcularRuta(direccion, sesion.getSucursalActivaId()),
                 resultado -> {
                     btnUbicar.setDisable(false);
                     if (resultado.isEmpty()) {
@@ -146,21 +143,6 @@ public class PedidosController {
                     }
                 }
         );
-    }
-
-
-    private Optional<Ruta> calcularRuta(String direccion) {
-        Sucursal sucursal = sucursalDAO.obtenerPorId(sesion.getSucursalActivaId()).orElseThrow();
-        if (sucursal.getLatitud() == null || sucursal.getLongitud() == null) {
-            throw new SucursalSinCoordenadasException();
-        }
-        Coordenadas origen = new Coordenadas(sucursal.getLatitud(), sucursal.getLongitud());
-
-        Optional<Coordenadas> destino = geocodificador.geocodificar(completarDireccion(direccion, sucursal), origen);
-        if (destino.isEmpty()) {
-            return Optional.empty();
-        }
-        return servicioRutas.calcularRuta(origen, destino.get());
     }
 
 
@@ -255,7 +237,7 @@ public class PedidosController {
 
         btnTomarPedido.setDisable(true);
         Async.ejecutar(
-                () -> crearCliente(nombre, telefono, direccion),
+                () -> clienteService.crear(nombre, telefono, direccion, sesion.getSucursalActivaId()),
                 clienteCreado -> {
                     btnTomarPedido.setDisable(false);
                     abrirMenuPedido(clienteCreado.getId());
@@ -279,37 +261,6 @@ public class PedidosController {
         navigator.abrirVentana(Pantalla.MENU_PEDIDO, "melo - Nuevo Pedido");
     }
 
-    /** Se ejecuta en un hilo aparte (ver Async): valida duplicado, geocodifica la dirección y persiste. */
-    private Cliente crearCliente(String nombre, String telefono, String direccion) {
-        if (clienteDAO.obtenerPorTelefono(telefono).isPresent()) {
-            throw new ClienteDuplicadoException(telefono);
-        }
-
-        Cliente cliente = new Cliente();
-        cliente.setNombre(nombre);
-        cliente.setTelefono(telefono);
-        cliente.setDireccion(direccion);
-
-        // La geocodificación es "best effort": si Mapbox no está configurado,
-        // no encuentra la dirección, o falla la red, igual se guarda el
-        // cliente -- solo con lat/lng en NULL. Nunca debe bloquear el registro.
-        try {
-            Sucursal sucursal = sucursalDAO.obtenerPorId(sesion.getSucursalActivaId()).orElse(null);
-            String direccionParaGeocodificar = sucursal == null ? direccion : completarDireccion(direccion, sucursal);
-            Coordenadas cercaDe = sucursal == null || sucursal.getLatitud() == null || sucursal.getLongitud() == null
-                    ? null
-                    : new Coordenadas(sucursal.getLatitud(), sucursal.getLongitud());
-            geocodificador.geocodificar(direccionParaGeocodificar, cercaDe).ifPresent(coordenadas -> {
-                cliente.setLatitud(coordenadas.getLatitud());
-                cliente.setLongitud(coordenadas.getLongitud());
-            });
-        } catch (RuntimeException geocodificacionFallida) {
-            // Sin coordenadas por ahora; el cliente se guarda de todas formas.
-        }
-
-        return clienteDAO.crear(cliente);
-    }
-
     private void mostrarError(String mensaje) {
         lblError.setText("⚠ " + mensaje);
         lblError.setVisible(true);
@@ -327,17 +278,5 @@ public class PedidosController {
         txtAddress.clear();
         clienteEncontrado = null;
         ocultarMapa();
-    }
-
-    private static class ClienteDuplicadoException extends RuntimeException {
-        ClienteDuplicadoException(String telefono) {
-            super("Cliente duplicado: " + telefono);
-        }
-    }
-
-    private static class SucursalSinCoordenadasException extends RuntimeException {
-        SucursalSinCoordenadasException() {
-            super("La sucursal activa no tiene latitud/longitud configuradas.");
-        }
     }
 }

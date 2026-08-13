@@ -25,8 +25,6 @@ public class UsuarioDAOImpl implements UsuarioDAO {
     private static final String SQL_ELIMINAR = "DELETE FROM usuarios WHERE id = ?";
     private static final String SQL_BASE = "SELECT id, sucursal_id, nombre, pin_acceso, rol, activo FROM usuarios";
     private static final String SQL_POR_ID = SQL_BASE + " WHERE id = ?";
-    private static final String SQL_POR_PIN =
-            SQL_BASE + " WHERE sucursal_id = ? AND pin_acceso = ? AND activo = TRUE";
     private static final String SQL_POR_SUCURSAL = SQL_BASE + " WHERE sucursal_id = ?";
 
     private final ConexionDB conexionDB;
@@ -65,21 +63,6 @@ public class UsuarioDAOImpl implements UsuarioDAO {
             }
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo obtener el usuario con id " + id, e);
-        }
-    }
-
-    @Override
-    public Optional<Usuario> obtenerPorPin(int sucursalId, String pinAcceso) {
-        try (Connection conexion = conexionDB.obtenerConexion();
-             PreparedStatement sentencia = conexion.prepareStatement(SQL_POR_PIN)) {
-
-            sentencia.setInt(1, sucursalId);
-            sentencia.setString(2, pinAcceso);
-            try (ResultSet resultado = sentencia.executeQuery()) {
-                return resultado.next() ? Optional.of(mapearFila(resultado)) : Optional.empty();
-            }
-        } catch (SQLException e) {
-            throw new PersistenciaException("No se pudo validar el PIN de acceso", e);
         }
     }
 

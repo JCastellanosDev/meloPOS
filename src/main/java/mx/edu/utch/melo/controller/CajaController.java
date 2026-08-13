@@ -7,16 +7,15 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
-import mx.edu.utch.melo.dao.ReporteDAO;
-import mx.edu.utch.melo.dao.TurnoDAO;
 import mx.edu.utch.melo.model.Turno;
 import mx.edu.utch.melo.model.reporte.ResumenTurno;
 import mx.edu.utch.melo.nav.Pantalla;
+import mx.edu.utch.melo.service.TurnoService;
+import mx.edu.utch.melo.service.TurnoService.ResultadoCierre;
 import mx.edu.utch.melo.sesion.SesionActual;
 import mx.edu.utch.melo.util.Dinero;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
@@ -29,6 +28,8 @@ import java.util.Optional;
  * contra lo contado.
  */
 public class CajaController {
+
+    private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(CajaController.class.getName());
 
     @FXML
     private VBox panelApertura;
@@ -76,15 +77,13 @@ public class CajaController {
     @FXML
     private SidebarController sidebarController;
 
-    private final TurnoDAO turnoDAO;
-    private final ReporteDAO reporteDAO;
+    private final TurnoService turnoService;
     private final SesionActual sesion;
 
     private Turno turnoActivo;
 
     public CajaController(AppContext contexto) {
-        this.turnoDAO = contexto.getTurnoDAO();
-        this.reporteDAO = contexto.getReporteDAO();
+        this.turnoService = contexto.getTurnoService();
         this.sesion = contexto.getSesion();
     }
 
@@ -96,7 +95,7 @@ public class CajaController {
 
     private void cargarTurnoAbierto() {
         Async.ejecutar(
-                () -> turnoDAO.obtenerTurnoAbierto(sesion.getUsuarioActivo().getId()),
+                () -> turnoService.obtenerTurnoAbierto(sesion.getUsuarioActivo().getId()),
                 this::mostrarSegunTurno,
                 error -> mostrarPanel(panelApertura)
         );
@@ -117,9 +116,9 @@ public class CajaController {
 
     private void cargarResumenTurno() {
         Async.ejecutar(
-                () -> reporteDAO.obtenerResumenTurno(turnoActivo.getId()),
+                () -> turnoService.obtenerResumen(turnoActivo.getId()),
                 this::mostrarResumen,
-                error -> { }
+                error -> LOG.log(java.util.logging.Level.WARNING, "No se pudo cargar el resumen del turno", error)
         );
     }
 
@@ -142,7 +141,8 @@ public class CajaController {
         btnAbrirTurno.setDisable(true);
 
         Async.ejecutar(
-                () -> turnoDAO.crear(nuevoTurno(monto.get())),
+                () -> turnoService.abrirTurno(sesion.getUsuarioActivo().getRol(), sesion.getSucursalActivaId(),
+                        sesion.getUsuarioActivo().getId(), monto.get()),
                 turnoCreado -> {
                     btnAbrirTurno.setDisable(false);
                     txtMontoApertura.clear();
@@ -153,18 +153,6 @@ public class CajaController {
                     mostrarError(lblErrorApertura, "No se pudo abrir el turno. Intenta de nuevo.");
                 }
         );
-    }
-
-    /** Se ejecuta en un hilo aparte (ver Async): getSucursalActivaId()/getUsuarioActivo() no deben leerse antes. */
-    private Turno nuevoTurno(BigDecimal montoApertura) {
-        Turno turno = new Turno();
-        turno.setSucursalId(sesion.getSucursalActivaId());
-        turno.setUsuarioId(sesion.getUsuarioActivo().getId());
-        turno.setMontoApertura(montoApertura);
-        turno.setMontoCierreContado(null);
-        turno.setFechaApertura(LocalDateTime.now());
-        turno.setFechaCierre(null);
-        return turno;
     }
 
     @FXML
@@ -181,28 +169,13 @@ public class CajaController {
         BigDecimal montoContado = monto.get();
 
         Async.ejecutar(
-                () -> cerrarTurno(turnoId, montoContado),
+                () -> turnoService.cerrarTurno(sesion.getUsuarioActivo().getRol(), turnoId, montoContado),
                 this::mostrarCierre,
                 error -> {
                     btnCerrarTurno.setDisable(false);
                     mostrarError(lblErrorCierre, "No se pudo cerrar el turno. Intenta de nuevo.");
                 }
         );
-    }
-
-    /** Se ejecuta en un hilo aparte (ver Async): cierra el turno y calcula la diferencia contra lo esperado. */
-    private ResultadoCierre cerrarTurno(int turnoId, BigDecimal montoContado) {
-        ResumenTurno resumen = reporteDAO.obtenerResumenTurno(turnoId);
-        Turno turno = turnoDAO.obtenerPorId(turnoId).orElseThrow();
-
-        BigDecimal montoEsperado = turno.getMontoApertura().add(resumen.totalEfectivo());
-        BigDecimal diferencia = montoContado.subtract(montoEsperado);
-
-        turno.setMontoCierreContado(montoContado);
-        turno.setFechaCierre(LocalDateTime.now());
-        turnoDAO.actualizar(turno);
-
-        return new ResultadoCierre(resumen, montoEsperado, montoContado, diferencia);
     }
 
     private void mostrarCierre(ResultadoCierre resultado) {
@@ -249,9 +222,5 @@ public class CajaController {
     private void ocultarError(Label etiqueta) {
         etiqueta.setVisible(false);
         etiqueta.setManaged(false);
-    }
-
-    private record ResultadoCierre(ResumenTurno resumen, BigDecimal montoEsperado, BigDecimal montoContado,
-                                    BigDecimal diferencia) {
     }
 }

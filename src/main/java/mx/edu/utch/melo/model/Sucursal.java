@@ -133,6 +133,23 @@ public class Sucursal {
         return calle + " " + numero + ", " + colonia + ", " + codigoPostal + " " + ciudad + ", " + estado + ", " + pais;
     }
 
+    /**
+     * Costo de envío para una distancia dada, según la tarifa propia de esta sucursal (ver
+     * CLAUDE.md, sección Domicilios: {@code costo_envio = tarifa_base_envio + tarifa_por_km *
+     * distancia_km}). Antes vivía calculada a mano dentro de MenuPedidoController -- movida aquí
+     * en la auditoría de Fase 7 porque los dos únicos datos que necesita (tarifaBaseEnvio,
+     * tarifaPorKm) son propios de Sucursal, no del Controller que la usaba.
+     *
+     * Cero si falta la distancia o si la sucursal todavía no tiene tarifas configuradas (sucursal
+     * nueva sin capturar) -- nunca bloquea el flujo, igual que antes.
+     */
+    public BigDecimal calcularCostoEnvio(BigDecimal distanciaKm) {
+        if (distanciaKm == null || tarifaBaseEnvio == null || tarifaPorKm == null) {
+            return BigDecimal.ZERO;
+        }
+        return tarifaBaseEnvio.add(tarifaPorKm.multiply(distanciaKm));
+    }
+
     public BigDecimal getLatitud() {
         return latitud;
     }

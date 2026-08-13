@@ -10,10 +10,10 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
-import mx.edu.utch.melo.dao.UsuarioDAO;
 import mx.edu.utch.melo.model.Usuario;
 import mx.edu.utch.melo.nav.Navigator;
 import mx.edu.utch.melo.nav.Pantalla;
+import mx.edu.utch.melo.service.UsuarioService;
 import mx.edu.utch.melo.sesion.SesionActual;
 
 import java.util.Optional;
@@ -41,14 +41,14 @@ public class CambiarUsuarioController {
     @FXML
     private Button btnConfirmar;
 
-    private final UsuarioDAO usuarioDAO;
+    private final UsuarioService usuarioService;
     private final SesionActual sesion;
     private final Navigator navigator;
 
     private final StringBuilder pin = new StringBuilder();
 
     public CambiarUsuarioController(AppContext contexto) {
-        this.usuarioDAO = contexto.getUsuarioDAO();
+        this.usuarioService = contexto.getUsuarioService();
         this.sesion = contexto.getSesion();
         this.navigator = contexto.getNavigator();
     }
@@ -120,7 +120,7 @@ public class CambiarUsuarioController {
         String pinCapturado = pin.toString();
 
         Async.ejecutar(
-                () -> usuarioDAO.obtenerPorPin(sesion.getSucursalActivaId(), pinCapturado),
+                () -> usuarioService.autenticarPorPin(sesion.getSucursalActivaId(), pinCapturado),
                 this::procesarResultado,
                 error -> {
                     btnConfirmar.setDisable(false);

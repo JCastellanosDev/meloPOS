@@ -13,29 +13,18 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
-import mx.edu.utch.melo.dao.DetalleOrdenDAO;
-import mx.edu.utch.melo.dao.OrdenDAO;
-import mx.edu.utch.melo.dao.PagoDAO;
-import mx.edu.utch.melo.dao.ProductoDAO;
-import mx.edu.utch.melo.dao.SucursalDAO;
-import mx.edu.utch.melo.dao.TurnoDAO;
-import mx.edu.utch.melo.dao.UsuarioDAO;
-import mx.edu.utch.melo.model.DetalleOrden;
 import mx.edu.utch.melo.model.EntradaMonetaria;
-import mx.edu.utch.melo.model.EstadoOrden;
 import mx.edu.utch.melo.model.MetodoPago;
 import mx.edu.utch.melo.model.Orden;
-import mx.edu.utch.melo.model.Pago;
-import mx.edu.utch.melo.model.Producto;
 import mx.edu.utch.melo.model.Sucursal;
 import mx.edu.utch.melo.model.Usuario;
+import mx.edu.utch.melo.service.PagoService;
+import mx.edu.utch.melo.service.PagoService.LineaRecibo;
 import mx.edu.utch.melo.sesion.SesionActual;
 import mx.edu.utch.melo.util.Dinero;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -89,13 +78,7 @@ public class PaymentPortalController {
     @FXML
     private Label lblTransferencia;
 
-    private final OrdenDAO ordenDAO;
-    private final DetalleOrdenDAO detalleOrdenDAO;
-    private final ProductoDAO productoDAO;
-    private final PagoDAO pagoDAO;
-    private final UsuarioDAO usuarioDAO;
-    private final TurnoDAO turnoDAO;
-    private final SucursalDAO sucursalDAO;
+    private final PagoService pagoService;
     private final SesionActual sesion;
 
     private final EntradaMonetaria entradaRecibido = new EntradaMonetaria();
@@ -103,13 +86,7 @@ public class PaymentPortalController {
     private MetodoPago metodoSeleccionado = MetodoPago.EFECTIVO;
 
     public PaymentPortalController(AppContext contexto) {
-        this.ordenDAO = contexto.getOrdenDAO();
-        this.detalleOrdenDAO = contexto.getDetalleOrdenDAO();
-        this.productoDAO = contexto.getProductoDAO();
-        this.pagoDAO = contexto.getPagoDAO();
-        this.usuarioDAO = contexto.getUsuarioDAO();
-        this.turnoDAO = contexto.getTurnoDAO();
-        this.sucursalDAO = contexto.getSucursalDAO();
+        this.pagoService = contexto.getPagoService();
         this.sesion = contexto.getSesion();
     }
 
@@ -168,7 +145,7 @@ public class PaymentPortalController {
 
     private void cargarOrden(int ordenId) {
         Async.ejecutar(
-                () -> construirDatosRecibo(ordenId),
+                () -> pagoService.obtenerRecibo(ordenId, sesion.getSucursalActivaId()),
                 datos -> {
                     this.ordenActiva = datos.orden();
                     mostrarEncabezado(datos.orden(), datos.cajero(), datos.sucursal());
@@ -177,21 +154,6 @@ public class PaymentPortalController {
                 },
                 error -> mostrarSinOrden()
         );
-    }
-
-    /** Se ejecuta en un hilo aparte (ver Async): todas las consultas a BD juntas, la UI se arma después. */
-    private DatosRecibo construirDatosRecibo(int ordenId) {
-        Orden orden = ordenDAO.obtenerPorId(ordenId).orElseThrow();
-        Usuario cajero = usuarioDAO.obtenerPorId(orden.getUsuarioId()).orElse(null);
-        Sucursal sucursal = sucursalDAO.obtenerPorId(sesion.getSucursalActivaId()).orElse(null);
-
-        List<LineaRecibo> lineas = new ArrayList<>();
-        for (DetalleOrden detalle : detalleOrdenDAO.obtenerPorOrden(ordenId)) {
-            Producto producto = productoDAO.obtenerPorId(detalle.getProductoId()).orElse(null);
-            String nombre = producto == null ? "Producto #" + detalle.getProductoId() : producto.getNombre();
-            lineas.add(new LineaRecibo(nombre, detalle.getCantidad(), detalle.getSubtotal(), detalle.getNota()));
-        }
-        return new DatosRecibo(orden, cajero, sucursal, lineas);
     }
 
     /** Mismo encabezado que el ticket de Menú (ver MenuPOSController), para que el recibo se vea igual. */
@@ -299,7 +261,7 @@ public class PaymentPortalController {
         BigDecimal montoTotal = ordenActiva.getTotal();
 
         Async.ejecutar(
-                () -> registrarPago(ordenId, metodo, montoTotal),
+                () -> pagoService.registrarPago(ordenId, metodo, montoTotal, sesion.getUsuarioActivo().getId()),
                 exito -> {
                     sesion.setOrdenEnProceso(null);
                     cerrarVentana();
@@ -314,26 +276,6 @@ public class PaymentPortalController {
     /** Esta pantalla es una ventana emergente (ver MenuPOSController.onCobrarCuenta), no una pestaña: al terminar, se cierra sola. */
     private void cerrarVentana() {
         ((Stage) btnConfirmarPago.getScene().getWindow()).close();
-    }
-
-    /** Se ejecuta en un hilo aparte (ver Async): registra el pago y avanza el estado de la orden. */
-    private Boolean registrarPago(int ordenId, MetodoPago metodo, BigDecimal monto) {
-        Pago pago = new Pago();
-        pago.setOrdenId(ordenId);
-        pago.setMetodoPago(metodo);
-        pago.setMonto(monto);
-        pago.setFechaPago(LocalDateTime.now());
-        pagoDAO.crear(pago);
-
-        // Para COMEDOR/PARA_LLEVAR se cobra antes de preparar (ver CLAUDE.md): al pagar, pasa a cocina.
-        Orden orden = ordenDAO.obtenerPorId(ordenId).orElseThrow();
-        orden.setEstado(EstadoOrden.EN_PREPARACION);
-        // Corte de caja: la venta se cuenta en el turno abierto del cajero, si tiene uno abierto.
-        // Si no (olvidó abrir turno), el cobro no se bloquea -- queda con turno_id null, igual que hoy.
-        turnoDAO.obtenerTurnoAbierto(sesion.getUsuarioActivo().getId())
-                .ifPresent(turno -> orden.setTurnoId(turno.getId()));
-        ordenDAO.actualizar(orden);
-        return Boolean.TRUE;
     }
 
     private double parsearMoneda(String texto) {
@@ -367,11 +309,5 @@ public class PaymentPortalController {
     private void ocultarErrorPago() {
         lblErrorPago.setVisible(false);
         lblErrorPago.setManaged(false);
-    }
-
-    private record LineaRecibo(String nombre, int cantidad, BigDecimal monto, String nota) {
-    }
-
-    private record DatosRecibo(Orden orden, Usuario cajero, Sucursal sucursal, List<LineaRecibo> lineas) {
     }
 }

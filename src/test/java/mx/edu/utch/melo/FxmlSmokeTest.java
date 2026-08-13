@@ -6,6 +6,7 @@ import javafx.scene.Parent;
 import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.dao.CategoriaDAO;
 import mx.edu.utch.melo.dao.ClienteDAO;
+import mx.edu.utch.melo.dao.DashboardDAO;
 import mx.edu.utch.melo.dao.DetalleOrdenDAO;
 import mx.edu.utch.melo.dao.MesaDAO;
 import mx.edu.utch.melo.dao.ModificadorDAO;
@@ -16,6 +17,7 @@ import mx.edu.utch.melo.dao.ReporteDAO;
 import mx.edu.utch.melo.dao.SucursalDAO;
 import mx.edu.utch.melo.dao.TurnoDAO;
 import mx.edu.utch.melo.dao.UsuarioDAO;
+import mx.edu.utch.melo.db.ConexionDB;
 import mx.edu.utch.melo.geo.ServicioRutas;
 import mx.edu.utch.melo.nav.ControllerFactory;
 import mx.edu.utch.melo.nav.Navigator;
@@ -79,7 +81,13 @@ class FxmlSmokeTest {
             daoInactivo(DetalleOrdenDAO.class),
             daoInactivo(PagoDAO.class),
             daoInactivo(ReporteDAO.class),
-            (origen, destino) -> Optional.empty());
+            daoInactivo(DashboardDAO.class),
+            (origen, destino) -> Optional.empty(),
+            // Singleton real, pero seguro aquí: solo lo usan VentaService/PagoService para abrir una
+            // transacción (ver ConexionDB#ejecutarEnTransaccion), y eso nunca se dispara en esta prueba
+            // (solo se llama initialize(), nunca "Cobrar"/"Confirmar Pago"). Construirlo no valida
+            // credenciales -- eso se pospone a obtenerConexion(), que aquí nunca se invoca.
+            ConexionDB.getInstancia());
 
     /** DAO proxy que nunca toca la base de datos: solo devuelve valores vacíos/por defecto. */
     private static <T> T daoInactivo(Class<T> tipoDao) {

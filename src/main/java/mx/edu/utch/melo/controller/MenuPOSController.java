@@ -11,20 +11,15 @@ import javafx.scene.layout.VBox;
 import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.dao.CategoriaDAO;
-import mx.edu.utch.melo.dao.DetalleOrdenDAO;
-import mx.edu.utch.melo.dao.OrdenDAO;
 import mx.edu.utch.melo.dao.ProductoDAO;
 import mx.edu.utch.melo.dao.SucursalDAO;
 import mx.edu.utch.melo.model.Categoria;
-import mx.edu.utch.melo.model.DetalleOrden;
-import mx.edu.utch.melo.model.EstadoOrden;
 import mx.edu.utch.melo.model.ItemOrden;
-import mx.edu.utch.melo.model.Orden;
 import mx.edu.utch.melo.model.Producto;
 import mx.edu.utch.melo.model.Sucursal;
-import mx.edu.utch.melo.model.TipoOrden;
 import mx.edu.utch.melo.nav.Navigator;
 import mx.edu.utch.melo.nav.Pantalla;
+import mx.edu.utch.melo.service.VentaService;
 import mx.edu.utch.melo.sesion.SesionActual;
 import mx.edu.utch.melo.util.Dinero;
 import mx.edu.utch.melo.util.Totales;
@@ -32,7 +27,6 @@ import mx.edu.utch.melo.view.FilaArticuloFactory;
 import mx.edu.utch.melo.view.TarjetaProductoFactory;
 import org.kordamp.ikonli.javafx.FontIcon;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -99,8 +93,7 @@ public class MenuPOSController {
     private final Navigator navigator;
     private final ProductoDAO productoDAO;
     private final CategoriaDAO categoriaDAO;
-    private final OrdenDAO ordenDAO;
-    private final DetalleOrdenDAO detalleOrdenDAO;
+    private final VentaService ventaService;
     private final SucursalDAO sucursalDAO;
     private final SesionActual sesion;
 
@@ -129,8 +122,7 @@ public class MenuPOSController {
         this.navigator = contexto.getNavigator();
         this.productoDAO = contexto.getProductoDAO();
         this.categoriaDAO = contexto.getCategoriaDAO();
-        this.ordenDAO = contexto.getOrdenDAO();
-        this.detalleOrdenDAO = contexto.getDetalleOrdenDAO();
+        this.ventaService = contexto.getVentaService();
         this.sucursalDAO = contexto.getSucursalDAO();
         this.sesion = contexto.getSesion();
     }
@@ -157,7 +149,7 @@ public class MenuPOSController {
         List<Categoria> categorias = categoriaDAO.obtenerTodos();
         Sucursal sucursal = sucursalDAO.obtenerPorId(sucursalId).orElse(null);
         boolean iva = sucursal == null || sucursal.isAplicaIva();
-        int siguienteNumero = ordenDAO.siguienteNumeroOrden(sucursalId);
+        int siguienteNumero = ventaService.siguienteNumeroOrden(sucursalId);
         String nombreCajero = sesion.getUsuarioActivo().getNombre();
         return new DatosIniciales(productos, categorias, sucursal, iva, siguienteNumero, nombreCajero, LocalDateTime.now());
     }
@@ -292,7 +284,7 @@ public class MenuPOSController {
         boolean cobrarIva = aplicaIva;
 
         Async.ejecutar(
-                () -> crearOrden(copiaArticulos, cobrarIva),
+                () -> ventaService.crearOrdenComedor(sesion.getUsuarioActivo().getId(), copiaArticulos, cobrarIva),
                 ordenCreada -> {
                     sesion.setOrdenEnProceso(ordenCreada.getId());
                     articulos.clear();
@@ -307,41 +299,6 @@ public class MenuPOSController {
                     mostrarErrorCobro("No se pudo crear la orden. Intenta de nuevo.");
                 }
         );
-    }
-
-    /** Se ejecuta en un hilo aparte (ver Async): crea la orden y su detalle en una sola operación lógica. */
-    private Orden crearOrden(List<ItemOrden> items, boolean cobrarIva) {
-        double subtotalDouble = Totales.subtotal(items);
-        BigDecimal subtotal = BigDecimal.valueOf(subtotalDouble);
-        BigDecimal impuestos = BigDecimal.valueOf(Totales.iva(subtotalDouble, cobrarIva));
-        BigDecimal total = BigDecimal.valueOf(Totales.total(subtotalDouble, cobrarIva));
-
-        Orden orden = new Orden();
-        orden.setTipoOrden(TipoOrden.COMEDOR);
-        orden.setMesaId(null);
-        orden.setUsuarioId(sesion.getUsuarioActivo().getId());
-        orden.setClienteId(null);
-        orden.setTurnoId(null);
-        orden.setEstado(EstadoOrden.PENDIENTE);
-        orden.setSubtotal(subtotal);
-        orden.setImpuestos(impuestos);
-        orden.setDistanciaKm(null);
-        orden.setCostoEnvio(BigDecimal.ZERO);
-        orden.setTotal(total);
-        orden.setFechaCreacion(LocalDateTime.now());
-        orden = ordenDAO.crear(orden);
-
-        for (ItemOrden item : items) {
-            DetalleOrden detalle = new DetalleOrden();
-            detalle.setOrdenId(orden.getId());
-            detalle.setProductoId(item.getProductoId());
-            detalle.setCantidad(item.getCantidad());
-            detalle.setPrecioUnitario(BigDecimal.valueOf(item.getPrecioUnitario()));
-            detalle.setNota(item.getNota().isBlank() ? null : item.getNota());
-            detalleOrdenDAO.crear(detalle);
-        }
-
-        return orden;
     }
 
     /** Pausa el carrito actual (ej. el cliente todavía no decide) y deja la pantalla libre para tomar otro pedido. */

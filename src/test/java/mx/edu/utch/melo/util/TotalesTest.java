@@ -42,4 +42,30 @@ class TotalesTest {
 
         assertEquals(270.00, item.getSubtotal(), 0.001);
     }
+
+    /**
+     * ver CLAUDE.md, sección "Precios e IVA": algunas sucursales no cobran IVA
+     * (Sucursal.isAplicaIva). Estas dos ramas (iva/total con aplicaIva=false) no tenían ninguna
+     * prueba pese a ser lógica de negocio real, usada directamente en VentaService -- encontrado
+     * al auditar la Fase 6.
+     */
+    @Test
+    void ivaEsCeroCuandoLaSucursalNoAplicaIva() {
+        assertEquals(0.0, Totales.iva(100.00, false), 0.001);
+    }
+
+    @Test
+    void ivaSigueSiendoDieciseisPorCientoCuandoLaSucursalSiAplicaIva() {
+        assertEquals(16.00, Totales.iva(100.00, true), 0.001);
+    }
+
+    @Test
+    void totalEsIgualAlSubtotalCuandoLaSucursalNoAplicaIva() {
+        assertEquals(100.00, Totales.total(100.00, false), 0.001);
+    }
+
+    @Test
+    void totalIncluyeIvaCuandoLaSucursalSiAplicaIva() {
+        assertEquals(116.00, Totales.total(100.00, true), 0.001);
+    }
 }

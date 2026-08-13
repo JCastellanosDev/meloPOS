@@ -20,13 +20,24 @@ import java.util.Optional;
  * usuario semilla al arrancar (ver db/schema.sql) -- cuando exista
  * login real, {@link #iniciarSesion} se llama desde ahí en vez de
  * desde el arranque de la app.
+ *
+ * Concurrencia: estos campos se escriben en el hilo de FX y se leen
+ * dentro de los {@code Supplier} pasados a {@link mx.edu.utch.melo.async.Async#ejecutar},
+ * que corren en otro hilo. Hoy eso es seguro porque cada llamada a
+ * {@code Async.ejecutar} crea un {@link Thread} nuevo y lo arranca con
+ * {@code Thread.start()}, lo cual da happens-before de cualquier escritura
+ * anterior en el hilo de FX hacia ese hilo nuevo. Los campos son
+ * {@code volatile} para no depender únicamente de esa garantía implícita.
+ * Si algún día {@code Async} deja de crear un hilo por tarea (por ejemplo,
+ * al migrar a un {@code ExecutorService} con hilos reutilizados), esta
+ * garantía deja de aplicar y hay que revisar esta clase de nuevo.
  */
 public class SesionActual {
 
-    private Usuario usuarioActivo;
-    private Integer ordenEnProcesoId;
-    private Integer clienteEnProcesoId;
-    private BigDecimal distanciaKmEnProceso;
+    private volatile Usuario usuarioActivo;
+    private volatile Integer ordenEnProcesoId;
+    private volatile Integer clienteEnProcesoId;
+    private volatile BigDecimal distanciaKmEnProceso;
 
     public void iniciarSesion(Usuario usuario) {
         this.usuarioActivo = usuario;

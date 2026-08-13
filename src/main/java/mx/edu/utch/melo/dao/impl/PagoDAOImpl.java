@@ -36,8 +36,16 @@ public class PagoDAOImpl implements PagoDAO {
 
     @Override
     public Pago crear(Pago pago) {
-        try (Connection conexion = conexionDB.obtenerConexion();
-             PreparedStatement sentencia = conexion.prepareStatement(SQL_INSERTAR, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conexion = conexionDB.obtenerConexion()) {
+            return crear(pago, conexion);
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo crear el pago de la orden " + pago.getOrdenId(), e);
+        }
+    }
+
+    @Override
+    public Pago crear(Pago pago, Connection conexion) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(SQL_INSERTAR, Statement.RETURN_GENERATED_KEYS)) {
 
             mapearParametros(sentencia, pago);
             sentencia.executeUpdate();
