@@ -241,6 +241,10 @@ public class PaymentPortalController {
                     this.ordenActiva = datos.orden();
                     lblNumeroOrden.setText("Orden #" + datos.orden().getId());
                     renderizarTicket(datos.lineas());
+                    // Precarga "Recibido" con el total para el caso común de pago exacto en efectivo
+                    // (mismo mecanismo que el botón "Exacto", ver onMontoRapido); solo afecta el
+                    // campo de pago único -- el dividido no se puede adivinar, se captura a mano.
+                    entradaRecibido.establecer(datos.orden().getTotal());
                     actualizarTotales();
                 },
                 error -> mostrarSinOrden()
