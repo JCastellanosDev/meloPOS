@@ -8,9 +8,6 @@ import mx.edu.utch.melo.nav.Pantalla;
 public class TopbarController {
 
     @FXML
-    private Button btnNotificaciones;
-
-    @FXML
     private Button btnUsuario;
 
     private final Navigator navigator;
@@ -22,10 +19,6 @@ public class TopbarController {
     @FXML
     void initialize() {
         btnUsuario.setOnAction(e -> navigator.abrirVentana(Pantalla.CAMBIAR_USUARIO, "melo - Cambiar Usuario"));
-    }
-
-    public Button getBtnNotificaciones() {
-        return btnNotificaciones;
     }
 
     public Button getBtnUsuario() {

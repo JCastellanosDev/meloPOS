@@ -79,8 +79,13 @@
                             <Button fx:id="btnDomicilio" alignment="CENTER" maxWidth="Infinity" styleClass="btn-primary" text="Realizar pedido" />
                         </VBox>
 
-                        <!-- Reservaciones -->
-                        <VBox alignment="TOP_CENTER" styleClass="quick-tile gap-6" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                        <!-- Reservaciones: sin implementar todavía (ver CLAUDE.md, "no es prioridad
+                             ahora"). Antes competía visualmente con Comedor/Domicilio, que sí son
+                             acciones reales, con el mismo peso (ver auditoría UI/UX). quick-tile-disabled
+                             solo atenúa la opacidad de todo el tile, reutiliza -fx-opacity, que
+                             ninguna otra clase de tile redeclara (ver la regla de combinación al
+                             inicio de styles.css), así que es seguro combinarla con quick-tile. -->
+                        <VBox alignment="TOP_CENTER" styleClass="quick-tile gap-6 quick-tile-disabled" GridPane.columnIndex="0" GridPane.rowIndex="1">
                             <FontIcon iconLiteral="mdi2c-calendar" iconSize="28" styleClass="text-icon-lg-accent" />
                             <Label styleClass="text-title-sm" text="Reservaciones" />
                             <Label alignment="CENTER" maxWidth="240" styleClass="text-muted" text="Maneja las reservaciones de mesa." textAlignment="CENTER" wrapText="true" />

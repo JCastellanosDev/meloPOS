@@ -184,6 +184,12 @@ public class CajaController {
         lblCierreEsperado.setText(Dinero.formatear(resultado.montoEsperado()));
         lblCierreContado.setText(Dinero.formatear(resultado.montoContado()));
         lblCierreDiferencia.setText(Dinero.formatear(resultado.diferencia()));
+        // Antes siempre en acento sin importar el signo (ver auditoría UI/UX): el momento más
+        // crítico del corte -- ¿cuadró la caja o no -- quedaba visualmente indistinguible de
+        // cualquier otro monto de la pantalla. .text-diff-ok/.text-diff-bad reutilizan -success/
+        // -danger, ya definidos en la paleta (ver styles.css).
+        boolean cuadro = resultado.diferencia().compareTo(BigDecimal.ZERO) == 0;
+        lblCierreDiferencia.getStyleClass().setAll(cuadro ? "text-diff-ok" : "text-diff-bad");
     }
 
     @FXML

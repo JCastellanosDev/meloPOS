@@ -20,7 +20,12 @@
     <top>
         <VBox styleClass="topbar">
             <HBox prefHeight="64" alignment="CENTER_LEFT" spacing="16">
-                <TextField promptText="Buscar platillo..." prefWidth="260" styleClass="search-field"/>
+                <!-- Antes esta pantalla era la única sin ningún título visible (ver auditoría
+                     UI/UX): el usuario se orientaba solo por el estado activo del Sidebar. -->
+                <Label text="Menú" styleClass="topbar-title"/>
+                <!-- Antes decorativo: sin fx:id, sin filtrar nada (ver MenuPOSController.renderizarMenu,
+                     mismo patrón ya usado por DeliveryController.aplicarFiltro sobre la lista ya cargada). -->
+                <TextField fx:id="txtBuscarProducto" promptText="Buscar platillo..." prefWidth="260" styleClass="search-field"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <fx:include fx:id="topbar" source="Topbar.fxml"/>
             </HBox>

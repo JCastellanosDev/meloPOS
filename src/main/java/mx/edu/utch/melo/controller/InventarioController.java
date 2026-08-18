@@ -1,16 +1,16 @@
 package mx.edu.utch.melo.controller;
 
 import javafx.fxml.FXML;
-import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.dao.ProductoDAO;
 import mx.edu.utch.melo.model.Producto;
 import mx.edu.utch.melo.nav.Pantalla;
 import mx.edu.utch.melo.sesion.SesionActual;
+import mx.edu.utch.melo.view.EstadoVacioFactory;
+import mx.edu.utch.melo.view.FilaEntidadFactory;
 
 import java.util.List;
 
@@ -59,32 +59,25 @@ public class InventarioController {
         listaProductos.getChildren().setAll(productos.stream().map(this::construirFilaProducto).toList());
     }
 
-    private HBox construirFilaProducto(Producto producto) {
-        Label lblNombre = new Label(producto.getNombre());
-        lblNombre.getStyleClass().add("text-body-strong");
-
-        Label lblDisponibilidad = new Label(producto.isDisponible() ? "Disponible" : "No disponible");
-        lblDisponibilidad.getStyleClass().add("text-muted");
-
-        VBox columnaNombre = new VBox(4, lblNombre, lblDisponibilidad);
-        HBox.setHgrow(columnaNombre, Priority.ALWAYS);
-
-        Label lblExistencias = new Label(producto.getCantidadDisponible() + " / mín. " + producto.getStockMinimo());
-        lblExistencias.getStyleClass().add("text-muted");
-
-        Label lblAlerta = new Label(producto.tieneStockBajo() ? "Stock Bajo" : "OK");
-        lblAlerta.getStyleClass().add(producto.tieneStockBajo() ? "badge badge-urgent" : "badge badge-success");
-
-        HBox fila = new HBox(14, columnaNombre, lblExistencias, lblAlerta);
-        fila.setAlignment(Pos.CENTER_LEFT);
-        fila.getStyleClass().add("order-card");
-        return fila;
+    /** Ver auditoría UI/UX, "componentes a convertir en reutilizables": antes esta fila y la de
+     * PersonalController se reconstruían por separado a mano con el mismo esqueleto. De paso
+     * corrige un bug real de estilo -- ver FilaEntidadFactory y el aviso al inicio de styles.css:
+     * el .add() anterior insertaba "badge badge-x" como un solo token de styleClass, que JavaFX
+     * nunca separa en dos clases CSS, así que la insignia se veía sin fondo ni color. */
+    private Node construirFilaProducto(Producto producto) {
+        String existencias = producto.getCantidadDisponible() + " / mín. " + producto.getStockMinimo();
+        boolean stockBajo = producto.tieneStockBajo();
+        return FilaEntidadFactory.crear(
+                null,
+                producto.getNombre(),
+                producto.isDisponible() ? "Disponible" : "No disponible",
+                existencias,
+                stockBajo ? "Stock Bajo" : "OK",
+                stockBajo ? "badge badge-urgent" : "badge badge-success");
     }
 
     private void mostrarMensaje(String mensaje) {
-        Label etiqueta = new Label(mensaje);
-        etiqueta.getStyleClass().add("text-muted");
-        listaProductos.getChildren().setAll(etiqueta);
+        listaProductos.getChildren().setAll(EstadoVacioFactory.crear("mdi2b-box", mensaje, 400));
     }
 
     private void mostrarErrorCarga() {

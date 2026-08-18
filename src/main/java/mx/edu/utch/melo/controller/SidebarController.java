@@ -3,6 +3,7 @@ package mx.edu.utch.melo.controller;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.VBox;
 import mx.edu.utch.melo.nav.Navigator;
 import mx.edu.utch.melo.nav.Pantalla;
 
@@ -10,6 +11,11 @@ import java.util.List;
 import java.util.Map;
 
 public class SidebarController {
+
+    /** Antes sin tooltip (ver auditoría UI/UX): es la única forma de volver al Dashboard, sin
+     * ningún botón de navegación propio ni etiqueta visible que lo indique. */
+    @FXML
+    private VBox logoContenedor;
 
     @FXML
     private Button btnMesas;
@@ -82,6 +88,8 @@ public class SidebarController {
 
         // Mesas sigue deshabilitado a propósito (ver CLAUDE.md: "no es prioridad ahora").
         deshabilitarProximamente(btnMesas);
+
+        Tooltip.install(logoContenedor, new Tooltip("Ir al Panel Principal"));
     }
 
     @FXML

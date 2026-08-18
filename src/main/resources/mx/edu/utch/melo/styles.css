@@ -294,6 +294,14 @@
     -fx-border-width: 1;
     -fx-padding: 20;
 }
+/* Combinable con .quick-tile (solo toca -fx-opacity, que ninguna otra clase de tile redeclara --
+   ver la regla de combinación al inicio de este archivo). Para un tile de "Próximamente" (ver
+   Dashboard.fxml, Reservaciones): antes solo el botón interior se veía atenuado por
+   .btn-primary:disabled, mientras el ícono/título/texto de la tarjeta competían con el mismo peso
+   visual que Comedor/Domicilio, que sí son acciones reales (ver auditoría UI/UX). */
+.quick-tile-disabled {
+    -fx-opacity: 0.55;
+}
 
 /* Variante para la opción principal (Comedor): mismo tile, con tinte de acento. */
 .quick-tile-accent {
@@ -313,6 +321,15 @@
 .btn-accent:disabled {
     -fx-opacity: 0.45;
     -fx-cursor: default;
+}
+
+/* Retroalimentación de hover en los dos botones sólidos "de acción" -- antes solo .nav-button/
+   .icon-button tenían :hover, dejando el botón principal de cada formulario sin ninguna señal de
+   que el cursor está sobre él (ver auditoría UI/UX: "hover states"). Solo opacidad, sin color
+   nuevo, para no tocar la paleta. */
+.btn-primary:hover,
+.btn-accent:hover {
+    -fx-opacity: 0.88;
 }
 
 .btn-primary {
@@ -335,6 +352,18 @@
     -fx-padding: 12 20;
     -fx-cursor: hand;
     -fx-min-height: 44;
+}
+
+/* Mismo estado :disabled que .btn-primary/.btn-accent, extendido a los botones secundarios que
+   antes no lo tenían (ver auditoría UI/UX): sin esto, un botón outline/pill deshabilitado por un
+   controlador no se distingue visualmente de uno activo, salvo por el cursor. */
+.btn-outline:disabled,
+.btn-outline-accent:disabled,
+.btn-card-action:disabled,
+.btn-card-action-accent:disabled,
+.pill-button:disabled {
+    -fx-opacity: 0.45;
+    -fx-cursor: default;
 }
 
 .btn-outline {
@@ -572,6 +601,20 @@
     -fx-font-weight: bold;
     -fx-text-fill: -accent;
 }
+/* Variantes de .text-price-lg para el resultado del corte de caja (ver CajaController): antes la
+   diferencia siempre se pintaba de acento sin importar si la caja cuadró o no -- el momento más
+   crítico del corte quedaba visualmente idéntico a cualquier otro monto de la pantalla (ver
+   auditoría UI/UX). Reutilizan -success/-danger, ya definidos en la paleta, no colores nuevos. */
+.text-diff-ok {
+    -fx-font-size: 16;
+    -fx-font-weight: bold;
+    -fx-text-fill: -success;
+}
+.text-diff-bad {
+    -fx-font-size: 16;
+    -fx-font-weight: bold;
+    -fx-text-fill: -danger;
+}
 .text-label-caps {
     -fx-font-size: 10;
     -fx-font-weight: bold;
@@ -598,6 +641,16 @@
     -fx-background-radius: 8;
     -fx-min-height: 44;
     -fx-alignment: center-left;
+}
+/* Borde de acento al enfocar: mismo criterio que .cart-item-note-input:focused, extendido aquí
+   (ver auditoría UI/UX -- los formularios de Pedidos/Caja no tenían ninguna señal visual de foco
+   más allá del cursor parpadeante del TextField interior). El TextField hijo (.input-plain) es
+   transparente y JavaFX no propaga :focused de un hijo a su contenedor -- por eso esta es una
+   clase normal, alternada por código cuando el TextField gana/pierde foco (ver
+   PedidosController/CajaController), no un pseudo-selector ":focused" (que aquí no dispararía). */
+.input-wrapper-focused {
+    -fx-border-color: -accent;
+    -fx-border-width: 1.5;
 }
 .input-plain {
     -fx-background-color: transparent;
@@ -1190,9 +1243,14 @@
     -fx-font-size: 13;
     -fx-font-weight: bold;
 }
+/* Nota de cocina de la línea (ej. "sin cebolla"): antes usaba -text-muted (pensado para fondos
+   claros) sobre el fondo casi negro del ticket, quedando el texto de menor contraste justo en la
+   información que puede ser crítica (alergias, restricciones). #CCCCCC ya es el gris que usa el
+   resto de la interfaz KDS sobre este mismo fondo (ver .kds-status-clock, .ticket-bump-btn) --
+   mismo tono, no un color nuevo (ver auditoría UI/UX). */
 .ticket-item-note {
-    -fx-text-fill: -text-muted;
-    -fx-font-size: 11;
+    -fx-text-fill: #CCCCCC;
+    -fx-font-size: 12;
 }
 .ticket-mod-flag {
     -fx-border-color: -accent;

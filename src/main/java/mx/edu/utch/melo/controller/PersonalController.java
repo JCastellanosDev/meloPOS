@@ -1,17 +1,16 @@
 package mx.edu.utch.melo.controller;
 
 import javafx.fxml.FXML;
-import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.dao.UsuarioDAO;
 import mx.edu.utch.melo.model.Usuario;
 import mx.edu.utch.melo.nav.Pantalla;
 import mx.edu.utch.melo.sesion.SesionActual;
+import mx.edu.utch.melo.view.EstadoVacioFactory;
+import mx.edu.utch.melo.view.FilaEntidadFactory;
 
 import java.util.List;
 import java.util.Locale;
@@ -55,29 +54,20 @@ public class PersonalController {
         listaPersonal.getChildren().setAll(usuarios.stream().map(this::construirFilaUsuario).toList());
     }
 
-    private HBox construirFilaUsuario(Usuario usuario) {
-        StackPane avatar = new StackPane();
-        avatar.getStyleClass().add("avatar");
-        Label lblInicial = new Label(inicial(usuario.getNombre()));
-        lblInicial.getStyleClass().add("avatar-label");
-        avatar.getChildren().add(lblInicial);
-
-        Label lblNombre = new Label(usuario.getNombre());
-        lblNombre.getStyleClass().add("text-body-strong");
-
-        Label lblRol = new Label(usuario.getRol().getEtiqueta());
-        lblRol.getStyleClass().add("text-muted");
-
-        VBox columnaNombre = new VBox(4, lblNombre, lblRol);
-        HBox.setHgrow(columnaNombre, Priority.ALWAYS);
-
-        Label lblEstado = new Label(usuario.isActivo() ? "Activo" : "Inactivo");
-        lblEstado.getStyleClass().add(usuario.isActivo() ? "badge badge-success" : "badge badge-muted");
-
-        HBox fila = new HBox(14, avatar, columnaNombre, lblEstado);
-        fila.setAlignment(Pos.CENTER_LEFT);
-        fila.getStyleClass().add("order-card");
-        return fila;
+    /** Ver auditoría UI/UX, "componentes a convertir en reutilizables": antes esta fila y la de
+     * InventarioController se reconstruían por separado a mano con el mismo esqueleto. De paso
+     * corrige un bug real de estilo -- ver FilaEntidadFactory y el aviso al inicio de styles.css:
+     * el .add() anterior insertaba "badge badge-x" como un solo token de styleClass, que JavaFX
+     * nunca separa en dos clases CSS, así que la insignia se veía sin fondo ni color. */
+    private Node construirFilaUsuario(Usuario usuario) {
+        boolean activo = usuario.isActivo();
+        return FilaEntidadFactory.crear(
+                inicial(usuario.getNombre()),
+                usuario.getNombre(),
+                usuario.getRol().getEtiqueta(),
+                null,
+                activo ? "Activo" : "Inactivo",
+                activo ? "badge badge-success" : "badge badge-muted");
     }
 
     private String inicial(String nombre) {
@@ -85,9 +75,7 @@ public class PersonalController {
     }
 
     private void mostrarMensaje(String mensaje) {
-        Label etiqueta = new Label(mensaje);
-        etiqueta.getStyleClass().add("text-muted");
-        listaPersonal.getChildren().setAll(etiqueta);
+        listaPersonal.getChildren().setAll(EstadoVacioFactory.crear("mdi2a-account-tie", mensaje, 400));
     }
 
     private void mostrarErrorCarga() {

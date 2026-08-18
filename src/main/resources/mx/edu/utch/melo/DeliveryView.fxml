@@ -5,6 +5,7 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
@@ -23,11 +24,15 @@
     <!-- ===== BARRA SUPERIOR ===== -->
     <top>
         <HBox alignment="CENTER_LEFT" prefHeight="64" styleClass="topbar">
-            <Label styleClass="topbar-title" text="Terminal 01" />
+            <Label styleClass="topbar-title" text="Domicilios" />
             <Region HBox.hgrow="ALWAYS" />
             <TextField fx:id="txtBuscarPedido" prefWidth="220" promptText="Buscar por # de pedido..." styleClass="search-field" />
-            <Button styleClass="icon-button">
+            <!-- Antes sin fx:id ni onAction: un ícono decorativo que no hacía nada (ver auditoría
+                 UI/UX, "botones muertos"). cargarPedidos() ya existe para el refresco automático
+                 al recuperar el foco de la ventana: aquí solo se expone como acción manual. -->
+            <Button fx:id="btnActualizar" styleClass="icon-button" onAction="#onActualizar">
                 <graphic><FontIcon iconLiteral="mdi2r-refresh" iconSize="18" /></graphic>
+                <tooltip><Tooltip text="Actualizar pedidos" /></tooltip>
             </Button>
             <fx:include fx:id="topbar" source="Topbar.fxml" />
         </HBox>

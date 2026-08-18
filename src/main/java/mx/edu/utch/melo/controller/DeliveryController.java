@@ -22,6 +22,7 @@ import mx.edu.utch.melo.nav.Pantalla;
 import mx.edu.utch.melo.service.DeliveryService;
 import mx.edu.utch.melo.sesion.SesionActual;
 import mx.edu.utch.melo.util.Dinero;
+import mx.edu.utch.melo.view.EstadoVacioFactory;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -103,6 +104,12 @@ public class DeliveryController {
         });
     }
 
+    /** Refresco manual (ver DeliveryView.fxml) -- antes el botón no tenía fx:id ni onAction. */
+    @FXML
+    void onActualizar() {
+        cargarPedidos();
+    }
+
     private void cargarPedidos() {
         Async.ejecutar(
                 this::construirDatosPedidos,
@@ -160,7 +167,7 @@ public class DeliveryController {
         HBox.setHgrow(lblCliente, Priority.ALWAYS);
 
         Label lblEstado = new Label(descripcionEstado(orden.getEstado()));
-        lblEstado.getStyleClass().add(claseBadgeEstado(orden.getEstado()));
+        lblEstado.getStyleClass().addAll(claseBadgeEstado(orden.getEstado()).split(" "));
 
         HBox encabezado = new HBox(lblCliente, lblEstado);
         encabezado.setAlignment(Pos.CENTER_LEFT);
@@ -211,13 +218,21 @@ public class DeliveryController {
         navigator.abrirVentana(Pantalla.ORDENES, "melo - Cobrar");
     }
 
+    /**
+     * Sin el prefijo "●" que llevaba antes: ahora que la insignia sí se pinta con su color real
+     * (ver claseBadgeEstado -- el .add() anterior insertaba "badge badge-x" como un solo token de
+     * styleClass, que JavaFX nunca separa en dos clases CSS, así que la insignia se veía sin fondo
+     * ni color), el punto de texto quedaba redundante con el propio color de fondo de la insignia
+     * y además es el único lugar de la app que simula un estado así en vez de usar el lenguaje de
+     * insignias que ya usa el resto de las pantallas (ver auditoría UI/UX, "unificar").
+     */
     private String descripcionEstado(EstadoOrden estado) {
         return switch (estado) {
-            case PENDIENTE -> "● Pendiente";
-            case EN_PREPARACION -> "● En Preparación";
-            case LISTA -> "● Lista para Recoger";
-            case ENTREGADA -> "● Entregada";
-            case PAGADA, CANCELADA -> "● " + estado.name();
+            case PENDIENTE -> "Pendiente";
+            case EN_PREPARACION -> "En Preparación";
+            case LISTA -> "Lista para Recoger";
+            case ENTREGADA -> "Entregada";
+            case PAGADA, CANCELADA -> estado.name();
         };
     }
 
@@ -230,15 +245,7 @@ public class DeliveryController {
     }
 
     private void mostrarMensaje(String mensaje) {
-        FontIcon icono = new FontIcon("mdi2t-truck-delivery-outline");
-        icono.getStyleClass().add("empty-state-icon");
-        Label etiqueta = new Label(mensaje);
-        etiqueta.getStyleClass().add("empty-state-text");
-        VBox estado = new VBox(8, icono, etiqueta);
-        estado.getStyleClass().add("empty-state");
-        estado.setAlignment(Pos.CENTER);
-        estado.setPrefWidth(420);
-        contenedorPedidos.getChildren().setAll(estado);
+        contenedorPedidos.getChildren().setAll(EstadoVacioFactory.crear("mdi2t-truck-delivery-outline", mensaje, 420));
     }
 
     private void mostrarErrorCarga() {

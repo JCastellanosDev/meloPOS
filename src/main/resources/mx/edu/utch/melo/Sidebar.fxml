@@ -20,8 +20,12 @@
       xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="mx.edu.utch.melo.controller.SidebarController">
 
-    <!-- Logo: al hacer clic regresa al Dashboard (ver onLogoClick) -->
-    <VBox styleClass="sidebar-logo" onMouseClicked="#onLogoClick">
+    <!-- Logo: al hacer clic regresa al Dashboard (ver onLogoClick). Antes sin ninguna señal de que
+         fuera interactivo (ver auditoría UI/UX): es la única forma de volver al Dashboard, no hay
+         botón de navegación propio para eso. VBox no es un Control: no tiene propiedad "tooltip"
+         propia en FXML, por eso el tooltip se instala por código (ver SidebarController,
+         Tooltip.install) en vez de declararse aquí. -->
+    <VBox fx:id="logoContenedor" styleClass="sidebar-logo" onMouseClicked="#onLogoClick">
         <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
             <image>
                 <Image url="@img/melo1.png" />
@@ -31,9 +35,6 @@
 
     <!-- Navegación principal -->
     <VBox styleClass="sidebar-nav">
-        <Button fx:id="btnMesas" text="Mesas" graphicTextGap="12" maxWidth="Infinity" styleClass="nav-button">
-            <graphic><FontIcon iconLiteral="mdi2t-table-chair" iconSize="18" /></graphic>
-        </Button>
         <Button fx:id="btnMenu" text="Menú" graphicTextGap="12" maxWidth="Infinity" styleClass="nav-button">
             <graphic><FontIcon iconLiteral="mdi2s-silverware-fork-knife" iconSize="18" /></graphic>
         </Button>
@@ -57,6 +58,13 @@
         </Button>
         <Button fx:id="btnCaja" text="Caja" graphicTextGap="12" maxWidth="Infinity" styleClass="nav-button">
             <graphic><FontIcon iconLiteral="mdi2c-cash-register" iconSize="18" /></graphic>
+        </Button>
+        <!-- Movido al final de la navegación principal (ver auditoría UI/UX): sigue deshabilitado
+             a propósito ("no es prioridad ahora", ver CLAUDE.md), pero antes ocupaba el primer
+             lugar de la lista, por delante de "Menú": la función real más usada del sistema
+             quedaba en segundo lugar visual detrás de una que no se puede usar todavía. -->
+        <Button fx:id="btnMesas" text="Mesas" graphicTextGap="12" maxWidth="Infinity" styleClass="nav-button">
+            <graphic><FontIcon iconLiteral="mdi2t-table-chair" iconSize="18" /></graphic>
         </Button>
     </VBox>
 

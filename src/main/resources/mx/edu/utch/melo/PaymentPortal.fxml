@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.geometry.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <!--
@@ -11,21 +19,8 @@
   desglose de artículos (ver contenedorTicket) además del total a pagar,
   descuento, método de pago y teclado numérico (ver PaymentPortalController).
 -->
-<BorderPane fx:id="raiz" xmlns="http://javafx.com/javafx/21"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="mx.edu.utch.melo.controller.PaymentPortalController"
-            prefWidth="460" prefHeight="800"
-            stylesheets="@styles.css">
 
-    <!-- ===== BARRA SUPERIOR ===== -->
-    <top>
-        <HBox prefHeight="56" alignment="CENTER_LEFT" spacing="12" styleClass="topbar">
-            <FontIcon iconLiteral="mdi2c-cash" iconSize="20" styleClass="text-icon-accent"/>
-            <Label text="Cobrar" styleClass="text-title-sm"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Label fx:id="lblNumeroOrden" text="Orden #—" styleClass="text-muted"/>
-        </HBox>
-    </top>
+<BorderPane fx:id="raiz" prefHeight="700.0" prefWidth="350.0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mx.edu.utch.melo.controller.PaymentPortalController">
 
     <!-- ===== CENTRO ===== -->
     <center>
@@ -34,23 +29,23 @@
 
                 <!-- ===== TICKET ===== -->
                 <VBox styleClass="card gap-8">
-                    <Label text="TICKET" styleClass="text-label-caps"/>
-                    <VBox fx:id="contenedorTicket" spacing="8"/>
+                    <Label styleClass="text-label-caps" text="TICKET" />
+                    <VBox fx:id="contenedorTicket" spacing="8" />
                 </VBox>
 
                 <!-- ===== TOTAL A PAGAR ===== -->
                 <VBox styleClass="card gap-8">
-                    <HBox fx:id="filaTotalOriginal" visible="false" managed="false">
-                        <Label text="Total" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
-                        <Label fx:id="lblTotalOriginal" text="\$0.00" styleClass="text-body"/>
+                    <HBox fx:id="filaTotalOriginal" managed="false" visible="false">
+                        <Label styleClass="text-muted" text="Total" HBox.hgrow="ALWAYS" />
+                        <Label fx:id="lblTotalOriginal" styleClass="text-body" text="\$0.00" />
                     </HBox>
-                    <HBox fx:id="filaDescuentoInfo" visible="false" managed="false">
-                        <Label fx:id="lblDescuentoEtiqueta" text="Descuento" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
-                        <Label fx:id="lblDescuentoMonto" text="-\$0.00" styleClass="text-price"/>
+                    <HBox fx:id="filaDescuentoInfo" managed="false" visible="false">
+                        <Label fx:id="lblDescuentoEtiqueta" styleClass="text-muted" text="Descuento" HBox.hgrow="ALWAYS" />
+                        <Label fx:id="lblDescuentoMonto" styleClass="text-price" text="-\$0.00" />
                     </HBox>
                     <HBox>
-                        <Label text="Total a pagar" styleClass="text-label-caps" HBox.hgrow="ALWAYS"/>
-                        <Label fx:id="lblTotalAPagar" text="\$0.00" styleClass="text-price-lg"/>
+                        <Label styleClass="text-label-caps" text="Total a pagar" HBox.hgrow="ALWAYS" />
+                        <Label fx:id="lblTotalAPagar" styleClass="text-price-lg" text="\$0.00" />
                     </HBox>
                 </VBox>
 
@@ -59,138 +54,125 @@
                      para no ocupar espacio aquí: este panel solo muestra un botón para abrirla,
                      el resultado ya aplicado, o la autorización de Administrador en curso. -->
                 <VBox styleClass="card gap-12">
-                    <Label text="DESCUENTO" styleClass="text-label-caps"/>
+                    <Label styleClass="text-label-caps" text="DESCUENTO" />
 
-                    <Button fx:id="btnElegirDescuento" text="Elegir descuento" maxWidth="Infinity"
-                            graphicTextGap="8" styleClass="btn-outline-accent" onAction="#onAbrirSeleccionDescuento">
-                        <graphic><FontIcon iconLiteral="mdi2s-sale" iconSize="16"/></graphic>
+                    <Button fx:id="btnElegirDescuento" graphicTextGap="8" maxWidth="Infinity" onAction="#onAbrirSeleccionDescuento" styleClass="btn-outline-accent" text="Elegir descuento">
+                        <graphic><FontIcon iconLiteral="mdi2s-sale" iconSize="16" /></graphic>
                     </Button>
 
                     <!-- Ya hay un descuento aplicado: se puede quitar, sin pedir autorización de nuevo. -->
-                    <HBox fx:id="filaDescuentoAplicado" visible="false" managed="false" alignment="CENTER_LEFT" spacing="10">
-                        <Label fx:id="lblDescuentoAplicadoTexto" text="—" styleClass="text-body-strong" HBox.hgrow="ALWAYS"/>
-                        <Button fx:id="btnQuitarDescuento" text="Quitar" styleClass="btn-outline" onAction="#onQuitarDescuento"/>
+                    <HBox fx:id="filaDescuentoAplicado" alignment="CENTER_LEFT" managed="false" spacing="10" visible="false">
+                        <Label fx:id="lblDescuentoAplicadoTexto" styleClass="text-body-strong" text="—" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnQuitarDescuento" onAction="#onQuitarDescuento" styleClass="btn-outline" text="Quitar" />
                     </HBox>
 
                     <!-- Autorización de Administrador: aparece al regresar de SeleccionarDescuento con una categoría elegida. -->
-                    <VBox fx:id="panelAutorizacion" visible="false" managed="false" styleClass="change-box">
-                        <Label fx:id="lblAutorizacionTitulo" text="—" styleClass="text-body-strong" wrapText="true"/>
-                        <Label text="PIN de Administrador" styleClass="text-muted"/>
-                        <PasswordField fx:id="txtPinAutorizacion" promptText="••••" styleClass="search-field"
-                                       onAction="#onAutorizarDescuento"/>
-                        <Label fx:id="lblErrorDescuento" styleClass="form-error" wrapText="true" visible="false" managed="false"/>
+                    <VBox fx:id="panelAutorizacion" managed="false" styleClass="change-box" visible="false">
+                        <Label fx:id="lblAutorizacionTitulo" styleClass="text-body-strong" text="—" wrapText="true" />
+                        <Label styleClass="text-muted" text="PIN de Administrador" />
+                        <PasswordField fx:id="txtPinAutorizacion" onAction="#onAutorizarDescuento" promptText="••••" styleClass="search-field" />
+                        <Label fx:id="lblErrorDescuento" managed="false" styleClass="form-error" visible="false" wrapText="true" />
                         <HBox spacing="10">
-                            <Button text="Cancelar" styleClass="btn-outline" HBox.hgrow="ALWAYS" maxWidth="Infinity"
-                                    onAction="#onCancelarAutorizacion"/>
-                            <Button fx:id="btnAutorizarDescuento" text="Autorizar" styleClass="btn-accent" HBox.hgrow="ALWAYS"
-                                    maxWidth="Infinity" onAction="#onAutorizarDescuento"/>
+                            <Button maxWidth="Infinity" onAction="#onCancelarAutorizacion" styleClass="btn-outline" text="Cancelar" HBox.hgrow="ALWAYS" />
+                            <Button fx:id="btnAutorizarDescuento" maxWidth="Infinity" onAction="#onAutorizarDescuento" styleClass="btn-accent" text="Autorizar" HBox.hgrow="ALWAYS" />
                         </HBox>
                     </VBox>
                 </VBox>
 
                 <!-- ===== MODO DE PAGO ===== -->
                 <HBox spacing="0">
-                    <Button fx:id="tabPagoUnico" text="Pago único" styleClass="tab-item-active" HBox.hgrow="ALWAYS"
-                            maxWidth="Infinity" onAction="#onModoPagoUnico"/>
-                    <Button fx:id="tabPagoDividido" text="Pago dividido" styleClass="tab-item" HBox.hgrow="ALWAYS"
-                            maxWidth="Infinity" onAction="#onModoPagoDividido"/>
+                    <Button fx:id="tabPagoUnico" maxWidth="Infinity" onAction="#onModoPagoUnico" styleClass="tab-item-active" text="Pago único" HBox.hgrow="ALWAYS" />
+                    <Button fx:id="tabPagoDividido" maxWidth="Infinity" onAction="#onModoPagoDividido" styleClass="tab-item" text="Pago dividido" HBox.hgrow="ALWAYS" />
                 </HBox>
 
                 <!-- ===== PAGO ÚNICO ===== -->
                 <VBox fx:id="panelPagoUnico" spacing="16">
                     <HBox spacing="12">
-                        <VBox fx:id="tileEfectivo" prefHeight="90" HBox.hgrow="ALWAYS" styleClass="pay-method-active gap-6" onMouseClicked="#onEfectivoClick">
-                            <FontIcon iconLiteral="mdi2c-cash" iconSize="24" styleClass="text-icon-lg-accent"/>
-                            <Label fx:id="lblEfectivo" text="Efectivo" styleClass="pay-method-label-active"/>
+                        <VBox fx:id="tileEfectivo" onMouseClicked="#onEfectivoClick" prefHeight="90" styleClass="pay-method-active gap-6" HBox.hgrow="ALWAYS">
+                            <FontIcon iconLiteral="mdi2c-cash" iconSize="24" styleClass="text-icon-lg-accent" />
+                            <Label fx:id="lblEfectivo" styleClass="pay-method-label-active" text="Efectivo" />
                         </VBox>
-                        <VBox fx:id="tileTarjeta" prefHeight="90" styleClass="pay-method gap-6" HBox.hgrow="ALWAYS" onMouseClicked="#onTarjetaClick">
-                            <FontIcon iconLiteral="mdi2c-credit-card-outline" iconSize="24" styleClass="text-icon-lg-accent"/>
-                            <Label fx:id="lblTarjeta" text="Tarjeta" styleClass="pay-method-label"/>
+                        <VBox fx:id="tileTarjeta" onMouseClicked="#onTarjetaClick" prefHeight="90" styleClass="pay-method gap-6" HBox.hgrow="ALWAYS">
+                            <FontIcon iconLiteral="mdi2c-credit-card-outline" iconSize="24" styleClass="text-icon-lg-accent" />
+                            <Label fx:id="lblTarjeta" styleClass="pay-method-label" text="Tarjeta" />
                         </VBox>
-                        <VBox fx:id="tileTransferencia" prefHeight="90" styleClass="pay-method gap-6" HBox.hgrow="ALWAYS" onMouseClicked="#onTransferenciaClick">
-                            <FontIcon iconLiteral="mdi2b-bank-transfer" iconSize="24" styleClass="text-icon-lg-accent"/>
-                            <Label fx:id="lblTransferencia" text="Transferencia" alignment="CENTER" contentDisplay="CENTER"
-                                   styleClass="pay-method-label" textAlignment="CENTER" wrapText="true"/>
+                        <VBox fx:id="tileTransferencia" onMouseClicked="#onTransferenciaClick" prefHeight="90" styleClass="pay-method gap-6" HBox.hgrow="ALWAYS">
+                            <FontIcon iconLiteral="mdi2b-bank-transfer" iconSize="24" styleClass="text-icon-lg-accent" />
+                            <Label fx:id="lblTransferencia" alignment="CENTER" contentDisplay="CENTER" styleClass="pay-method-label" text="Transferencia" textAlignment="CENTER" wrapText="true" />
                         </VBox>
                     </HBox>
 
                     <VBox styleClass="card gap-16">
-                        <Label text="RECIBIDO" styleClass="text-label-caps"/>
+                        <Label styleClass="text-label-caps" text="RECIBIDO" />
                         <HBox styleClass="amount-box">
-                            <Label text="\$" styleClass="amount-currency"/>
-                            <Label fx:id="lblRecibido" text="0.00" styleClass="amount-value" HBox.hgrow="ALWAYS"/>
+                            <Label styleClass="amount-currency" text="\$" />
+                            <Label fx:id="lblRecibido" styleClass="amount-value" text="0.00" HBox.hgrow="ALWAYS" />
                         </HBox>
                         <VBox styleClass="change-box">
-                            <Label text="CAMBIO" styleClass="text-label-caps"/>
+                            <Label styleClass="text-label-caps" text="CAMBIO" />
                             <HBox alignment="CENTER_LEFT">
-                                <Label fx:id="lblCambio" text="\$0.00" styleClass="change-value" HBox.hgrow="ALWAYS"/>
-                                <Button styleClass="icon-button" onAction="#onReiniciarRecibido">
+                                <Label fx:id="lblCambio" styleClass="change-value" text="\$0.00" HBox.hgrow="ALWAYS" />
+                                <Button onAction="#onReiniciarRecibido" styleClass="icon-button">
                                     <graphic><FontIcon iconLiteral="mdi2r-refresh" iconSize="16" /></graphic>
+                                    <tooltip><Tooltip text="Reiniciar monto recibido" /></tooltip>
                                 </Button>
                             </HBox>
                         </VBox>
                     </VBox>
-
-                    <!-- Montos rápidos: solo tienen sentido para completar "recibido" en pago único. -->
-                    <VBox spacing="10">
-                        <HBox spacing="10" alignment="CENTER">
-                            <Button text="\$200" prefWidth="90" styleClass="quick-amount-btn" HBox.hgrow="ALWAYS" onAction="#onMontoRapido"/>
-                            <Button text="\$500" prefWidth="90" styleClass="quick-amount-btn" HBox.hgrow="ALWAYS" onAction="#onMontoRapido"/>
-                        </HBox>
-                        <HBox spacing="10" alignment="CENTER">
-                            <Button text="\$1000" prefWidth="90" styleClass="quick-amount-btn" HBox.hgrow="ALWAYS" onAction="#onMontoRapido"/>
-                            <Button text="Exacto" prefWidth="90" styleClass="quick-amount-btn-primary" HBox.hgrow="ALWAYS" onAction="#onMontoRapido"/>
-                        </HBox>
-                    </VBox>
                 </VBox>
 
                 <!-- ===== PAGO DIVIDIDO ===== -->
-                <VBox fx:id="panelPagoDividido" spacing="16" visible="false" managed="false">
-                    <VBox fx:id="cajaEfectivoDividido" styleClass="amount-box-active" onMouseClicked="#onSeleccionarCampoEfectivo">
-                        <Label text="EFECTIVO" styleClass="text-label-caps"/>
+                <VBox fx:id="panelPagoDividido" managed="false" spacing="16" visible="false">
+                    <VBox fx:id="cajaEfectivoDividido" onMouseClicked="#onSeleccionarCampoEfectivo" styleClass="amount-box-active">
+                        <Label styleClass="text-label-caps" text="EFECTIVO" />
                         <HBox>
-                            <Label text="\$" styleClass="amount-currency"/>
-                            <Label fx:id="lblEfectivoDividido" text="0.00" styleClass="amount-value" HBox.hgrow="ALWAYS"/>
+                            <Label styleClass="amount-currency" text="\$" />
+                            <Label fx:id="lblEfectivoDividido" styleClass="amount-value" text="0.00" HBox.hgrow="ALWAYS" />
                         </HBox>
                     </VBox>
-                    <VBox fx:id="cajaTarjetaDividido" styleClass="amount-box" onMouseClicked="#onSeleccionarCampoTarjeta">
-                        <Label text="TARJETA" styleClass="text-label-caps"/>
+                    <VBox fx:id="cajaTarjetaDividido" onMouseClicked="#onSeleccionarCampoTarjeta" styleClass="amount-box">
+                        <Label styleClass="text-label-caps" text="TARJETA" />
                         <HBox>
-                            <Label text="\$" styleClass="amount-currency"/>
-                            <Label fx:id="lblTarjetaDividido" text="0.00" styleClass="amount-value" HBox.hgrow="ALWAYS"/>
+                            <Label styleClass="amount-currency" text="\$" />
+                            <Label fx:id="lblTarjetaDividido" styleClass="amount-value" text="0.00" HBox.hgrow="ALWAYS" />
                         </HBox>
                     </VBox>
                     <HBox alignment="CENTER_LEFT">
-                        <Label fx:id="lblFaltanteDividido" text="Falta \$0.00" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
-                        <Button text="Limpiar" styleClass="btn-outline" onAction="#onLimpiarPagoDividido"/>
+                        <Label fx:id="lblFaltanteDividido" styleClass="text-muted" text="Falta \$0.00" HBox.hgrow="ALWAYS" />
+                        <Button onAction="#onLimpiarPagoDividido" styleClass="btn-outline" text="Limpiar" />
                     </HBox>
                 </VBox>
 
                 <!-- ===== TECLADO NUMÉRICO (compartido) ===== -->
-                <GridPane hgap="10" vgap="10" alignment="CENTER">
-                    <Button text="1" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
-                    <Button text="2" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
-                    <Button text="3" GridPane.columnIndex="2" GridPane.rowIndex="0" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
-                    <Button text="4" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
-                    <Button text="5" GridPane.columnIndex="1" GridPane.rowIndex="1" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
-                    <Button text="6" GridPane.columnIndex="2" GridPane.rowIndex="1" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
-                    <Button text="7" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
-                    <Button text="8" GridPane.columnIndex="1" GridPane.rowIndex="2" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
-                    <Button text="9" GridPane.columnIndex="2" GridPane.rowIndex="2" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
-                    <Button text="." GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
-                    <Button text="0" GridPane.columnIndex="1" GridPane.rowIndex="3" styleClass="numpad-btn" onAction="#onTeclaNumpad"/>
-                    <Button text="⌫" GridPane.columnIndex="2" GridPane.rowIndex="3" styleClass="numpad-btn-danger" onAction="#onTeclaNumpad"/>
+                <GridPane alignment="CENTER" hgap="10" vgap="10">
+                    <Button onAction="#onTeclaNumpad" styleClass="numpad-btn" text="1" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                    <Button onAction="#onTeclaNumpad" styleClass="numpad-btn" text="2" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                    <Button onAction="#onTeclaNumpad" styleClass="numpad-btn" text="3" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                    <Button onAction="#onTeclaNumpad" styleClass="numpad-btn" text="4" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                    <Button onAction="#onTeclaNumpad" styleClass="numpad-btn" text="5" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                    <Button onAction="#onTeclaNumpad" styleClass="numpad-btn" text="6" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                    <Button onAction="#onTeclaNumpad" styleClass="numpad-btn" text="7" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                    <Button onAction="#onTeclaNumpad" styleClass="numpad-btn" text="8" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                    <Button onAction="#onTeclaNumpad" styleClass="numpad-btn" text="9" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                    <Button onAction="#onTeclaNumpad" styleClass="numpad-btn" text="." GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                    <Button onAction="#onTeclaNumpad" styleClass="numpad-btn" text="0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                    <Button onAction="#onTeclaNumpad" styleClass="numpad-btn-danger" text="⌫" GridPane.columnIndex="2" GridPane.rowIndex="3" />
                     <columnConstraints>
-                        <ColumnConstraints percentWidth="33.3"/>
-                        <ColumnConstraints percentWidth="33.3"/>
-                        <ColumnConstraints percentWidth="33.3"/>
+                        <ColumnConstraints percentWidth="33.3" />
+                        <ColumnConstraints percentWidth="33.3" />
+                        <ColumnConstraints percentWidth="33.3" />
                     </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+               </rowConstraints>
                 </GridPane>
 
-                <Label fx:id="lblErrorPago" styleClass="form-error" wrapText="true" visible="false" managed="false"/>
+                <Label fx:id="lblErrorPago" managed="false" styleClass="form-error" visible="false" wrapText="true" />
 
-                <Button fx:id="btnConfirmarPago" text="Confirmar Pago" graphicTextGap="8" maxWidth="Infinity" prefHeight="56"
-                        styleClass="btn-accent-block" onAction="#onConfirmarPago">
+                <Button fx:id="btnConfirmarPago" graphicTextGap="8" maxWidth="Infinity" onAction="#onConfirmarPago" prefHeight="56" styleClass="btn-accent-block" text="Confirmar Pago">
                     <graphic><FontIcon iconLiteral="mdi2c-check-circle-outline" iconSize="18" /></graphic>
                 </Button>
 

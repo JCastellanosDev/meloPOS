@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -32,12 +33,20 @@
             <Label fx:id="lblActivas" styleClass="badge badge-muted" text="0 Activas" />
             <Region HBox.hgrow="ALWAYS" />
 
-            <!-- Densidad de la cuadrícula: cuántos tickets caben a la vista (ver KitchenDisplayController.aplicarColumnas) -->
+            <!-- Densidad de la cuadrícula: cuántos tickets caben a la vista (ver KitchenDisplayController.aplicarColumnas).
+                 El número solo (ver auditoría UI/UX) no es autoexplicativo para un cocinero nuevo: el
+                 ícono de grid da contexto, el tooltip lo hace explícito sin agregar texto permanente. -->
             <HBox alignment="CENTER" spacing="6" styleClass="kds-toolbar-group">
                 <FontIcon iconLiteral="mdi2v-view-grid" iconSize="16" styleClass="kds-status-icon" />
-                <Button fx:id="btnDensidad3" onAction="#onDensidad3" styleClass="kds-toolbar-btn" text="6" />
-                <Button fx:id="btnDensidad4" onAction="#onDensidad4" styleClass="kds-toolbar-btn" text="8" />
-                <Button fx:id="btnDensidad6" onAction="#onDensidad6" styleClass="kds-toolbar-btn" text="12" />
+                <Button fx:id="btnDensidad3" onAction="#onDensidad3" styleClass="kds-toolbar-btn" text="6">
+                    <tooltip><Tooltip text="6 comandas visibles a la vez" /></tooltip>
+                </Button>
+                <Button fx:id="btnDensidad4" onAction="#onDensidad4" styleClass="kds-toolbar-btn" text="8">
+                    <tooltip><Tooltip text="8 comandas visibles a la vez" /></tooltip>
+                </Button>
+                <Button fx:id="btnDensidad6" onAction="#onDensidad6" styleClass="kds-toolbar-btn" text="12">
+                    <tooltip><Tooltip text="12 comandas visibles a la vez" /></tooltip>
+                </Button>
             </HBox>
 
             <!-- Tamaño de texto global de los tickets (ver KitchenDisplayController.cambiarNivelTamano) -->
@@ -46,12 +55,14 @@
                     <graphic>
                         <FontIcon iconLiteral="mdi2f-format-font-size-decrease" iconSize="16" />
                     </graphic>
+                    <tooltip><Tooltip text="Reducir tamaño de texto" /></tooltip>
                 </Button>
                 <Label fx:id="lblNivelTexto" styleClass="kds-toolbar-label" text="Normal" />
                 <Button onAction="#onAumentarTexto" styleClass="kds-toolbar-btn">
                     <graphic>
                         <FontIcon iconLiteral="mdi2f-format-font-size-increase" iconSize="16" />
                     </graphic>
+                    <tooltip><Tooltip text="Aumentar tamaño de texto" /></tooltip>
                 </Button>
             </HBox>
 

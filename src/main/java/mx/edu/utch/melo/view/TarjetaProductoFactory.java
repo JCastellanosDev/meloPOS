@@ -3,6 +3,7 @@ package mx.edu.utch.melo.view;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -38,6 +39,9 @@ public final class TarjetaProductoFactory {
         Button btnAgregar = new Button("+");
         btnAgregar.getStyleClass().add("btn-round-add");
         btnAgregar.setOnAction(e -> onAgregar.run());
+        // Botón símbolo-only (ver auditoría UI/UX): es la acción más repetida de toda la app, el
+        // tooltip cuesta una línea y evita que "+" quede como única señal de qué hace.
+        Tooltip.install(btnAgregar, new Tooltip("Agregar " + producto.getNombre() + " al pedido"));
         // Solo se checa "disponible": vender todavía no descuenta cantidad_disponible (ver CLAUDE.md,
         // sección Inventario), así que bloquear por existencia dejaría productos invendibles sin razón.
         if (!producto.isDisponible()) {

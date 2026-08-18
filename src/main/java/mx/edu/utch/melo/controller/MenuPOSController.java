@@ -5,6 +5,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -33,6 +34,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 public class MenuPOSController {
@@ -46,6 +48,10 @@ public class MenuPOSController {
     /** Contenedor dinámico: se llena con un botón por categoría real (ver AjustesController), más "Todos". */
     @FXML
     private HBox filaCategorias;
+
+    /** Antes decorativo, sin fx:id ni filtrar nada (ver auditoría UI/UX). */
+    @FXML
+    private TextField txtBuscarProducto;
 
     @FXML
     private Label lblNumeroOrden;
@@ -134,6 +140,9 @@ public class MenuPOSController {
     void initialize() {
         sidebarController.activar(Pantalla.MENU);
         actualizarTotales();
+        // Filtra en memoria sobre todosLosProductos, ya cargados -- mismo patrón que
+        // DeliveryController.aplicarFiltro (ver renderizarMenu), no vuelve a consultar la BD.
+        txtBuscarProducto.textProperty().addListener((observable, antes, actual) -> renderizarMenu());
         cargarDatosIniciales();
     }
 
@@ -210,10 +219,18 @@ public class MenuPOSController {
                 ? todosLosProductos
                 : todosLosProductos.stream().filter(p -> p.getCategoriaId() == categoriaSeleccionadaId).toList();
 
+        String filtroTexto = txtBuscarProducto.getText();
+        if (filtroTexto != null && !filtroTexto.isBlank()) {
+            String normalizado = filtroTexto.trim().toLowerCase(Locale.forLanguageTag("es-MX"));
+            productos = productos.stream()
+                    .filter(p -> p.getNombre().toLowerCase(Locale.forLanguageTag("es-MX")).contains(normalizado))
+                    .toList();
+        }
+
         if (productos.isEmpty()) {
             mostrarErrorEnMenu(todosLosProductos.isEmpty()
                     ? "Todavía no hay platillos activos en esta sucursal."
-                    : "No hay productos en esta categoría todavía.");
+                    : "Ningún platillo coincide con la búsqueda o la categoría.");
             return;
         }
         contenedorMenu.getChildren().setAll(productos.stream()

@@ -44,7 +44,10 @@
 
                 <!-- Teléfono -->
                 <Label text="NÚMERO DE CELULAR" styleClass="text-label-caps"/>
-                <HBox alignment="CENTER_LEFT" styleClass="input-wrapper">
+                <!-- fx:id agregado (ver auditoría UI/UX): antes ningún campo del formulario tenía
+                     señal visual de foco más allá del cursor del TextField. Ver
+                     PedidosController.marcarFocoEnWrapper, que alterna input-wrapper-focused. -->
+                <HBox fx:id="envolturaPhone" alignment="CENTER_LEFT" styleClass="input-wrapper">
                     <VBox.margin><Insets top="6" bottom="4"/></VBox.margin>
                     <FontIcon iconLiteral="mdi2p-phone-outline" iconSize="16" styleClass="input-icon"/>
                     <TextField fx:id="txtPhone" promptText="Ej. 300 123 4567" prefWidth="480" styleClass="input-plain" onAction="#onBuscarPorTelefono"/>
@@ -55,7 +58,7 @@
 
                 <!-- Nombre -->
                 <Label text="NOMBRE Y APELLIDO" styleClass="text-label-caps"/>
-                <HBox alignment="CENTER_LEFT" styleClass="input-wrapper">
+                <HBox fx:id="envolturaNombre" alignment="CENTER_LEFT" styleClass="input-wrapper">
                     <VBox.margin><Insets top="6" bottom="20"/></VBox.margin>
                     <FontIcon iconLiteral="mdi2a-account-outline" iconSize="16" styleClass="input-icon"/>
                     <TextField fx:id="txtNombre" promptText="Ej. Juan Pérez" prefWidth="480" styleClass="input-plain"/>
@@ -65,7 +68,7 @@
                 <Label text="DIRECCIÓN DE ENTREGA" styleClass="text-label-caps"/>
                 <HBox alignment="CENTER" spacing="8">
                     <VBox.margin><Insets top="6" bottom="6"/></VBox.margin>
-                    <HBox alignment="CENTER_LEFT" styleClass="input-wrapper" HBox.hgrow="ALWAYS">
+                    <HBox fx:id="envolturaAddress" alignment="CENTER_LEFT" styleClass="input-wrapper" HBox.hgrow="ALWAYS">
                         <FontIcon iconLiteral="mdi2m-map-marker-outline" iconSize="16" styleClass="input-icon"/>
                         <TextField fx:id="txtAddress" promptText="Calle y número, o Calle, número y colonia" prefWidth="350" styleClass="input-plain"/>
                     </HBox>

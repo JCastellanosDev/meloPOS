@@ -5,6 +5,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -50,6 +51,7 @@ public final class FilaArticuloFactory {
         Button btnMenos = new Button("−");
         btnMenos.getStyleClass().add("btn-qty-sm");
         btnMenos.setOnAction(e -> onCambiarCantidad.accept(-1));
+        Tooltip.install(btnMenos, new Tooltip("Quitar una unidad"));
 
         Label lblCantidad = new Label(String.valueOf(item.getCantidad()));
         lblCantidad.getStyleClass().add("text-muted");
@@ -57,14 +59,18 @@ public final class FilaArticuloFactory {
         Button btnMas = new Button("+");
         btnMas.getStyleClass().add("btn-qty-sm");
         btnMas.setOnAction(e -> onCambiarCantidad.accept(1));
+        Tooltip.install(btnMas, new Tooltip("Agregar una unidad"));
 
         Region espaciador = new Region();
         HBox.setHgrow(espaciador, Priority.ALWAYS);
 
+        // Ícono solo, y además la única acción destructiva de esta fila (ver auditoría UI/UX):
+        // el tooltip es más importante aquí que en +/- por el riesgo de un toque accidental.
         Button btnEliminar = new Button();
         btnEliminar.setGraphic(new FontIcon("mdi2t-trash-can-outline"));
         btnEliminar.getStyleClass().add("btn-icon-danger-sm");
         btnEliminar.setOnAction(e -> onEliminar.run());
+        Tooltip.install(btnEliminar, new Tooltip("Quitar " + item.getNombre() + " del pedido"));
 
         HBox filaCantidad = new HBox(6, btnMenos, lblCantidad, btnMas, espaciador, btnEliminar);
         filaCantidad.setAlignment(Pos.CENTER_LEFT);

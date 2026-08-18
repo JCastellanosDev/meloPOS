@@ -6,6 +6,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.dao.SucursalDAO;
@@ -41,6 +42,18 @@ public class PedidosController {
 
     @FXML
     private TextField txtAddress;
+
+    /** Envolturas de los 3 campos de arriba, para marcar cuál tiene el foco (ver auditoría UI/UX,
+     * marcarFocoEnWrapper) -- antes ningún campo del formulario tenía señal visual de foco más
+     * allá del cursor de texto del propio TextField. */
+    @FXML
+    private HBox envolturaPhone;
+
+    @FXML
+    private HBox envolturaNombre;
+
+    @FXML
+    private HBox envolturaAddress;
 
     @FXML
     private Button btnUbicar;
@@ -89,6 +102,23 @@ public class PedidosController {
         txtPhone.textProperty().addListener((observable, anterior, actual) -> clienteEncontrado = null);
         // Si edita la dirección después de calcular una ruta, esa ruta ya no es válida.
         txtAddress.textProperty().addListener((observable, anterior, actual) -> ocultarMapa());
+
+        marcarFocoEnWrapper(txtPhone, envolturaPhone);
+        marcarFocoEnWrapper(txtNombre, envolturaNombre);
+        marcarFocoEnWrapper(txtAddress, envolturaAddress);
+    }
+
+    /** Refleja el foco del TextField en su envoltura (ver auditoría UI/UX, input-wrapper-focused
+     * en styles.css): el TextField interior es transparente (.input-plain), así que JavaFX no
+     * propaga :focused de un hijo a su contenedor por sí solo. */
+    private void marcarFocoEnWrapper(TextField campo, HBox envoltura) {
+        campo.focusedProperty().addListener((observable, antes, tieneFoco) -> {
+            if (tieneFoco) {
+                envoltura.getStyleClass().add("input-wrapper-focused");
+            } else {
+                envoltura.getStyleClass().remove("input-wrapper-focused");
+            }
+        });
     }
 
 
