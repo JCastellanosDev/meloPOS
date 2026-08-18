@@ -110,8 +110,29 @@ public class PagoService {
      * avanzar la orden. Valida que la suma coincida exactamente con el total de la orden dentro de
      * la propia transacción -- no confía en que el Controller ya lo haya validado antes de llamar
      * aquí (ver auditoría de Fase 7, "el Service no debe confiar en que la UI repita la guarda").
+     *
+     * Guardias adicionales (auditoría de integridad de pagos, esta sesión):
+     * <ul>
+     *   <li>Ningún monto capturado puede ser negativo -- no hay ningún escenario de negocio válido
+     *       para "pagar" un monto negativo. Monto cero sí se permite a este nivel (lo filtra
+     *       {@link #registrarPagoDividido} para no crear un Pago vacío, pero {@link #registrarPago}
+     *       de un solo monto en cero debe seguir funcionando para CORTESIA, el único
+     *       {@link TipoDescuento} de 100% -- un total legítimamente en cero).</li>
+     *   <li>La orden debe estar exactamente en el estado en el que su canal espera el pago (ver
+     *       {@link #estadoEsperadoAntesDePagar}). Sin esta guardia, un segundo cobro sobre una
+     *       orden ya pagada pasaría la validación de "la suma coincide con el total" sin problema
+     *       (el total no cambia entre el primer y el segundo intento) y crearía un segundo juego de
+     *       filas Pago -- doble cobro registrado en el sistema aunque el cliente solo pagó una vez.
+     *       CANCELADA se rechaza aparte, con su propio mensaje, porque es un caso distinto (no es
+     *       que ya se haya cobrado, es que la orden ya no es cobrable en absoluto).</li>
+     * </ul>
      */
     private boolean registrarPagos(int ordenId, List<PagoACrear> pagos, int usuarioId) {
+        for (PagoACrear pagoACrear : pagos) {
+            if (pagoACrear.monto().signum() < 0) {
+                throw new MontoInvalidoException(pagoACrear.monto());
+            }
+        }
         BigDecimal sumaCapturada = pagos.stream().map(PagoACrear::monto).reduce(BigDecimal.ZERO, BigDecimal::add);
         // Lectura fuera de la transacción a propósito: solo decide a qué turno se le asigna la
         // venta, no es parte de lo que debe revertirse si falla el registro del pago.
@@ -119,6 +140,13 @@ public class PagoService {
 
         return transaccionador.ejecutarEnTransaccion(conexion -> {
             Orden orden = ordenDAO.obtenerPorId(ordenId, conexion).orElseThrow();
+            if (orden.getEstado() == EstadoOrden.CANCELADA) {
+                throw new OrdenCanceladaException(ordenId);
+            }
+            EstadoOrden estadoEsperado = estadoEsperadoAntesDePagar(orden.getTipoOrden());
+            if (orden.getEstado() != estadoEsperado) {
+                throw new OrdenYaFueCobradaException(ordenId, orden.getEstado());
+            }
             if (sumaCapturada.compareTo(orden.getTotal()) != 0) {
                 throw new MontoPagadoNoCoincideException(orden.getTotal(), sumaCapturada);
             }
@@ -154,6 +182,24 @@ public class PagoService {
     }
 
     /**
+     * Estado en el que debe estar la orden justo ANTES de aceptar un pago, según su canal --
+     * el inverso de {@link #estadoTrasPago}, usado por {@link #registrarPagos} para rechazar un
+     * cobro repetido o fuera de lugar (ver CLAUDE.md: "el momento en que se cobra cambia según el
+     * canal"). COMEDOR/PARA_LLEVAR nacen en PENDIENTE (VentaService.crearOrdenComedor) y ahí se
+     * cobran, antes de mandarse a preparar. DOMICILIO/PARA_RECOGER nacen directo en
+     * EN_PREPARACION (VentaService.crearOrdenDomicilio) y se cobran ahí mismo, al entregar/recoger
+     * -- hoy no existe ningún otro estado intermedio antes del pago para ningún canal. Que la
+     * orden esté en cualquier otro estado significa que el pago ya se registró antes (CANCELADA
+     * se distingue y rechaza aparte, con su propio mensaje, en {@link #registrarPagos}).
+     */
+    private EstadoOrden estadoEsperadoAntesDePagar(TipoOrden tipoOrden) {
+        return switch (tipoOrden) {
+            case COMEDOR, PARA_LLEVAR -> EstadoOrden.PENDIENTE;
+            case DOMICILIO, PARA_RECOGER -> EstadoOrden.EN_PREPARACION;
+        };
+    }
+
+    /**
      * Aplica (o reemplaza, si ya tenía uno) un descuento por categoría con porcentaje predefinido
      * (ver TipoDescuento) -- requiere PIN de Administrador, verificado antes de llamar aquí (ver
      * UsuarioService.autenticarAdministrador); {@code rolAutorizante} es el rol de quien autorizó,
@@ -182,11 +228,38 @@ public class PagoService {
     }
 
     /**
-     * Quita el descuento de la orden, regresando el total a lo que era antes de aplicarlo. No
-     * exige un rol específico -- quitar un descuento nunca reduce lo que se cobra, así que no
-     * representa el mismo riesgo que aplicarlo (ver aplicarDescuento).
+     * Quita el descuento de la orden, regresando el total a lo que era antes de aplicarlo --
+     * versión que SÍ exige autorización (ver auditoría de esta sesión, "aplicar/quitar descuento").
+     * Quitar un descuento cambia el total que se cobra tanto como aplicarlo (lo aumenta, en vez de
+     * reducirlo) -- un cajero podría revertir por su cuenta un descuento que un Administrador ya
+     * autorizó para un cliente, cobrándole de más sin que nadie vuelva a autorizar ese cambio. Usa
+     * la misma regla que {@link #aplicarDescuento} (ADMINISTRADOR únicamente) por consistencia, no
+     * porque se haya diseñado una política nueva para este caso.
      */
+    public Orden quitarDescuento(Rol rolAutorizante, int ordenId) {
+        ControlAcceso.exigirRol(rolAutorizante, "quitar un descuento", Rol.ADMINISTRADOR);
+        Orden orden = quitarDescuentoSinAutorizar(ordenId);
+        Auditoria.registrar(rolAutorizante, "remoción de descuento", "ordenId=" + ordenId);
+        return orden;
+    }
+
+    /**
+     * @deprecated Sin guardia de autorización -- existe solo porque
+     * {@code PaymentPortalController.onQuitarDescuento} todavía llama esta sobrecarga directo
+     * desde el botón "Quitar Descuento", sin pedir PIN (a diferencia de "Aplicar Descuento", que sí
+     * pasa por {@code onAutorizarDescuento}); hoy cualquier rol con acceso a la pantalla de cobro
+     * puede revertir un descuento ya autorizado por un Administrador sin volver a autorizar. Use
+     * {@link #quitarDescuento(Rol, int)} en su lugar, que sí exige ADMINISTRADOR igual que
+     * {@link #aplicarDescuento}. Migrar el Controller requiere agregarle un flujo de PIN igual al
+     * de aplicar descuento -- cambio de UI fuera del alcance de esta auditoría (Service-layer
+     * únicamente); queda documentado aquí para quien lo retome.
+     */
+    @Deprecated
     public Orden quitarDescuento(int ordenId) {
+        return quitarDescuentoSinAutorizar(ordenId);
+    }
+
+    private Orden quitarDescuentoSinAutorizar(int ordenId) {
         Orden orden = ordenDAO.obtenerPorId(ordenId).orElseThrow();
         if (orden.getTipoDescuento() == null) {
             return orden;
@@ -210,6 +283,31 @@ public class PagoService {
     public static class MontoPagadoNoCoincideException extends RuntimeException {
         public MontoPagadoNoCoincideException(BigDecimal esperado, BigDecimal capturado) {
             super("El monto capturado (" + capturado + ") no coincide con el total de la orden (" + esperado + ").");
+        }
+    }
+
+    /** Ningún monto de un pago (único o una pierna de un pago dividido) puede ser negativo. */
+    public static class MontoInvalidoException extends RuntimeException {
+        public MontoInvalidoException(BigDecimal monto) {
+            super("El monto pagado no puede ser negativo: " + monto + ".");
+        }
+    }
+
+    /** Se intentó cobrar una orden que ya está CANCELADA -- no hay nada que cobrar. */
+    public static class OrdenCanceladaException extends RuntimeException {
+        public OrdenCanceladaException(int ordenId) {
+            super("No se puede registrar un pago sobre la orden " + ordenId + ": está cancelada.");
+        }
+    }
+
+    /**
+     * Se intentó cobrar una orden que ya no está en el estado en el que su canal espera el pago
+     * (ver {@link #estadoEsperadoAntesDePagar}) -- lo más probable es que ya se haya pagado antes.
+     */
+    public static class OrdenYaFueCobradaException extends RuntimeException {
+        public OrdenYaFueCobradaException(int ordenId, EstadoOrden estadoActual) {
+            super("No se puede registrar un pago sobre la orden " + ordenId
+                    + ": ya fue cobrada (estado actual: " + estadoActual + ").");
         }
     }
 }
