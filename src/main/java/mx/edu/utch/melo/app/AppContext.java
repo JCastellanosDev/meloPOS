@@ -41,9 +41,13 @@ import mx.edu.utch.melo.sesion.SesionActual;
  * Los controladores que SOLO necesitan navegar (p. ej. SidebarController)
  * siguen recibiendo {@link Navigator} directo por constructor, no AppContext
  * completo -- darles acceso a todos los DAO cuando no los usan violaría
- * Segregación de Interfaces. DashboardController SÍ recibe AppContext: además
- * de navegar, muestra datos reales (usuario en sesión, pedidos a domicilio
- * activos, ventas del día).
+ * Segregación de Interfaces. Todos los demás controladores, incluido
+ * DashboardController, ya se migraron a pedir solo las dependencias
+ * concretas que usan (Service/DAO/Navigator/SesionActual puntuales) --
+ * ninguno recibe AppContext completo hoy. {@link mx.edu.utch.melo.nav.SceneManager}
+ * sigue guardando AppContext completo porque necesita construir un
+ * {@link mx.edu.utch.melo.nav.ControllerFactory} nuevo por cada pantalla y
+ * validar el acceso por rol contra la sesión activa.
  */
 public class AppContext {
 
