@@ -13,18 +13,21 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Pedidos a domicilio activos para la pantalla de Delivery (ver DeliveryController). Junta
- * {@code OrdenDAO.obtenerActivasPorTipo(DOMICILIO)} con una lectura por lote de
- * {@link ClienteDAO#obtenerPorIds(List)} para resolver los clientes de todas las órdenes --
- * mismo patrón de coordinar más de un DAO que {@link PagoService#obtenerRecibo}, pero en 2
- * consultas totales en vez de 1+N (antes: una lectura de {@code ClienteDAO.obtenerPorId} por
- * cada orden dentro de un bucle -- N+1 clásico contra MySQL para una pantalla que recarga en
- * cada regreso de foco y en cada cierre de popup "Agregar"/"Cobrar"). Se eligió el batch sobre
- * un JOIN nuevo en OrdenDAO para no tocar OrdenDAO/OrdenDAOImpl -- otro cambio en paralelo ya
- * los está tocando por cancelación de órdenes -- y porque el batch ya deja esto en 2 consultas
- * totales sin necesitar un DTO cruzado Orden+Cliente nuevo. "Agregar"/"Cobrar" no viven aquí: no
- * tocan DAO directamente, solo preparan SesionActual y navegan (ver DeliveryController), así que
- * no hay nada de negocio que extraer de esa parte.
+ * Órdenes activas de un canal que no se cobra al tomar el pedido (DOMICILIO o PARA_RECOGER),
+ * para las pantallas que las listan: Delivery (DOMICILIO, ver DeliveryController) y Pedidos
+ * (PARA_RECOGER, ver PedidosController -- órdenes creadas por {@code VentaService.crearOrdenDomicilio}
+ * sin distancia calculada, ver su javadoc). Junta {@code OrdenDAO.obtenerActivasPorTipo(tipo)}
+ * con una lectura por lote de {@link ClienteDAO#obtenerPorIds(List)} para resolver los clientes
+ * de todas las órdenes -- mismo patrón de coordinar más de un DAO que
+ * {@link PagoService#obtenerRecibo}, pero en 2 consultas totales en vez de 1+N (antes: una
+ * lectura de {@code ClienteDAO.obtenerPorId} por cada orden dentro de un bucle -- N+1 clásico
+ * contra MySQL para pantallas que recargan en cada regreso de foco y en cada cierre de popup
+ * "Agregar"/"Cobrar"). Se eligió el batch sobre un JOIN nuevo en OrdenDAO para no tocar
+ * OrdenDAO/OrdenDAOImpl -- otro cambio en paralelo ya los está tocando por cancelación de
+ * órdenes -- y porque el batch ya deja esto en 2 consultas totales sin necesitar un DTO cruzado
+ * Orden+Cliente nuevo. "Agregar"/"Cobrar" no viven aquí: no tocan DAO directamente, solo
+ * preparan SesionActual y navegan (ver DeliveryController/PedidosController), así que no hay
+ * nada de negocio que extraer de esa parte.
  */
 public class DeliveryService {
 
@@ -36,9 +39,9 @@ public class DeliveryService {
         this.clienteDAO = clienteDAO;
     }
 
-    /** Órdenes DOMICILIO activas (no pagadas ni canceladas) con su cliente ya resuelto. */
-    public List<PedidoActivo> obtenerPedidosActivos() {
-        List<Orden> ordenes = ordenDAO.obtenerActivasPorTipo(TipoOrden.DOMICILIO);
+    /** Órdenes activas (no pagadas ni canceladas) del tipo dado, con su cliente ya resuelto. */
+    public List<PedidoActivo> obtenerPedidosActivos(TipoOrden tipo) {
+        List<Orden> ordenes = ordenDAO.obtenerActivasPorTipo(tipo);
 
         List<Integer> idsClientes = ordenes.stream()
                 .map(Orden::getClienteId)

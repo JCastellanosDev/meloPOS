@@ -6,7 +6,7 @@
 <?import javafx.geometry.*?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<BorderPane xmlns="http://javafx.com/javafx/21"
+<BorderPane fx:id="raiz" xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="mx.edu.utch.melo.controller.PedidosController"
             prefWidth="1280" prefHeight="960"
@@ -123,6 +123,36 @@
                     </HBox>
                     <Label text="Para entregas recurrentes, asegúrese de guardar referencias claras en la dirección. Un registro preciso reduce los tiempos de entrega."
                            styleClass="text-muted" wrapText="true" maxWidth="260"/>
+                </VBox>
+
+                <!-- Pedidos Para Recoger activos: órdenes que esta misma pantalla crea sin ruta
+                     calculada (ver VentaService.crearOrdenDomicilio: sin distancia, la orden nace
+                     PARA_RECOGER en vez de DOMICILIO). Antes ninguna pantalla las mostraba; mismo
+                     patrón de tarjeta que DeliveryView "Pedidos Activos", adaptado a esta columna
+                     angosta de 300px (ver PedidosController). -->
+                <VBox styleClass="card" spacing="12" VBox.vgrow="ALWAYS">
+                    <VBox spacing="2">
+                        <Label styleClass="text-title-sm" text="Pedidos Para Recoger"/>
+                        <Label styleClass="text-muted-sm" text="Órdenes activas que el cliente pasará a recoger."
+                               wrapText="true"/>
+                    </VBox>
+
+                    <HBox spacing="6" alignment="CENTER_LEFT">
+                        <Label fx:id="lblTotalParaRecoger" styleClass="text-price" text="0"/>
+                        <Label styleClass="text-muted-sm" text="activos"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="lblSumaParaRecoger" styleClass="text-price" text="\$0.00"/>
+                    </HBox>
+
+                    <TextField fx:id="txtBuscarParaRecoger" promptText="Buscar por # de pedido..."
+                               styleClass="search-field" maxWidth="Infinity"/>
+
+                    <Separator/>
+
+                    <!-- Tarjetas generadas en tiempo de ejecución (ver PedidosController) -->
+                    <ScrollPane fitToWidth="true" styleClass="delivery-scroll" VBox.vgrow="ALWAYS">
+                        <VBox fx:id="contenedorParaRecoger" spacing="12"/>
+                    </ScrollPane>
                 </VBox>
             </VBox>
         </HBox>

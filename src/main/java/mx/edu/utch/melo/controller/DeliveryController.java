@@ -17,6 +17,7 @@ import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.model.Cliente;
 import mx.edu.utch.melo.model.EstadoOrden;
 import mx.edu.utch.melo.model.Orden;
+import mx.edu.utch.melo.model.TipoOrden;
 import mx.edu.utch.melo.nav.Navigator;
 import mx.edu.utch.melo.nav.Pantalla;
 import mx.edu.utch.melo.service.DeliveryService;
@@ -120,7 +121,7 @@ public class DeliveryController {
 
     /** Se ejecuta en un hilo aparte (ver Async): la consulta agregada vive en DeliveryService, la UI se arma después. */
     private List<DeliveryService.PedidoActivo> construirDatosPedidos() {
-        return deliveryService.obtenerPedidosActivos();
+        return deliveryService.obtenerPedidosActivos(TipoOrden.DOMICILIO);
     }
 
     private void renderizarPedidos(List<DeliveryService.PedidoActivo> datos) {

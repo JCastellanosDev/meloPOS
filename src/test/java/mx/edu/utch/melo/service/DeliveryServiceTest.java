@@ -33,7 +33,7 @@ class DeliveryServiceTest {
 
         DeliveryService service = new DeliveryService(ordenDAO, clienteDAO);
 
-        List<DeliveryService.PedidoActivo> pedidos = service.obtenerPedidosActivos();
+        List<DeliveryService.PedidoActivo> pedidos = service.obtenerPedidosActivos(TipoOrden.DOMICILIO);
 
         assertEquals(2, pedidos.size());
         assertEquals("Ana Pérez", pedidos.get(0).cliente().getNombre());
@@ -44,6 +44,31 @@ class DeliveryServiceTest {
         assertEquals(1, clienteDAO.llamadasObtenerPorIds.size(),
                 "debe resolver todos los clientes en una sola llamada en lote, no una por orden");
         assertEquals(List.of(10, 11), clienteDAO.llamadasObtenerPorIds.get(0).stream().sorted().toList());
+    }
+
+    /**
+     * obtenerPedidosActivos ahora recibe el TipoOrden como parámetro (antes estaba fijo a
+     * DOMICILIO, ver PedidosController -- que lo reutiliza con PARA_RECOGER para el panel de
+     * "Pedidos Para Recoger"). Esta prueba usa un tipo distinto de DOMICILIO justamente para
+     * comprobar que el Service reenvía el parámetro real al DAO en vez de seguir hardcodeado.
+     */
+    @Test
+    void obtenerPedidosActivosConsultaElTipoQueSeLePasaNoSiempreDomicilio() {
+        Orden orden = ordenDeEjemplo(1, 20, "60.00");
+        orden.setTipoOrden(TipoOrden.PARA_RECOGER);
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.activas = List.of(orden);
+        ClienteDAOFalso clienteDAO = new ClienteDAOFalso();
+        clienteDAO.porId.put(20, clienteDeEjemplo(20, "Marco Díaz"));
+
+        DeliveryService service = new DeliveryService(ordenDAO, clienteDAO);
+
+        List<DeliveryService.PedidoActivo> pedidos = service.obtenerPedidosActivos(TipoOrden.PARA_RECOGER);
+
+        assertEquals(TipoOrden.PARA_RECOGER, ordenDAO.tipoConsultado,
+                "el Service debe reenviar el tipo recibido al DAO, no un DOMICILIO fijo");
+        assertEquals(1, pedidos.size());
+        assertEquals("Marco Díaz", pedidos.get(0).cliente().getNombre());
     }
 
     /**
@@ -64,7 +89,7 @@ class DeliveryServiceTest {
 
         DeliveryService service = new DeliveryService(ordenDAO, clienteDAO);
 
-        List<DeliveryService.PedidoActivo> pedidos = service.obtenerPedidosActivos();
+        List<DeliveryService.PedidoActivo> pedidos = service.obtenerPedidosActivos(TipoOrden.DOMICILIO);
 
         assertEquals(1, pedidos.size());
         assertNull(pedidos.get(0).cliente());
@@ -82,7 +107,7 @@ class DeliveryServiceTest {
 
         DeliveryService service = new DeliveryService(ordenDAO, clienteDAO);
 
-        List<DeliveryService.PedidoActivo> pedidos = service.obtenerPedidosActivos();
+        List<DeliveryService.PedidoActivo> pedidos = service.obtenerPedidosActivos(TipoOrden.DOMICILIO);
 
         assertNull(pedidos.get(0).cliente());
     }
@@ -108,7 +133,7 @@ class DeliveryServiceTest {
 
         DeliveryService service = new DeliveryService(ordenDAO, clienteDAO);
 
-        List<DeliveryService.PedidoActivo> pedidos = service.obtenerPedidosActivos();
+        List<DeliveryService.PedidoActivo> pedidos = service.obtenerPedidosActivos(TipoOrden.DOMICILIO);
 
         assertEquals(3, pedidos.size(), "PENDIENTE, EN_PREPARACION y LISTA deben aparecer, ninguna se debe filtrar aquí");
         assertEquals(1, clienteDAO.llamadasObtenerPorIds.size(),
@@ -140,7 +165,7 @@ class DeliveryServiceTest {
         OrdenDAOFalsoConFiltroReal ordenDAO = new OrdenDAOFalsoConFiltroReal(universo);
         DeliveryService service = new DeliveryService(ordenDAO, new ClienteDAOFalso());
 
-        List<DeliveryService.PedidoActivo> pedidos = service.obtenerPedidosActivos();
+        List<DeliveryService.PedidoActivo> pedidos = service.obtenerPedidosActivos(TipoOrden.DOMICILIO);
 
         List<Integer> idsVisibles = pedidos.stream().map(p -> p.orden().getId()).sorted().toList();
         assertEquals(List.of(1, 2, 3), idsVisibles,
