@@ -74,7 +74,11 @@
                             <FontIcon iconLiteral="mdi2m-moped" iconSize="28" styleClass="text-icon-lg-accent" />
                             <Label styleClass="text-title-sm" text="Domicilio" />
                             <Label fx:id="txtPedidosActivos" styleClass="badge badge-accent" text="—" />
-                            <Label alignment="CENTER" maxWidth="240" styleClass="text-muted" text="Para recoger o domicilios." textAlignment="CENTER" wrapText="true" />
+                            <!-- Antes decía "Para recoger o domicilios" (ver auditoría UI/UX): el botón
+                                 solo lleva a Pedidos, que hoy únicamente crea órdenes DOMICILIO: no
+                                 existe todavía ninguna pantalla que cree una orden PARA_RECOGER (ver
+                                 CLAUDE.md), así que el texto prometía un canal que no se puede tomar. -->
+                            <Label alignment="CENTER" maxWidth="240" styleClass="text-muted" text="Toma un pedido a domicilio." textAlignment="CENTER" wrapText="true" />
                             <Region VBox.vgrow="ALWAYS" />
                             <Button fx:id="btnDomicilio" alignment="CENTER" maxWidth="Infinity" styleClass="btn-primary" text="Realizar pedido" />
                         </VBox>
