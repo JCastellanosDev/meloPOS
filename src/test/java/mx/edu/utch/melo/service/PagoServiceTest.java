@@ -196,6 +196,26 @@ class PagoServiceTest {
     }
 
     @Test
+    void registrarPagoDeUnaOrdenDomicilioEnListaSeCobraSinProblema() {
+        // Bug real reportado en producción: KitchenDisplayController.marcarEntregada manda las
+        // órdenes de DOMICILIO/PARA_RECOGER a LISTA (no directo a ENTREGADA) al completarse en
+        // cocina, justo para que sigan siendo cobrables en Delivery -- pero una versión anterior
+        // de estaEnEstadoCobrable solo aceptaba EN_PREPARACION, así que CUALQUIER pedido a
+        // domicilio que ya hubiera pasado por cocina (el caso normal) rechazaba el cobro con
+        // OrdenYaFueCobradaException, aunque nunca se había pagado.
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.orden = ordenDeEjemplo();
+        ordenDAO.orden.setTipoOrden(TipoOrden.DOMICILIO);
+        ordenDAO.orden.setEstado(EstadoOrden.LISTA);
+        PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
+                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+
+        service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("371.20"), 9);
+
+        assertEquals(EstadoOrden.ENTREGADA, ordenDAO.orden.getEstado());
+    }
+
+    @Test
     void registrarPagoDeUnaOrdenParaLlevarSigueAvanzandoAEnPreparacion() {
         // contraste explícito con domicilio/para_recoger: para_llevar sigue cobrando antes de
         // preparar (ver CLAUDE.md), así que no debe entrar en la rama de "pago es el último paso".

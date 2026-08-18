@@ -118,8 +118,8 @@ public class PagoService {
      *       {@link #registrarPagoDividido} para no crear un Pago vacío, pero {@link #registrarPago}
      *       de un solo monto en cero debe seguir funcionando para CORTESIA, el único
      *       {@link TipoDescuento} de 100% -- un total legítimamente en cero).</li>
-     *   <li>La orden debe estar exactamente en el estado en el que su canal espera el pago (ver
-     *       {@link #estadoEsperadoAntesDePagar}). Sin esta guardia, un segundo cobro sobre una
+     *   <li>La orden debe estar en un estado cobrable para su canal (ver
+     *       {@link #estaEnEstadoCobrable}). Sin esta guardia, un segundo cobro sobre una
      *       orden ya pagada pasaría la validación de "la suma coincide con el total" sin problema
      *       (el total no cambia entre el primer y el segundo intento) y crearía un segundo juego de
      *       filas Pago -- doble cobro registrado en el sistema aunque el cliente solo pagó una vez.
@@ -143,8 +143,7 @@ public class PagoService {
             if (orden.getEstado() == EstadoOrden.CANCELADA) {
                 throw new OrdenCanceladaException(ordenId);
             }
-            EstadoOrden estadoEsperado = estadoEsperadoAntesDePagar(orden.getTipoOrden());
-            if (orden.getEstado() != estadoEsperado) {
+            if (!estaEnEstadoCobrable(orden)) {
                 throw new OrdenYaFueCobradaException(ordenId, orden.getEstado());
             }
             if (sumaCapturada.compareTo(orden.getTotal()) != 0) {
@@ -182,20 +181,28 @@ public class PagoService {
     }
 
     /**
-     * Estado en el que debe estar la orden justo ANTES de aceptar un pago, según su canal --
-     * el inverso de {@link #estadoTrasPago}, usado por {@link #registrarPagos} para rechazar un
-     * cobro repetido o fuera de lugar (ver CLAUDE.md: "el momento en que se cobra cambia según el
-     * canal"). COMEDOR/PARA_LLEVAR nacen en PENDIENTE (VentaService.crearOrdenComedor) y ahí se
-     * cobran, antes de mandarse a preparar. DOMICILIO/PARA_RECOGER nacen directo en
-     * EN_PREPARACION (VentaService.crearOrdenDomicilio) y se cobran ahí mismo, al entregar/recoger
-     * -- hoy no existe ningún otro estado intermedio antes del pago para ningún canal. Que la
-     * orden esté en cualquier otro estado significa que el pago ya se registró antes (CANCELADA
-     * se distingue y rechaza aparte, con su propio mensaje, en {@link #registrarPagos}).
+     * Si la orden todavía se puede cobrar, según su canal -- usado por {@link #registrarPagos}
+     * para rechazar un cobro repetido o fuera de lugar (ver CLAUDE.md: "el momento en que se
+     * cobra cambia según el canal"). COMEDOR/PARA_LLEVAR nacen en PENDIENTE
+     * (VentaService.crearOrdenComedor) y ahí se cobran, antes de mandarse a preparar -- un solo
+     * estado válido.
+     *
+     * DOMICILIO/PARA_RECOGER nacen en EN_PREPARACION (VentaService.crearOrdenDomicilio), pero
+     * ADEMÁS pueden llegar a cobrarse en LISTA: cuando Cocina completa uno de estos pedidos
+     * (ver KitchenDisplayController.marcarEntregada), la orden pasa a LISTA en vez de saltar
+     * directo a ENTREGADA, justo para que siga viéndose y sea cobrable en DeliveryController
+     * hasta que de verdad se pague -- así que EN_PREPARACION *o* LISTA son ambos estados
+     * cobrables para estos dos canales (bug real detectado en producción: una versión anterior
+     * de esta guardia solo aceptaba EN_PREPARACION y rechazaba cualquier pedido a domicilio que
+     * ya hubiera pasado por cocina, que es el caso normal). Cualquier otro estado (ENTREGADA,
+     * PAGADA) significa que el pago ya se registró antes; CANCELADA se distingue y rechaza
+     * aparte, con su propio mensaje, en {@link #registrarPagos}.
      */
-    private EstadoOrden estadoEsperadoAntesDePagar(TipoOrden tipoOrden) {
-        return switch (tipoOrden) {
-            case COMEDOR, PARA_LLEVAR -> EstadoOrden.PENDIENTE;
-            case DOMICILIO, PARA_RECOGER -> EstadoOrden.EN_PREPARACION;
+    private boolean estaEnEstadoCobrable(Orden orden) {
+        return switch (orden.getTipoOrden()) {
+            case COMEDOR, PARA_LLEVAR -> orden.getEstado() == EstadoOrden.PENDIENTE;
+            case DOMICILIO, PARA_RECOGER ->
+                    orden.getEstado() == EstadoOrden.EN_PREPARACION || orden.getEstado() == EstadoOrden.LISTA;
         };
     }
 
@@ -301,8 +308,8 @@ public class PagoService {
     }
 
     /**
-     * Se intentó cobrar una orden que ya no está en el estado en el que su canal espera el pago
-     * (ver {@link #estadoEsperadoAntesDePagar}) -- lo más probable es que ya se haya pagado antes.
+     * Se intentó cobrar una orden que ya no está en un estado cobrable para su canal (ver
+     * {@link #estaEnEstadoCobrable}) -- lo más probable es que ya se haya pagado antes.
      */
     public static class OrdenYaFueCobradaException extends RuntimeException {
         public OrdenYaFueCobradaException(int ordenId, EstadoOrden estadoActual) {
