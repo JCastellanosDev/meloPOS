@@ -119,6 +119,22 @@ public class DetalleOrdenDAOImpl implements DetalleOrdenDAO {
     }
 
     @Override
+    public List<DetalleOrden> obtenerPorOrden(int ordenId, Connection conexion) {
+        List<DetalleOrden> detalles = new ArrayList<>();
+        try (PreparedStatement sentencia = conexion.prepareStatement(SQL_POR_ORDEN)) {
+            sentencia.setInt(1, ordenId);
+            try (ResultSet resultado = sentencia.executeQuery()) {
+                while (resultado.next()) {
+                    detalles.add(mapearFila(resultado));
+                }
+            }
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo obtener los artículos de la orden " + ordenId, e);
+        }
+        return detalles;
+    }
+
+    @Override
     public List<ModificadorAplicado> obtenerModificadores(int detalleOrdenId) {
         List<ModificadorAplicado> modificadores = new ArrayList<>();
         try (Connection conexion = conexionDB.obtenerConexion();

@@ -17,6 +17,7 @@ import mx.edu.utch.melo.model.Producto;
 import mx.edu.utch.melo.model.Rol;
 import mx.edu.utch.melo.model.Sucursal;
 import mx.edu.utch.melo.model.TipoDescuento;
+import mx.edu.utch.melo.model.TipoOrden;
 import mx.edu.utch.melo.model.Turno;
 import mx.edu.utch.melo.model.Usuario;
 import mx.edu.utch.melo.security.Auditoria;
@@ -129,11 +130,27 @@ public class PagoService {
                 pago.setFechaPago(LocalDateTime.now());
                 pagoDAO.crear(pago, conexion);
             }
-            orden.setEstado(EstadoOrden.EN_PREPARACION);
+            orden.setEstado(estadoTrasPago(orden.getTipoOrden()));
             orden.setTurnoId(turnoAbiertoId);
             ordenDAO.actualizar(orden, conexion);
             return true;
         });
+    }
+
+    /**
+     * COMEDOR/PARA_LLEVAR se cobran antes de preparar (ver CLAUDE.md), así que el pago es lo que
+     * dispara la preparación -- EN_PREPARACION, igual que siempre. DOMICILIO/PARA_RECOGER hacen
+     * el recorrido al revés: "Ordenar -> Preparar -> Recoger/Entregar -> Pagar", así que cuando se
+     * cobran ya están preparados (y en la práctica, ya entregados/recogidos -- todavía no existe un
+     * paso explícito de "confirmar entrega" en el sistema). Forzarlos de vuelta a EN_PREPARACION al
+     * cobrar los resucitaría como pedido activo en Kitchen Display, que es justo lo que se quiere
+     * evitar.
+     */
+    private EstadoOrden estadoTrasPago(TipoOrden tipoOrden) {
+        return switch (tipoOrden) {
+            case DOMICILIO, PARA_RECOGER -> EstadoOrden.ENTREGADA;
+            case COMEDOR, PARA_LLEVAR -> EstadoOrden.EN_PREPARACION;
+        };
     }
 
     /**

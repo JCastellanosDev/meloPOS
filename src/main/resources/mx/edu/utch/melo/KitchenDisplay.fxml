@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.BorderPane?>
@@ -30,6 +31,30 @@
             <!-- Insignia: se actualiza en tiempo de ejecución (ver KitchenDisplayController) -->
             <Label fx:id="lblActivas" styleClass="badge badge-muted" text="0 Activas" />
             <Region HBox.hgrow="ALWAYS" />
+
+            <!-- Densidad de la cuadrícula: cuántos tickets caben a la vista (ver KitchenDisplayController.aplicarColumnas) -->
+            <HBox alignment="CENTER" spacing="6" styleClass="kds-toolbar-group">
+                <FontIcon iconLiteral="mdi2v-view-grid" iconSize="16" styleClass="kds-status-icon" />
+                <Button fx:id="btnDensidad3" onAction="#onDensidad3" styleClass="kds-toolbar-btn" text="6" />
+                <Button fx:id="btnDensidad4" onAction="#onDensidad4" styleClass="kds-toolbar-btn" text="8" />
+                <Button fx:id="btnDensidad6" onAction="#onDensidad6" styleClass="kds-toolbar-btn" text="12" />
+            </HBox>
+
+            <!-- Tamaño de texto global de los tickets (ver KitchenDisplayController.cambiarNivelTamano) -->
+            <HBox alignment="CENTER" spacing="6" styleClass="kds-toolbar-group">
+                <Button onAction="#onDisminuirTexto" styleClass="kds-toolbar-btn">
+                    <graphic>
+                        <FontIcon iconLiteral="mdi2f-format-font-size-decrease" iconSize="16" />
+                    </graphic>
+                </Button>
+                <Label fx:id="lblNivelTexto" styleClass="kds-toolbar-label" text="Normal" />
+                <Button onAction="#onAumentarTexto" styleClass="kds-toolbar-btn">
+                    <graphic>
+                        <FontIcon iconLiteral="mdi2f-format-font-size-increase" iconSize="16" />
+                    </graphic>
+                </Button>
+            </HBox>
+
             <Label fx:id="lblClock" styleClass="kds-status-clock" text="00:00">
             <HBox.margin>
                <Insets right="500.0" />
@@ -45,17 +70,20 @@
         <StackPane styleClass="kds-surface">
             <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="kds-scroll">
                 <!--
-                  Cuadrícula fija de 4 columnas x 2 filas (8 tickets visibles a la vez), forzada
-                  a ocupar todo el ScrollPane (fitToWidth + fitToHeight, columnConstraints +
-                  rowConstraints al 100% entre las 4/2): el controlador (KitchenDisplayController)
-                  la llena con los tickets de las órdenes en preparación leídas desde la base de
-                  datos (ver TicketFactory), y cada tarjeta se estira para llenar su celda (ver
-                  GridPane.setHgrow/setVgrow en renderizarTickets). No debe contener tickets
-                  escritos de forma estática aquí.
+                  Cuadrícula de 2 filas x N columnas (N configurable en tiempo de ejecución vía
+                  los botones de densidad de la franja de estado, ver
+                  KitchenDisplayController.aplicarColumnas), forzada a ocupar todo el ScrollPane
+                  (fitToWidth + fitToHeight, columnConstraints + rowConstraints al 100% entre las
+                  N/2). Las 4 columnas de aquí abajo son solo el valor inicial: el controlador
+                  reemplaza columnConstraints por completo al cambiar de densidad, ya que FXML es
+                  estático. El controlador llena la cuadrícula con los tickets de las órdenes en
+                  preparación leídas desde la base de datos (ver TicketFactory), y cada tarjeta se
+                  estira para llenar su celda (ver GridPane.setHgrow/setVgrow en
+                  renderizarTickets). No debe contener tickets escritos de forma estática aquí.
 
-                  Límite conocido: al forzar fitToHeight, si hay más de 8 órdenes activas a la vez,
-                  la 3ra fila (sin rowConstraints propias) se aprieta en vez de habilitar scroll
-                  vertical: no se resolvió aquí porque no se pidió explícitamente.
+                  Límite conocido: al forzar fitToHeight, si hay más órdenes activas que celdas
+                  visibles, la fila de más (sin rowConstraints propias) se aprieta en vez de
+                  habilitar scroll vertical: no se resolvió aquí porque no se pidió explícitamente.
                 -->
                 <GridPane fx:id="contenedorTickets" hgap="0" vgap="0">
                     <columnConstraints>

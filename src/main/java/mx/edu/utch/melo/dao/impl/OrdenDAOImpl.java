@@ -39,8 +39,12 @@ public class OrdenDAOImpl implements OrdenDAO {
     private static final String SQL_POR_ESTADO = SQL_BASE + " WHERE estado = ?";
     private static final String SQL_ACTIVAS_POR_MESA =
             SQL_BASE + " WHERE mesa_id = ? AND estado NOT IN ('PAGADA', 'CANCELADA')";
+    // ENTREGADA cuenta como inactiva aquí (a diferencia de SQL_ACTIVAS_POR_MESA, sin tocar):
+    // DOMICILIO/PARA_RECOGER llegan a ENTREGADA al cobrar, no a PAGADA (ver PagoService.estadoTrasPago
+    // -- se cobra al entregar, ver CLAUDE.md), así que sin esto una orden ya cobrada y entregada
+    // se quedaba mostrándose para siempre en "Pedidos Activos" (ver DeliveryController).
     private static final String SQL_ACTIVAS_POR_TIPO =
-            SQL_BASE + " WHERE tipo_orden = ? AND estado NOT IN ('PAGADA', 'CANCELADA')";
+            SQL_BASE + " WHERE tipo_orden = ? AND estado NOT IN ('PAGADA', 'CANCELADA', 'ENTREGADA')";
     // ordenes no guarda sucursal_id propio (ver CLAUDE.md): se llega a ella vía usuario_id, mismo patrón que ReporteDAOImpl.
     private static final String SQL_SIGUIENTE_NUMERO =
             "SELECT COALESCE(MAX(o.id), 0) + 1 AS siguiente FROM ordenes o "

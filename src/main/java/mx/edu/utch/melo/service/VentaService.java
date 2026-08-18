@@ -50,12 +50,20 @@ public class VentaService {
         return persistir(orden, items);
     }
 
-    /** Pedido a domicilio: se cobra al entregar, por eso entra directo a EN_PREPARACION (sin pasar por cobro). */
+    /**
+     * Pedido a domicilio o para recoger: se cobra al entregar/recoger, por eso entra directo a
+     * EN_PREPARACION (sin pasar por cobro). Sin ruta calculada (distanciaKm null -- el mesero no
+     * presionó "Ubicar" en Pedidos, ver PedidosController.onUbicar) no hay forma de cobrar un envío
+     * real, así que la orden se registra como PARA_RECOGER en vez de DOMICILIO: el cliente pasa por
+     * ella, no se le entrega en una dirección. costoEnvio ya viene en 0 en ese caso
+     * (Sucursal.calcularCostoEnvio es null-safe), esto solo decide el canal correcto.
+     */
     public Orden crearOrdenDomicilio(int usuarioId, Integer clienteId, List<ItemOrden> items, boolean cobrarIva,
                                       BigDecimal distanciaKm, BigDecimal costoEnvio) {
         validarItems(items);
         TotalesOrden totales = calcularTotales(items, cobrarIva, costoEnvio);
-        Orden orden = nuevaOrden(TipoOrden.DOMICILIO, usuarioId, clienteId, EstadoOrden.EN_PREPARACION,
+        TipoOrden tipo = distanciaKm == null ? TipoOrden.PARA_RECOGER : TipoOrden.DOMICILIO;
+        Orden orden = nuevaOrden(tipo, usuarioId, clienteId, EstadoOrden.EN_PREPARACION,
                 totales, distanciaKm, costoEnvio);
         return persistir(orden, items);
     }
@@ -97,6 +105,43 @@ public class VentaService {
         orden.setTotal(totales.total());
         orden.setFechaCreacion(LocalDateTime.now());
         return orden;
+    }
+
+    /**
+     * Agrega artículos a una orden de DOMICILIO ya existente (ver DeliveryController: botón
+     * "Agregar" en una tarjeta de pedido activo) -- el mesero/cajero reabre el mismo menú que
+     * armó el pedido original y sigue agregando encima, sin crear una segunda orden. Inserta un
+     * DetalleOrden por artículo nuevo y recalcula subtotal/impuestos/total sobre TODOS los
+     * artículos de la orden (los que ya tenía + los nuevos, leídos de vuelta dentro de la misma
+     * transacción) -- el envío (costoEnvio/distanciaKm) no se toca: ya se fijó al crear la orden
+     * (ver CLAUDE.md, domicilios) y agregar comida no cambia la ruta ni la distancia.
+     */
+    public Orden agregarArticulos(int ordenId, List<ItemOrden> nuevosItems, boolean cobrarIva) {
+        if (nuevosItems.isEmpty()) {
+            throw new IllegalArgumentException("No se puede agregar una lista de artículos vacía.");
+        }
+        return transaccionador.ejecutarEnTransaccion(conexion -> {
+            Orden orden = ordenDAO.obtenerPorId(ordenId, conexion).orElseThrow();
+            for (ItemOrden item : nuevosItems) {
+                DetalleOrden detalle = new DetalleOrden();
+                detalle.setOrdenId(ordenId);
+                detalle.setProductoId(item.getProductoId());
+                detalle.setCantidad(item.getCantidad());
+                detalle.setPrecioUnitario(item.getPrecioUnitario());
+                detalle.setNota(item.getNota().isBlank() ? null : item.getNota());
+                detalleOrdenDAO.crear(detalle, conexion);
+            }
+
+            List<ItemOrden> todosLosArticulos = detalleOrdenDAO.obtenerPorOrden(ordenId, conexion).stream()
+                    .map(detalle -> new ItemOrden(detalle.getProductoId(), "", detalle.getPrecioUnitario(), detalle.getCantidad()))
+                    .toList();
+            BigDecimal subtotal = Totales.subtotal(todosLosArticulos);
+            orden.setSubtotal(subtotal);
+            orden.setImpuestos(Totales.iva(subtotal, cobrarIva));
+            orden.setTotal(Totales.total(subtotal, cobrarIva).add(orden.getCostoEnvio()));
+            ordenDAO.actualizar(orden, conexion);
+            return orden;
+        });
     }
 
     private Orden persistir(Orden orden, List<ItemOrden> items) {

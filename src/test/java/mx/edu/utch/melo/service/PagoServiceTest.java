@@ -162,6 +162,51 @@ class PagoServiceTest {
     }
 
     @Test
+    void registrarPagoDeUnaOrdenDomicilioLaAvanzaAEntregadaNoAEnPreparacion() {
+        // ver CLAUDE.md: domicilio se cobra al entregar, no antes de preparar -- para esa orden
+        // el pago es el ÚLTIMO paso, así que regresarla a EN_PREPARACION la resucitaría como
+        // pedido activo en Kitchen Display (regresión real, ver PagoService.estadoTrasPago).
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.orden = ordenDeEjemplo();
+        ordenDAO.orden.setTipoOrden(TipoOrden.DOMICILIO);
+        ordenDAO.orden.setEstado(EstadoOrden.EN_PREPARACION);
+        PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
+                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+
+        service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("371.20"), 9);
+
+        assertEquals(EstadoOrden.ENTREGADA, ordenDAO.orden.getEstado());
+    }
+
+    @Test
+    void registrarPagoDeUnaOrdenParaRecogerLaAvanzaAEntregadaNoAEnPreparacion() {
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.orden = ordenDeEjemplo();
+        ordenDAO.orden.setTipoOrden(TipoOrden.PARA_RECOGER);
+        PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
+                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+
+        service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("371.20"), 9);
+
+        assertEquals(EstadoOrden.ENTREGADA, ordenDAO.orden.getEstado());
+    }
+
+    @Test
+    void registrarPagoDeUnaOrdenParaLlevarSigueAvanzandoAEnPreparacion() {
+        // contraste explícito con domicilio/para_recoger: para_llevar sigue cobrando antes de
+        // preparar (ver CLAUDE.md), así que no debe entrar en la rama de "pago es el último paso".
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.orden = ordenDeEjemplo();
+        ordenDAO.orden.setTipoOrden(TipoOrden.PARA_LLEVAR);
+        PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
+                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+
+        service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("371.20"), 9);
+
+        assertEquals(EstadoOrden.EN_PREPARACION, ordenDAO.orden.getEstado());
+    }
+
+    @Test
     void registrarPagoDivididoCreaDosPagosYAvanzaLaOrdenUnaSolaVez() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.orden = ordenDeEjemplo();
@@ -411,6 +456,11 @@ class PagoServiceTest {
 
         @Override
         public List<DetalleOrden> obtenerPorOrden(int ordenId) {
+            return detalles;
+        }
+
+        @Override
+        public List<DetalleOrden> obtenerPorOrden(int ordenId, Connection conexion) {
             return detalles;
         }
 

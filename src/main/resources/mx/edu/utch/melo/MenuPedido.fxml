@@ -52,6 +52,19 @@
                 <VBox.margin><Insets bottom="16"/></VBox.margin>
             </Separator>
 
+            <!--
+              Solo visible en modo edición (ver MenuPedidoController.modoEdicion): lo que ya
+              traía el pedido antes de abrir esta ventana, de solo lectura; lo nuevo se agrega
+              en listaArticulos, abajo.
+            -->
+            <VBox fx:id="seccionArticulosExistentes" spacing="6" visible="false" managed="false">
+                <Label text="Ya en el pedido" styleClass="text-label-caps"/>
+                <VBox fx:id="listaArticulosExistentes" spacing="4"/>
+                <Separator>
+                    <VBox.margin><Insets top="12"/></VBox.margin>
+                </Separator>
+            </VBox>
+
             <!-- Artículos del pedido: se generan en tiempo de ejecución (ver MenuPedidoController) -->
             <VBox fx:id="listaArticulos" styleClass="gap-12 pad-y-16"/>
 
@@ -73,7 +86,7 @@
                 </HBox>
                 <Separator/>
                 <HBox>
-                    <Label text="Total" styleClass="text-price-lg" HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="lblTotalTexto" text="Total" styleClass="text-price-lg" HBox.hgrow="ALWAYS"/>
                     <Label fx:id="lblTotal" text="\$0.00" styleClass="text-price-lg"/>
                 </HBox>
                 <Label fx:id="lblErrorPedido" styleClass="form-error" wrapText="true" visible="false" managed="false"/>

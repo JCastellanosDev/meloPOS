@@ -7,6 +7,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -50,16 +51,18 @@ public final class TicketFactory {
         long minutos = Duration.between(orden.getFechaCreacion(), LocalDateTime.now()).toMinutes();
         Estilo estilo = elegirEstilo(minutos);
 
-        Label titulo = new Label("Orden #" + orden.getId());
-        titulo.getStyleClass().add("ticket-title");
-        HBox.setHgrow(titulo, Priority.ALWAYS);
+        Label numero = new Label(String.valueOf(orden.getId()));
+        numero.getStyleClass().add("ticket-order-number");
 
-        Label tiempo = new Label(String.format("%02d:%02d", minutos / 60, minutos % 60));
+        // Icono + minutos comparten la misma clase de color (estilo.claseTiempo) para que la
+        // píldora se lea como una sola unidad, no como dos elementos coloreados por separado.
+        FontIcon iconoTiempo = new FontIcon("mdi2c-clock-outline");
+        iconoTiempo.getStyleClass().add(estilo.claseTiempo);
+        Label tiempo = new Label(minutos + " min");
         tiempo.getStyleClass().add(estilo.claseTiempo);
-        Label etiquetaTiempo = new Label("Transcurrido");
-        etiquetaTiempo.getStyleClass().add("text-muted-sm");
-        VBox columnaTiempo = new VBox(tiempo, etiquetaTiempo);
-        columnaTiempo.setAlignment(Pos.CENTER_RIGHT);
+        HBox pildoraTiempo = new HBox(4, iconoTiempo, tiempo);
+        pildoraTiempo.setAlignment(Pos.CENTER);
+        pildoraTiempo.getStyleClass().addAll("ticket-time-pill", estilo.clasePill);
 
         Button btnAmpliar = new Button(ampliado ? "Reducir" : "Ampliar");
         btnAmpliar.setGraphic(new FontIcon(ampliado ? "mdi2a-arrow-collapse" : "mdi2a-arrow-expand"));
@@ -67,9 +70,17 @@ public final class TicketFactory {
         btnAmpliar.getStyleClass().add("ticket-expand-btn");
         btnAmpliar.setOnAction(e -> onAmpliar.run());
 
-        HBox encabezado = new HBox(8, titulo, btnAmpliar, columnaTiempo);
-        encabezado.setAlignment(Pos.CENTER_LEFT);
+        // BorderPane, no HBox: numero y btnAmpliar tienen anchos distintos, así que solo
+        // left/center/right garantizan que pildoraTiempo quede centrada en medio del encabezado
+        // sin importar cuánto midan sus vecinos (una sola Region de relleno con HBox no logra esto).
+        BorderPane encabezado = new BorderPane();
         encabezado.getStyleClass().add("ticket-header");
+        encabezado.setLeft(numero);
+        encabezado.setCenter(pildoraTiempo);
+        encabezado.setRight(btnAmpliar);
+        BorderPane.setAlignment(numero, Pos.CENTER_LEFT);
+        BorderPane.setAlignment(pildoraTiempo, Pos.CENTER);
+        BorderPane.setAlignment(btnAmpliar, Pos.CENTER_RIGHT);
 
         Label meta = new Label(descripcionCanal(orden));
         meta.getStyleClass().add("ticket-meta");
@@ -87,6 +98,10 @@ public final class TicketFactory {
 
             Label lblItem = new Label(linea.texto());
             lblItem.getStyleClass().add(tachada ? "ticket-item-tachado" : "ticket-item");
+            // Sin esto, un Label solo mide tan ancho como su texto (no lo que le ofrece el VBox
+            // padre) -- un nombre largo se recorta en vez de usar el ancho real de la tarjeta.
+            lblItem.setMaxWidth(Double.MAX_VALUE);
+            lblItem.setWrapText(true);
             int indiceLinea = indice;
             lblItem.setOnMouseClicked(e -> onTacharLinea.accept(indiceLinea));
             items.getChildren().add(lblItem);
@@ -103,7 +118,10 @@ public final class TicketFactory {
         // chica, o un pedido con muchos productos), no se recortan ni se encima con la de al lado.
         ScrollPane scrollItems = new ScrollPane(items);
         scrollItems.setFitToWidth(true);
-        scrollItems.getStyleClass().add("kds-scroll");
+        // "ticket-items-scroll" (no solo "kds-scroll", que también usan otras pantallas fuera de
+        // KDS) quita el padding propio del ScrollPane para que items use el ancho real de la
+        // tarjeta, sin afectar el ScrollPane compartido de otras pantallas.
+        scrollItems.getStyleClass().addAll("kds-scroll", "ticket-items-scroll");
         VBox.setVgrow(scrollItems, Priority.ALWAYS);
 
         Button btnCompletar = new Button("✓  Completar Pedido");
@@ -127,12 +145,14 @@ public final class TicketFactory {
 
     private static Estilo elegirEstilo(long minutosTranscurridos) {
         if (minutosTranscurridos >= MINUTOS_URGENTE) {
-            return new Estilo("ticket-urgent", "ticket-separator-urgent", "text-time-urgent", "ticket-bump-btn-urgent");
+            return new Estilo("ticket-urgent", "ticket-separator-urgent", "text-time-urgent",
+                    "ticket-time-pill-urgent", "ticket-bump-btn-urgent");
         }
         if (minutosTranscurridos >= MINUTOS_ATENCION) {
-            return new Estilo("ticket-active", "ticket-separator-active", "text-time-warn", "ticket-bump-btn-active");
+            return new Estilo("ticket-active", "ticket-separator-active", "text-time-warn",
+                    "ticket-time-pill-warn", "ticket-bump-btn-active");
         }
-        return new Estilo("ticket", "ticket-separator", "text-time-ok", "ticket-bump-btn");
+        return new Estilo("ticket", "ticket-separator", "text-time-ok", "ticket-time-pill-ok", "ticket-bump-btn");
     }
 
     private static String descripcionCanal(Orden orden) {
@@ -144,7 +164,8 @@ public final class TicketFactory {
         };
     }
 
-    private record Estilo(String claseTicket, String claseSeparador, String claseTiempo, String claseBoton) {
+    private record Estilo(String claseTicket, String claseSeparador, String claseTiempo, String clasePill,
+                           String claseBoton) {
     }
 
     /** Una línea de artículo del ticket, con su nota opcional para cocina (ej. "sin cebolla"). */

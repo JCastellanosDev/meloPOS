@@ -1,89 +1,76 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.geometry.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<BorderPane xmlns="http://javafx.com/javafx/21"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="mx.edu.utch.melo.controller.DeliveryController"
-            prefWidth="1280" prefHeight="960"
-            stylesheets="@styles.css">
+<BorderPane fx:id="raiz" prefHeight="960" prefWidth="1280" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mx.edu.utch.melo.controller.DeliveryController">
 
     <!-- ===== MENÚ LATERAL ===== -->
     <left>
-        <fx:include fx:id="sidebar" source="Sidebar.fxml"/>
+        <fx:include fx:id="sidebar" source="Sidebar.fxml" />
     </left>
 
     <!-- ===== BARRA SUPERIOR ===== -->
     <top>
-        <HBox prefHeight="64" alignment="CENTER_LEFT" styleClass="topbar">
-            <Label text="Terminal 01" styleClass="topbar-title"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <TextField prefWidth="220" promptText="Buscar..." styleClass="search-field"/>
+        <HBox alignment="CENTER_LEFT" prefHeight="64" styleClass="topbar">
+            <Label styleClass="topbar-title" text="Terminal 01" />
+            <Region HBox.hgrow="ALWAYS" />
+            <TextField fx:id="txtBuscarPedido" prefWidth="220" promptText="Buscar por # de pedido..." styleClass="search-field" />
             <Button styleClass="icon-button">
                 <graphic><FontIcon iconLiteral="mdi2r-refresh" iconSize="18" /></graphic>
             </Button>
-            <fx:include fx:id="topbar" source="Topbar.fxml"/>
+            <fx:include fx:id="topbar" source="Topbar.fxml" />
         </HBox>
     </top>
 
-    <!-- ===== CENTRO: Mapa ===== -->
+    <!-- ===== CENTRO: pedidos a domicilio activos ===== -->
     <center>
-        <StackPane styleClass="pad-16">
-            <!-- Mapa (usar WebView con mapa real en producción) -->
-            <Pane styleClass="map-surface"/>
+        <StackPane styleClass="pad-24">
+            <children>
+                <!-- Ocupa todo el ancho/alto disponible (ver CLAUDE.md: el mockup de mapa
+                     que compartía este espacio ya se retiró aparte). -->
+                <VBox styleClass="delivery-panel" spacing="20" maxWidth="Infinity" maxHeight="Infinity">
 
-            <!-- Etiqueta de zona sobre el mapa -->
-            <VBox alignment="CENTER" styleClass="map-pin-overlay">
-                <StackPane>
-                    <VBox alignment="CENTER" spacing="0" styleClass="map-pin-card">
-                        <Label text="Zona Norte" styleClass="text-body-strong"/>
-                        <Label text="400 pedidos" styleClass="text-price"/>
+                    <VBox spacing="4">
+                        <Label styleClass="text-title-sm" text="Pedidos a Domicilio" />
+                        <Label styleClass="text-muted" text="Órdenes activas de la sucursal, con su estado actual." />
                     </VBox>
-                </StackPane>
-            </VBox>
 
-            <!-- Sugerencia de IA (banner inferior) -->
-            <VBox alignment="BOTTOM_CENTER" styleClass="pad-24">
-                <VBox styleClass="ai-banner" maxWidth="560">
-                    <HBox spacing="12" alignment="CENTER_LEFT">
-                        <FontIcon iconLiteral="mdi2r-robot-outline" iconSize="18" styleClass="text-icon-accent"/>
-                        <Label text="Sugerencia de Ruta (IA)" styleClass="text-body-strong"/>
+                    <!-- Estadísticas con datos reales (ver DeliveryController.actualizarEstadisticas):
+                         no hay entidad "repartidor" en el esquema todavía, así que aquí no se
+                         muestran tiempos de entrega ni asignación de repartidores (ver CLAUDE.md). -->
+                    <HBox spacing="16">
+                        <VBox styleClass="mini-stat-box-accent" alignment="CENTER" HBox.hgrow="ALWAYS">
+                            <Label fx:id="lblTotalPedidos" styleClass="stat-value-accent" text="0" />
+                            <Label styleClass="text-muted-sm" text="Pedidos activos" />
+                        </VBox>
+                        <VBox styleClass="mini-stat-box" alignment="CENTER" HBox.hgrow="ALWAYS">
+                            <Label fx:id="lblSumaTotales" styleClass="stat-value-lg" text="\$0.00" />
+                            <Label styleClass="text-muted-sm" text="Valor en curso" />
+                        </VBox>
                     </HBox>
-                    <Label text="Se detectó alta demanda en Zona Norte. Se recomienda asignar 2 repartidores adicionales para mantener tiempos de entrega menores a 15 min."
-                           styleClass="text-muted" wrapText="true" maxWidth="520"/>
-                    <Button text="Asignar Repartidores" styleClass="btn-accent">
-                        <VBox.margin><Insets top="4"/></VBox.margin>
-                    </Button>
+
+                    <Separator />
+
+                    <Label styleClass="text-body-strong" text="Pedidos Activos" />
+
+                    <!-- Tarjetas generadas en tiempo de ejecución (ver DeliveryController) -->
+                    <ScrollPane fitToWidth="true" styleClass="delivery-scroll" VBox.vgrow="ALWAYS">
+                        <FlowPane fx:id="contenedorPedidos" hgap="16" vgap="16" />
+                    </ScrollPane>
                 </VBox>
-            </VBox>
+            </children>
         </StackPane>
     </center>
-
-    <!-- ===== PANEL DERECHO ===== -->
-    <right>
-        <VBox prefWidth="340" prefHeight="960" styleClass="panel-right">
-
-            <!-- Encabezado de analítica -->
-            <Label text="Análisis de Domicilios" styleClass="text-title-sm"/>
-
-            <!--
-              Nota: no hay entidad "repartidor" en el esquema todavía, así que
-              no existen métricas de entregas a tiempo ni asignación de
-              repartidores que mostrar aquí (ver CLAUDE.md). Esta vista solo
-              lista, de forma dinámica, las órdenes de domicilio activas.
-            -->
-
-            <Separator/>
-
-            <!-- Pedidos activos: se generan en tiempo de ejecución (ver DeliveryController) -->
-            <VBox spacing="12">
-                <Label text="Pedidos Activos" styleClass="text-body-strong"/>
-                <VBox fx:id="contenedorPedidos" spacing="12"/>
-            </VBox>
-        </VBox>
-    </right>
 
 </BorderPane>

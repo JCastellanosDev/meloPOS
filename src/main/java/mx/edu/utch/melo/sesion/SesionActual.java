@@ -40,6 +40,7 @@ public class SesionActual {
     private volatile Integer clienteEnProcesoId;
     private volatile BigDecimal distanciaKmEnProceso;
     private volatile TipoDescuento descuentoSeleccionadoEnProceso;
+    private volatile Integer ordenAEditarId;
 
     public void iniciarSesion(Usuario usuario) {
         this.usuarioActivo = usuario;
@@ -97,6 +98,27 @@ public class SesionActual {
     public Optional<TipoDescuento> consumirDescuentoSeleccionado() {
         TipoDescuento valor = descuentoSeleccionadoEnProceso;
         descuentoSeleccionadoEnProceso = null;
+        return Optional.ofNullable(valor);
+    }
+
+    /**
+     * Orden de DOMICILIO ya existente que DeliveryController quiere reabrir en MenuPedido para
+     * agregar más artículos (ver Pantalla.MENU_PEDIDO, VentaService.agregarArticulos); null/ausente
+     * en MenuPedidoController.initialize() significa "arma una orden nueva", el comportamiento de
+     * siempre.
+     */
+    public void setOrdenAEditar(Integer ordenId) {
+        this.ordenAEditarId = ordenId;
+    }
+
+    /**
+     * Regresa la orden a editar y limpia el estado -- mismo motivo que consumirDescuentoSeleccionado:
+     * una apertura posterior de MenuPedido para un pedido nuevo (ver PedidosController.abrirMenuPedido)
+     * no debe heredar por accidente el modo edición de una apertura anterior.
+     */
+    public Optional<Integer> consumirOrdenAEditar() {
+        Integer valor = ordenAEditarId;
+        ordenAEditarId = null;
         return Optional.ofNullable(valor);
     }
 }
