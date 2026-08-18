@@ -2,15 +2,18 @@ package mx.edu.utch.melo.service;
 
 import mx.edu.utch.melo.dao.DetalleOrdenDAO;
 import mx.edu.utch.melo.dao.OrdenDAO;
+import mx.edu.utch.melo.dao.PagoDAO;
 import mx.edu.utch.melo.dao.ProductoDAO;
 import mx.edu.utch.melo.db.TrabajoTransaccional;
 import mx.edu.utch.melo.db.Transaccionador;
 import mx.edu.utch.melo.model.DetalleOrden;
 import mx.edu.utch.melo.model.EstadoOrden;
 import mx.edu.utch.melo.model.ItemOrden;
+import mx.edu.utch.melo.model.MetodoPago;
 import mx.edu.utch.melo.model.Modificador;
 import mx.edu.utch.melo.model.ModificadorAplicado;
 import mx.edu.utch.melo.model.Orden;
+import mx.edu.utch.melo.model.Pago;
 import mx.edu.utch.melo.model.Producto;
 import mx.edu.utch.melo.model.Rol;
 import mx.edu.utch.melo.model.TipoOrden;
@@ -51,7 +54,7 @@ class VentaServiceTest {
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(1, 10);
         productoDAO.stockDisponible.put(2, 10);
-        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         List<ItemOrden> items = List.of(
                 new ItemOrden(1, "Tacos al Pastor", new BigDecimal("145.00"), 2),
@@ -71,7 +74,7 @@ class VentaServiceTest {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(1, 10);
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
         List<ItemOrden> items = List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1));
 
         Orden creada = service.crearOrdenComedor(9, items, false);
@@ -85,7 +88,7 @@ class VentaServiceTest {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(1, 10);
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         Orden creada = service.crearOrdenComedor(9, List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1)), true);
 
@@ -103,7 +106,7 @@ class VentaServiceTest {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(1, 10);
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
         List<ItemOrden> items = List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1));
 
         Orden creada = service.crearOrdenDomicilio(9, 55, items, true,
@@ -126,7 +129,7 @@ class VentaServiceTest {
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(1, 10);
         productoDAO.stockDisponible.put(2, 10);
-        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
         ItemOrden conNota = new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 2);
         conNota.setNota("sin cebolla");
         ItemOrden sinNota = new ItemOrden(2, "Agua", new BigDecimal("30.00"), 1);
@@ -145,7 +148,7 @@ class VentaServiceTest {
     void siguienteNumeroOrdenDelegaAlDao() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.siguienteNumero = 42;
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertEquals(42, service.siguienteNumeroOrden(1));
     }
@@ -158,7 +161,7 @@ class VentaServiceTest {
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(1, 10);
         productoDAO.stockDisponible.put(2, 10);
-        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
         List<ItemOrden> items = List.of(
                 new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1),
                 new ItemOrden(2, "Agua", new BigDecimal("30.00"), 1)
@@ -172,7 +175,7 @@ class VentaServiceTest {
         // ver auditoría de Fase 7: la guarda de "carrito vacío" hoy solo vive en los Controllers
         // (MenuPOSController/MenuPedidoController) -- el Service no debe confiar en que la repitan.
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertThrows(IllegalArgumentException.class, () -> service.crearOrdenComedor(9, List.of(), true));
         assertNull(ordenDAO.ultimoCreado, "no debe llegar a persistir nada si la lista está vacía");
@@ -186,7 +189,7 @@ class VentaServiceTest {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(1, 10);
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
         List<ItemOrden> items = List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1));
 
         Orden creada = service.crearOrdenDomicilio(9, 55, items, true, null, BigDecimal.ZERO);
@@ -201,7 +204,7 @@ class VentaServiceTest {
     @Test
     void crearOrdenDomicilioRechazaUnaListaDeArticulosVacia() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertThrows(IllegalArgumentException.class, () ->
                 service.crearOrdenDomicilio(9, 55, List.of(), true, new BigDecimal("4.2"), new BigDecimal("50.00")));
@@ -216,7 +219,7 @@ class VentaServiceTest {
         detalleDAO.creados.add(detalleExistente(1, "100.00")); // ya en la orden antes de abrir MenuPedido
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(2, 10);
-        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         Orden actualizada = service.agregarArticulos(1,
                 List.of(new ItemOrden(2, "Agua de Jamaica", new BigDecimal("30.00"), 1)), true);
@@ -236,7 +239,7 @@ class VentaServiceTest {
         ordenDAO.ultimoCreado = ordenDomicilioExistente();
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(2, 10);
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         Orden actualizada = service.agregarArticulos(1,
                 List.of(new ItemOrden(2, "Agua de Jamaica", new BigDecimal("30.00"), 1)), true);
@@ -252,7 +255,7 @@ class VentaServiceTest {
         // una transacción ni tocar la orden por una lista vacía.
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.ultimoCreado = ordenDomicilioExistente();
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertThrows(IllegalArgumentException.class, () -> service.agregarArticulos(1, List.of(), true));
     }
@@ -264,7 +267,7 @@ class VentaServiceTest {
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(1, 10);
         productoDAO.stockDisponible.put(2, 5);
-        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
         List<ItemOrden> items = List.of(
                 new ItemOrden(1, "Tacos al Pastor", new BigDecimal("145.00"), 2),
                 new ItemOrden(2, "Agua de Jamaica", new BigDecimal("30.00"), 1)
@@ -287,7 +290,7 @@ class VentaServiceTest {
         DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(1, 1); // solo queda 1, pero se piden 2
-        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
         List<ItemOrden> items = List.of(new ItemOrden(1, "Tacos", new BigDecimal("145.00"), 2));
 
         assertThrows(VentaService.StockInsuficienteException.class,
@@ -301,7 +304,7 @@ class VentaServiceTest {
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(1, 0); // el primer artículo del carrito ya falla
         productoDAO.stockDisponible.put(2, 5);
-        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
         List<ItemOrden> items = List.of(
                 new ItemOrden(1, "Tacos", new BigDecimal("145.00"), 1),
                 new ItemOrden(2, "Agua", new BigDecimal("30.00"), 1)
@@ -323,7 +326,7 @@ class VentaServiceTest {
         DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(1, 2); // quedan exactamente 2, se piden 2
-        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
         List<ItemOrden> items = List.of(new ItemOrden(1, "Tacos", new BigDecimal("145.00"), 2));
 
         Orden creada = service.crearOrdenComedor(9, items, true);
@@ -341,7 +344,7 @@ class VentaServiceTest {
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(1, 3); // NO debe tocarse -- ya se descontó al crear la orden
         productoDAO.stockDisponible.put(2, 5);
-        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         service.agregarArticulos(1, List.of(new ItemOrden(2, "Agua de Jamaica", new BigDecimal("30.00"), 1)), true);
 
@@ -357,7 +360,7 @@ class VentaServiceTest {
         detalleDAO.creados.add(detalleExistente(1, "100.00"));
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(2, 0);
-        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertThrows(VentaService.StockInsuficienteException.class, () -> service.agregarArticulos(1,
                 List.of(new ItemOrden(2, "Agua de Jamaica", new BigDecimal("30.00"), 1)), true));
@@ -371,7 +374,7 @@ class VentaServiceTest {
         DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(1, 10);
-        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
         service.crearOrdenComedor(9, List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 3)), true);
         assertEquals(7, productoDAO.stockDisponible.get(1), "la venta debe haber descontado el stock primero");
 
@@ -388,7 +391,7 @@ class VentaServiceTest {
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(1, 10);
         productoDAO.stockDisponible.put(2, 5);
-        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
         List<ItemOrden> items = List.of(
                 new ItemOrden(1, "Tacos al Pastor", new BigDecimal("145.00"), 2),
                 new ItemOrden(2, "Agua de Jamaica", new BigDecimal("30.00"), 1)
@@ -412,7 +415,7 @@ class VentaServiceTest {
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         int stockOriginal = 23;
         productoDAO.stockDisponible.put(1, stockOriginal);
-        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
         service.crearOrdenComedor(9, List.of(new ItemOrden(1, "Tacos", new BigDecimal("145.00"), 5)), true);
 
         service.cancelarOrden(Rol.CAJERO, 1);
@@ -427,7 +430,7 @@ class VentaServiceTest {
         DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(1, 10);
-        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
         service.crearOrdenComedor(9, List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 3)), true);
 
         service.cancelarOrden(Rol.CAJERO, 1);
@@ -452,7 +455,7 @@ class VentaServiceTest {
         detalleDAO.creados.add(detalleExistente(1, "100.00"));
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(1, 5);
-        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertThrows(RuntimeException.class, () -> service.cancelarOrden(Rol.CAJERO, 1));
 
@@ -472,7 +475,7 @@ class VentaServiceTest {
         detalleDAO.creados.add(detalleExistente(1, "100.00"));
         ProductoDAOFalso productoDAO = new ProductoDAOFalso();
         productoDAO.stockDisponible.put(1, 7);
-        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         VentaService.CancelacionInvalidaException excepcion = assertThrows(
                 VentaService.CancelacionInvalidaException.class, () -> service.cancelarOrden(Rol.CAJERO, 1));
@@ -484,7 +487,7 @@ class VentaServiceTest {
     @Test
     void cancelarOrdenQueNoExisteLanzaOrdenNoEncontrada() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertThrows(VentaService.OrdenNoEncontradaException.class, () -> service.cancelarOrden(Rol.CAJERO, 999));
     }
@@ -493,9 +496,68 @@ class VentaServiceTest {
     void cancelarOrdenExigeUnRolPermitido() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.ultimoCreado = ordenExistente(EstadoOrden.PENDIENTE);
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertThrows(AccesoDenegadoException.class, () -> service.cancelarOrden(Rol.COCINA, 1));
+    }
+
+    /**
+     * Bug real encontrado en esta auditoría (ver Javadoc de VentaService.cancelarOrden): COMEDOR/
+     * PARA_LLEVAR pagan y quedan en EN_PREPARACION (PagoService.estadoTrasPago) -- el mismo estado
+     * en el que nace, SIN PAGAR, una orden DOMICILIO/PARA_RECOGER. Antes del fix, cancelarOrden solo
+     * miraba el EstadoOrden, así que una orden COMEDOR ya cobrada podía "cancelarse" igual que una
+     * sin cobrar: el stock se restauraba pero el Pago ya registrado se quedaba ahí, sin revertir --
+     * dinero cobrado + pedido cancelado + inventario de vuelta, con la venta original todavía en la
+     * tabla de pagos como si nada. Este test reproduce justo ese escenario.
+     */
+    @Test
+    void cancelarOrdenRechazaUnaOrdenComedorYaPagadaAunqueSuEstadoSeaEnPreparacion() {
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        Orden ordenComedorYaPagada = ordenExistente(EstadoOrden.EN_PREPARACION);
+        ordenDAO.ultimoCreado = ordenComedorYaPagada;
+        DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
+        detalleDAO.creados.add(detalleExistente(1, "100.00"));
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 7); // ya se descontó al vender, esto es lo que hay ahora
+        PagoDAOFalso pagoDAO = new PagoDAOFalso();
+        pagoDAO.pagosPorOrden.put(1, List.of(pagoDeEjemplo(1)));
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, pagoDAO, TRANSACCIONADOR_FALSO);
+
+        VentaService.OrdenYaPagadaException excepcion = assertThrows(
+                VentaService.OrdenYaPagadaException.class, () -> service.cancelarOrden(Rol.CAJERO, 1));
+
+        assertTrue(excepcion.getMessage().contains("pago"), "el mensaje debe explicar que ya tiene un pago registrado");
+        assertEquals(EstadoOrden.EN_PREPARACION, ordenDAO.ultimoCreado.getEstado(),
+                "no debe tocar el estado de una orden ya pagada");
+        assertEquals(7, productoDAO.stockDisponible.get(1), "no debe restaurar stock de una venta ya cobrada");
+    }
+
+    @Test
+    void cancelarOrdenSiguePermitiendoCancelarUnaOrdenDomicilioSinPagarEnEnPreparacion() {
+        // contraste con el test anterior: EN_PREPARACION sin ningún Pago registrado sigue siendo
+        // cancelable con normalidad -- es justo el caso real de una orden DOMICILIO recién creada
+        // (VentaService.crearOrdenDomicilio la manda directo a EN_PREPARACION, sin cobrar todavía).
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.ultimoCreado = ordenDomicilioExistente();
+        DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
+        detalleDAO.creados.add(detalleExistente(1, "100.00"));
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 3);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(), TRANSACCIONADOR_FALSO);
+
+        Orden cancelada = service.cancelarOrden(Rol.CAJERO, 1);
+
+        assertEquals(EstadoOrden.CANCELADA, cancelada.getEstado());
+        assertEquals(4, productoDAO.stockDisponible.get(1), "debe restaurar el stock de una orden nunca cobrada");
+    }
+
+    private static Pago pagoDeEjemplo(int ordenId) {
+        Pago pago = new Pago();
+        pago.setId(1);
+        pago.setOrdenId(ordenId);
+        pago.setMetodoPago(MetodoPago.EFECTIVO);
+        pago.setMonto(new BigDecimal("116.00"));
+        return pago;
     }
 
     private static Orden ordenExistente(EstadoOrden estado) {
@@ -753,6 +815,51 @@ class VentaServiceTest {
         public void restaurarStock(int productoId, int cantidad, Connection conexion) {
             int actual = stockDisponible.getOrDefault(productoId, 0);
             stockDisponible.put(productoId, actual + cantidad);
+        }
+    }
+
+    /**
+     * Fake mínimo para el chequeo nuevo de cancelarOrden (ver Javadoc de VentaService y el bug que
+     * corrige): por defecto no hay pagos registrados para ninguna orden (mismo comportamiento que
+     * antes del fix para todos los tests existentes de esta clase), a menos que un test llene
+     * {@link #pagosPorOrden} a propósito para simular una orden ya cobrada.
+     */
+    private static class PagoDAOFalso implements PagoDAO {
+        final Map<Integer, List<Pago>> pagosPorOrden = new HashMap<>();
+
+        @Override
+        public Pago crear(Pago pago) {
+            return crear(pago, null);
+        }
+
+        @Override
+        public Pago crear(Pago pago, Connection conexion) {
+            return pago;
+        }
+
+        @Override
+        public Optional<Pago> obtenerPorId(Integer id) {
+            return Optional.empty();
+        }
+
+        @Override
+        public List<Pago> obtenerTodos() {
+            return List.of();
+        }
+
+        @Override
+        public boolean actualizar(Pago pago) {
+            return true;
+        }
+
+        @Override
+        public boolean eliminar(Integer id) {
+            return true;
+        }
+
+        @Override
+        public List<Pago> obtenerPorOrden(int ordenId) {
+            return pagosPorOrden.getOrDefault(ordenId, List.of());
         }
     }
 }

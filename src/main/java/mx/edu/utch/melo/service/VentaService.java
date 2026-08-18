@@ -2,12 +2,14 @@ package mx.edu.utch.melo.service;
 
 import mx.edu.utch.melo.dao.DetalleOrdenDAO;
 import mx.edu.utch.melo.dao.OrdenDAO;
+import mx.edu.utch.melo.dao.PagoDAO;
 import mx.edu.utch.melo.dao.ProductoDAO;
 import mx.edu.utch.melo.db.Transaccionador;
 import mx.edu.utch.melo.model.DetalleOrden;
 import mx.edu.utch.melo.model.EstadoOrden;
 import mx.edu.utch.melo.model.ItemOrden;
 import mx.edu.utch.melo.model.Orden;
+import mx.edu.utch.melo.model.Pago;
 import mx.edu.utch.melo.model.Rol;
 import mx.edu.utch.melo.model.TipoOrden;
 import mx.edu.utch.melo.security.Auditoria;
@@ -47,13 +49,15 @@ public class VentaService {
     private final OrdenDAO ordenDAO;
     private final DetalleOrdenDAO detalleOrdenDAO;
     private final ProductoDAO productoDAO;
+    private final PagoDAO pagoDAO;
     private final Transaccionador transaccionador;
 
     public VentaService(OrdenDAO ordenDAO, DetalleOrdenDAO detalleOrdenDAO, ProductoDAO productoDAO,
-                         Transaccionador transaccionador) {
+                         PagoDAO pagoDAO, Transaccionador transaccionador) {
         this.ordenDAO = ordenDAO;
         this.detalleOrdenDAO = detalleOrdenDAO;
         this.productoDAO = productoDAO;
+        this.pagoDAO = pagoDAO;
         this.transaccionador = transaccionador;
     }
 
@@ -213,17 +217,38 @@ public class VentaService {
      * dentro del propio {@code UPDATE} (no lee el estado primero y decide después en Java, lo que
      * sería una condición de carrera entre dos cancelaciones concurrentes de la misma orden).</p>
      *
+     * <p><b>Bug real encontrado y corregido (auditoría de esta sesión)</b>: el estado por sí solo
+     * NO basta para saber si una orden ya se cobró. {@link PagoService#estadoTrasPago} manda
+     * COMEDOR/PARA_LLEVAR a {@code EN_PREPARACION} al pagar (no a {@code PAGADA} -- ese valor del
+     * enum nunca se usa en la práctica hoy), así que una orden COMEDOR/PARA_LLEVAR YA PAGADA se ve
+     * exactamente igual, por estado, que una orden DOMICILIO/PARA_RECOGER que todavía NO se ha
+     * cobrado (ambas en {@code EN_PREPARACION}) -- ambas están en la lista de "estados válidos de
+     * origen" de arriba. Sin una comprobación aparte, esto permitía cancelar (y restaurar stock de)
+     * una orden ya cobrada sin revertir ni un solo {@code Pago}: dinero cobrado, pedido cancelado,
+     * inventario de vuelta, sin ningún rastro de la inconsistencia. Por eso, antes de tocar el
+     * estado, esta operación verifica que la orden no tenga ya ningún {@link Pago} registrado
+     * ({@link PagoDAO#obtenerPorOrden(int)}) -- si tiene alguno, se rechaza con
+     * {@link OrdenYaPagadaException}, sin importar en qué {@code EstadoOrden} esté.</p>
+     *
      * <p><b>Sobre el stock que se restaura</b>: asume que la orden en verdad descontó su stock al
      * crearse (ver {@link #descontarStock}) -- cierto para toda orden creada por este Service, ya
      * que {@link #productoDAO} es una dependencia obligatoria del único constructor.</p>
      *
      * @throws OrdenNoEncontradaException si no existe una orden con ese id.
+     * @throws OrdenYaPagadaException si la orden ya tiene al menos un {@link Pago} registrado,
+     *         sin importar su {@code EstadoOrden} actual (ver el bug documentado arriba).
      * @throws CancelacionInvalidaException si la orden existe pero su estado actual no permite
      *         cancelar (ya {@code PAGADA}, {@code ENTREGADA} o {@code CANCELADA}).
      */
     public Orden cancelarOrden(Rol rolSolicitante, int ordenId) {
         ControlAcceso.exigirRol(rolSolicitante, "cancelar una orden",
                 Rol.MESERO, Rol.CAJERO, Rol.ADMINISTRADOR);
+        // Lectura fuera de la transacción a propósito, mismo patrón que el chequeo de turno abierto
+        // en PagoService.registrarPagos: solo decide si se debe rechazar la cancelación, no es algo
+        // que deba revertirse si el resto de la operación falla.
+        if (!pagoDAO.obtenerPorOrden(ordenId).isEmpty()) {
+            throw new OrdenYaPagadaException(ordenId);
+        }
         Orden cancelada = transaccionador.ejecutarEnTransaccion(conexion -> {
             boolean actualizada = ordenDAO.cancelar(ordenId, conexion);
             if (!actualizada) {
@@ -265,6 +290,19 @@ public class VentaService {
     public static class OrdenNoEncontradaException extends RuntimeException {
         public OrdenNoEncontradaException(int ordenId) {
             super("No existe una orden con id " + ordenId + ".");
+        }
+    }
+
+    /**
+     * Se lanza al intentar cancelar una orden que ya tiene al menos un {@link Pago} registrado --
+     * ver el Javadoc de {@link #cancelarOrden} para el bug real que esto corrige: el
+     * {@code EstadoOrden} por sí solo no distingue "todavía no se cobra" de "ya se cobró" para
+     * COMEDOR/PARA_LLEVAR, porque ambos casos pueden estar en {@code EN_PREPARACION}.
+     */
+    public static class OrdenYaPagadaException extends RuntimeException {
+        public OrdenYaPagadaException(int ordenId) {
+            super("No se puede cancelar la orden " + ordenId + ": ya tiene un pago registrado "
+                    + "(cancelar una venta ya cobrada requiere un flujo de reembolso, no implementado).");
         }
     }
 

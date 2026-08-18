@@ -108,7 +108,7 @@ public class AppContext {
         this.categoriaService = new CategoriaService(categoriaDAO);
         this.productoService = new ProductoService(productoDAO);
         this.usuarioService = new UsuarioService(usuarioDAO, controlIntentosPinDAO);
-        this.ventaService = new VentaService(ordenDAO, detalleOrdenDAO, productoDAO, conexionDB);
+        this.ventaService = new VentaService(ordenDAO, detalleOrdenDAO, productoDAO, pagoDAO, conexionDB);
         this.pagoService = new PagoService(ordenDAO, detalleOrdenDAO, productoDAO, pagoDAO, usuarioDAO, turnoDAO,
                 sucursalDAO, conexionDB);
         this.clienteService = new ClienteService(clienteDAO, sucursalDAO, geocodificador, servicioRutas);
