@@ -57,20 +57,6 @@ public class VentaService {
         this.transaccionador = transaccionador;
     }
 
-    /**
-     * @deprecated conserva el constructor de 3 parámetros que AppContext usa hoy
-     * ({@code new VentaService(ordenDAO, detalleOrdenDAO, conexionDB)}) -- este agente no tiene
-     * permitido editar AppContext.java (ver reporte final, "DEPENDENCIA CRUZADA"). Sin
-     * {@link ProductoDAO}, el descuento de inventario queda desactivado ({@link #descontarStock}
-     * se vuelve un no-op): exactamente el mismo comportamiento (el gap) que existía antes de este
-     * cambio, nunca peor. En cuanto AppContext pase productoDAO al construirlo, usa el constructor
-     * de 4 parámetros y borra este.
-     */
-    @Deprecated
-    public VentaService(OrdenDAO ordenDAO, DetalleOrdenDAO detalleOrdenDAO, Transaccionador transaccionador) {
-        this(ordenDAO, detalleOrdenDAO, null, transaccionador);
-    }
-
     public int siguienteNumeroOrden(int sucursalId) {
         return ordenDAO.siguienteNumeroOrden(sucursalId);
     }
@@ -199,18 +185,13 @@ public class VentaService {
     }
 
     /**
-     * Descuenta el stock vendido dentro de la transacción abierta. Si {@link #productoDAO} es
-     * null (ver constructor deprecado de 3 parámetros), el inventario no se toca -- mismo gap que
-     * existía antes de este cambio. Si hay ProductoDAO pero no alcanza el stock, lanza
+     * Descuenta el stock vendido dentro de la transacción abierta. Si no alcanza el stock, lanza
      * {@link StockInsuficienteException}: al ser un RuntimeException dentro de
      * {@code ejecutarEnTransaccion}, ConexionDB hace rollback de TODO (orden + detalle ya
      * insertados en esta misma transacción) antes de relanzarla -- no queda ni la orden ni sus
      * líneas de detalle a medias.
      */
     private void descontarStock(int productoId, int cantidad, Connection conexion) {
-        if (productoDAO == null) {
-            return;
-        }
         boolean descontado = productoDAO.descontarStock(productoId, cantidad, conexion);
         if (!descontado) {
             throw new StockInsuficienteException(productoId, cantidad);
@@ -233,16 +214,8 @@ public class VentaService {
      * sería una condición de carrera entre dos cancelaciones concurrentes de la misma orden).</p>
      *
      * <p><b>Sobre el stock que se restaura</b>: asume que la orden en verdad descontó su stock al
-     * crearse (ver {@link #descontarStock}) -- cierto para toda orden creada con el
-     * {@link ProductoDAO} real conectado (ver AppContext, ya wireado con el constructor de 4
-     * parámetros). El único hueco conocido es el constructor deprecado de 3 parámetros
-     * ({@code productoDAO} null) -- una orden creada por ese camino nunca descontó stock, así que
-     * cancelarla sumaría stock que nunca se restó. Ese constructor está marcado para eliminarse (ver
-     * reporte de este cambio); no se agrega aquí detección adicional (p.ej. una columna nueva
-     * "stockDescontado") porque no hay forma barata de distinguirlo sin cambiar el esquema, y el
-     * hueco desaparece con esa limpieza ya en curso. Aquí se sigue el mismo patrón defensivo que
-     * {@link #descontarStock}: si {@link #productoDAO} es null, restaurar stock es un no-op (nunca
-     * un NullPointerException).</p>
+     * crearse (ver {@link #descontarStock}) -- cierto para toda orden creada por este Service, ya
+     * que {@link #productoDAO} es una dependencia obligatoria del único constructor.</p>
      *
      * @throws OrdenNoEncontradaException si no existe una orden con ese id.
      * @throws CancelacionInvalidaException si la orden existe pero su estado actual no permite
@@ -270,9 +243,6 @@ public class VentaService {
     }
 
     private void restaurarStock(int productoId, int cantidad, Connection conexion) {
-        if (productoDAO == null) {
-            return;
-        }
         productoDAO.restaurarStock(productoId, cantidad, conexion);
     }
 

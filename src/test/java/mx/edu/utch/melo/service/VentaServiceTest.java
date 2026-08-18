@@ -48,7 +48,10 @@ class VentaServiceTest {
     void crearOrdenComedorCalculaSubtotalIvaYTotal() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
-        VentaService service = new VentaService(ordenDAO, detalleDAO, TRANSACCIONADOR_FALSO);
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 10);
+        productoDAO.stockDisponible.put(2, 10);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
 
         List<ItemOrden> items = List.of(
                 new ItemOrden(1, "Tacos al Pastor", new BigDecimal("145.00"), 2),
@@ -66,7 +69,9 @@ class VentaServiceTest {
     @Test
     void crearOrdenComedorSinIvaNoAgregaImpuesto() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 10);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), productoDAO, TRANSACCIONADOR_FALSO);
         List<ItemOrden> items = List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1));
 
         Orden creada = service.crearOrdenComedor(9, items, false);
@@ -78,7 +83,9 @@ class VentaServiceTest {
     @Test
     void crearOrdenComedorArmaLaOrdenSegunElCanalComedor() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 10);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), productoDAO, TRANSACCIONADOR_FALSO);
 
         Orden creada = service.crearOrdenComedor(9, List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1)), true);
 
@@ -94,7 +101,9 @@ class VentaServiceTest {
     @Test
     void crearOrdenDomicilioEntraDirectoAEnPreparacionYSumaElCostoDeEnvio() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 10);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), productoDAO, TRANSACCIONADOR_FALSO);
         List<ItemOrden> items = List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1));
 
         Orden creada = service.crearOrdenDomicilio(9, 55, items, true,
@@ -114,7 +123,10 @@ class VentaServiceTest {
     void persistirCreaUnDetallePorCadaArticuloConSuNota() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
-        VentaService service = new VentaService(ordenDAO, detalleDAO, TRANSACCIONADOR_FALSO);
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 10);
+        productoDAO.stockDisponible.put(2, 10);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
         ItemOrden conNota = new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 2);
         conNota.setNota("sin cebolla");
         ItemOrden sinNota = new ItemOrden(2, "Agua", new BigDecimal("30.00"), 1);
@@ -133,7 +145,7 @@ class VentaServiceTest {
     void siguienteNumeroOrdenDelegaAlDao() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.siguienteNumero = 42;
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertEquals(42, service.siguienteNumeroOrden(1));
     }
@@ -143,7 +155,10 @@ class VentaServiceTest {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
         detalleDAO.lanzarEnElSegundo = true;
-        VentaService service = new VentaService(ordenDAO, detalleDAO, TRANSACCIONADOR_FALSO);
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 10);
+        productoDAO.stockDisponible.put(2, 10);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
         List<ItemOrden> items = List.of(
                 new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1),
                 new ItemOrden(2, "Agua", new BigDecimal("30.00"), 1)
@@ -157,7 +172,7 @@ class VentaServiceTest {
         // ver auditoría de Fase 7: la guarda de "carrito vacío" hoy solo vive en los Controllers
         // (MenuPOSController/MenuPedidoController) -- el Service no debe confiar en que la repitan.
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertThrows(IllegalArgumentException.class, () -> service.crearOrdenComedor(9, List.of(), true));
         assertNull(ordenDAO.ultimoCreado, "no debe llegar a persistir nada si la lista está vacía");
@@ -169,7 +184,9 @@ class VentaServiceTest {
         // calculada no hay forma de cobrar un envío real, así que el canal correcto es "para
         // recoger" (el cliente pasa por su pedido), no domicilio.
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 10);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), productoDAO, TRANSACCIONADOR_FALSO);
         List<ItemOrden> items = List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1));
 
         Orden creada = service.crearOrdenDomicilio(9, 55, items, true, null, BigDecimal.ZERO);
@@ -184,7 +201,7 @@ class VentaServiceTest {
     @Test
     void crearOrdenDomicilioRechazaUnaListaDeArticulosVacia() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertThrows(IllegalArgumentException.class, () ->
                 service.crearOrdenDomicilio(9, 55, List.of(), true, new BigDecimal("4.2"), new BigDecimal("50.00")));
@@ -197,7 +214,9 @@ class VentaServiceTest {
         ordenDAO.ultimoCreado = ordenDomicilioExistente();
         DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
         detalleDAO.creados.add(detalleExistente(1, "100.00")); // ya en la orden antes de abrir MenuPedido
-        VentaService service = new VentaService(ordenDAO, detalleDAO, TRANSACCIONADOR_FALSO);
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(2, 10);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
 
         Orden actualizada = service.agregarArticulos(1,
                 List.of(new ItemOrden(2, "Agua de Jamaica", new BigDecimal("30.00"), 1)), true);
@@ -215,7 +234,9 @@ class VentaServiceTest {
         // se debe recalcular aquí, solo al crear la orden (ver crearOrdenDomicilio).
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.ultimoCreado = ordenDomicilioExistente();
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(2, 10);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), productoDAO, TRANSACCIONADOR_FALSO);
 
         Orden actualizada = service.agregarArticulos(1,
                 List.of(new ItemOrden(2, "Agua de Jamaica", new BigDecimal("30.00"), 1)), true);
@@ -231,7 +252,7 @@ class VentaServiceTest {
         // una transacción ni tocar la orden por una lista vacía.
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.ultimoCreado = ordenDomicilioExistente();
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertThrows(IllegalArgumentException.class, () -> service.agregarArticulos(1, List.of(), true));
     }
@@ -309,21 +330,6 @@ class VentaServiceTest {
 
         assertEquals(TipoOrden.COMEDOR, creada.getTipoOrden(), "la venta no debe rechazarse en el límite exacto");
         assertEquals(0, productoDAO.stockDisponible.get(1), "debe quedar en exactamente cero, no en negativo");
-    }
-
-    @Test
-    void elConstructorDeprecadoSinProductoDAONoIntentaDescontarStockNiLanzaNullPointer() {
-        // ver DEPENDENCIA CRUZADA en el reporte final: AppContext hoy sigue construyendo
-        // VentaService sin ProductoDAO -- debe seguir funcionando exactamente igual que antes
-        // (mismo gap de inventario, nunca un NullPointerException nuevo) hasta que se actualice
-        // esa wiring.
-        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
-
-        Orden creada = service.crearOrdenComedor(9,
-                List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1)), true);
-
-        assertEquals(TipoOrden.COMEDOR, creada.getTipoOrden());
     }
 
     @Test
@@ -478,7 +484,7 @@ class VentaServiceTest {
     @Test
     void cancelarOrdenQueNoExisteLanzaOrdenNoEncontrada() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertThrows(VentaService.OrdenNoEncontradaException.class, () -> service.cancelarOrden(Rol.CAJERO, 999));
     }
@@ -487,7 +493,7 @@ class VentaServiceTest {
     void cancelarOrdenExigeUnRolPermitido() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.ultimoCreado = ordenExistente(EstadoOrden.PENDIENTE);
-        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertThrows(AccesoDenegadoException.class, () -> service.cancelarOrden(Rol.COCINA, 1));
     }
