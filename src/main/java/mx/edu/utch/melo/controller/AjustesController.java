@@ -16,7 +16,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
-import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.model.Categoria;
 import mx.edu.utch.melo.model.Producto;
@@ -137,12 +136,13 @@ public class AjustesController {
     /** Sucursal activa ya cargada (ver mostrarSucursal), para poder guardar el interruptor de IVA sin recargarla. */
     private Sucursal sucursalActual;
 
-    public AjustesController(AppContext contexto) {
-        this.sucursalService = contexto.getSucursalService();
-        this.productoService = contexto.getProductoService();
-        this.categoriaService = contexto.getCategoriaService();
-        this.usuarioService = contexto.getUsuarioService();
-        this.sesion = contexto.getSesion();
+    public AjustesController(SucursalService sucursalService, ProductoService productoService,
+                              CategoriaService categoriaService, UsuarioService usuarioService, SesionActual sesion) {
+        this.sucursalService = sucursalService;
+        this.productoService = productoService;
+        this.categoriaService = categoriaService;
+        this.usuarioService = usuarioService;
+        this.sesion = sesion;
     }
 
     @FXML

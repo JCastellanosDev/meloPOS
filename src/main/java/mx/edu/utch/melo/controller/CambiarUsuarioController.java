@@ -8,11 +8,11 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.model.Usuario;
 import mx.edu.utch.melo.nav.Navigator;
 import mx.edu.utch.melo.nav.Pantalla;
+import mx.edu.utch.melo.security.PinBloqueadoException;
 import mx.edu.utch.melo.service.UsuarioService;
 import mx.edu.utch.melo.sesion.SesionActual;
 
@@ -47,10 +47,10 @@ public class CambiarUsuarioController {
 
     private final StringBuilder pin = new StringBuilder();
 
-    public CambiarUsuarioController(AppContext contexto) {
-        this.usuarioService = contexto.getUsuarioService();
-        this.sesion = contexto.getSesion();
-        this.navigator = contexto.getNavigator();
+    public CambiarUsuarioController(UsuarioService usuarioService, SesionActual sesion, Navigator navigator) {
+        this.usuarioService = usuarioService;
+        this.sesion = sesion;
+        this.navigator = navigator;
     }
 
     @FXML
@@ -124,7 +124,14 @@ public class CambiarUsuarioController {
                 this::procesarResultado,
                 error -> {
                     btnConfirmar.setDisable(false);
-                    mostrarError("No se pudo verificar el PIN. Intenta de nuevo.");
+                    pin.setLength(0);
+                    actualizarPin();
+                    // Mensaje específico de bloqueo (ver PinBloqueadoException, melo-security): no
+                    // revela más que hasta cuándo dura, pero sí distingue "bloqueado" de "PIN
+                    // incorrecto" o "error de conexión" -- son situaciones distintas para el cajero.
+                    mostrarError(error instanceof PinBloqueadoException bloqueado
+                            ? bloqueado.getMessage()
+                            : "No se pudo verificar el PIN. Intenta de nuevo.");
                 }
         );
     }

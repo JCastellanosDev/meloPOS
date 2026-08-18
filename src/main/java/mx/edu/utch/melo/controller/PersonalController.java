@@ -7,7 +7,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.dao.UsuarioDAO;
 import mx.edu.utch.melo.model.Usuario;
@@ -29,9 +28,9 @@ public class PersonalController {
     private final UsuarioDAO usuarioDAO;
     private final SesionActual sesion;
 
-    public PersonalController(AppContext contexto) {
-        this.usuarioDAO = contexto.getUsuarioDAO();
-        this.sesion = contexto.getSesion();
+    public PersonalController(UsuarioDAO usuarioDAO, SesionActual sesion) {
+        this.usuarioDAO = usuarioDAO;
+        this.sesion = sesion;
     }
 
     @FXML

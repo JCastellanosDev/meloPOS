@@ -12,6 +12,7 @@ import mx.edu.utch.melo.model.Producto;
 import mx.edu.utch.melo.model.TipoOrden;
 import mx.edu.utch.melo.model.Turno;
 import mx.edu.utch.melo.model.dashboard.CategoriaVendida;
+import mx.edu.utch.melo.model.dashboard.ClienteRecurrente;
 import mx.edu.utch.melo.model.dashboard.ComparacionVentas;
 import mx.edu.utch.melo.model.dashboard.ProductoSinVentas;
 import mx.edu.utch.melo.model.dashboard.ResumenDelivery;
@@ -125,6 +126,19 @@ class DashboardServiceTest {
     }
 
     @Test
+    void obtenerClientesRecurrentesDelegaAlDashboardDAO() {
+        // ver auditoría de Fase 8: DashboardService no reimplementa la agregación, solo la expone.
+        DashboardDAOFalso dashboardDAO = new DashboardDAOFalso();
+        dashboardDAO.clientesRecurrentes = List.of(new ClienteRecurrente("Ana", 3, new BigDecimal("450.00")));
+        DashboardService service = construirService(dashboardDAO, new ProductoDAOFalso(), new OrdenDAOFalso());
+
+        List<ClienteRecurrente> resultado = service.obtenerClientesRecurrentes(1, LocalDate.now(), LocalDate.now());
+
+        assertEquals(1, resultado.size());
+        assertEquals("Ana", resultado.get(0).nombreCliente());
+    }
+
+    @Test
     void obtenerPedidosActivosDomicilioDelegaAlOrdenDAO() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.activasDomicilio = List.of(new Orden(), new Orden());
@@ -168,6 +182,7 @@ class DashboardServiceTest {
     private static class DashboardDAOFalso implements DashboardDAO {
         Deque<ResumenVentas> colaResumenVentas = new ArrayDeque<>();
         List<VentaPorHora> ventasPorHora = List.of();
+        List<ClienteRecurrente> clientesRecurrentes = List.of();
 
         @Override
         public ResumenVentas obtenerResumenVentas(int sucursalId, LocalDate desde, LocalDate hasta) {
@@ -212,6 +227,11 @@ class DashboardServiceTest {
         @Override
         public ResumenDelivery obtenerResumenDelivery(int sucursalId, LocalDate desde, LocalDate hasta) {
             return ResumenDelivery.VACIO;
+        }
+
+        @Override
+        public List<ClienteRecurrente> obtenerClientesRecurrentes(int sucursalId, LocalDate desde, LocalDate hasta) {
+            return clientesRecurrentes;
         }
     }
 

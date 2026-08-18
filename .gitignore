@@ -7,7 +7,7 @@ target/
 # Credenciales locales -- nunca debe subirse al repo
 .env
 CLAUDE.md
-
+.claude
 # Fotos de producto subidas desde Ajustes (ver AlmacenImagenesProducto) -- datos locales, no código
 /imagenes-productos/
 

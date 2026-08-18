@@ -7,6 +7,7 @@ import mx.edu.utch.melo.model.Producto;
 import mx.edu.utch.melo.model.TipoOrden;
 import mx.edu.utch.melo.model.Turno;
 import mx.edu.utch.melo.model.dashboard.CategoriaVendida;
+import mx.edu.utch.melo.model.dashboard.ClienteRecurrente;
 import mx.edu.utch.melo.model.dashboard.ComparacionVentas;
 import mx.edu.utch.melo.model.dashboard.ProductoSinVentas;
 import mx.edu.utch.melo.model.dashboard.ResumenDelivery;
@@ -76,6 +77,18 @@ public class DashboardService {
     /** Pedidos DOMICILIO todavía activos (ni pagados ni cancelados) -- para el acceso rápido del Dashboard. */
     public int obtenerPedidosActivosDomicilio() {
         return ordenDAO.obtenerActivasPorTipo(TipoOrden.DOMICILIO).size();
+    }
+
+    /**
+     * Clientes con más de una orden en el rango (ver auditoría de Fase 8, "clientes recurrentes").
+     * Deliberadamente NO forma parte de {@link #construirDatosDashboard}/{@link DatosDashboard}
+     * todavía -- exponerla en el panel principal requeriría agregar la sección al FXML/Controller
+     * del Dashboard, un cambio de UI que esta fase no incluye ("no migres todo de golpe", ver
+     * CLAUDE.md/melo-architecture). Queda disponible para que ReportesController la consuma
+     * cuando se decida mostrarla.
+     */
+    public List<ClienteRecurrente> obtenerClientesRecurrentes(int sucursalId, LocalDate desde, LocalDate hasta) {
+        return dashboardDAO.obtenerClientesRecurrentes(sucursalId, desde, hasta);
     }
 
     public ComparacionVentas obtenerVentasDeHoy(int sucursalId) {

@@ -132,6 +132,20 @@ class TurnoServiceTest {
     }
 
     @Test
+    void cerrarTurnoLanzaSiElTurnoNoExiste() {
+        // turnoDAO.turnoExistente se queda null -- simula un turnoId que ya no existe (borrado o
+        // mal capturado desde la pantalla). No debe intentar actualizar nada.
+        TurnoDAOFalso turnoDAO = new TurnoDAOFalso();
+        ReporteDAOFalso reporteDAO = new ReporteDAOFalso();
+        reporteDAO.resumen = resumenCon(new BigDecimal("1200.00"));
+        TurnoService service = new TurnoService(turnoDAO, reporteDAO);
+
+        assertThrows(java.util.NoSuchElementException.class,
+                () -> service.cerrarTurno(Rol.CAJERO, 1, new BigDecimal("1700.00")));
+        assertFalse(turnoDAO.actualizarLlamado);
+    }
+
+    @Test
     void cerrarTurnoRechazaARolesQueNoSonCajeroNiAdministrador() {
         TurnoDAOFalso turnoDAO = new TurnoDAOFalso();
         turnoDAO.turnoExistente = turnoConApertura(1, new BigDecimal("500.00"));

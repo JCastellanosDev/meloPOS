@@ -10,7 +10,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.dao.ReporteDAO;
 import mx.edu.utch.melo.model.Producto;
@@ -124,10 +123,10 @@ public class ReportesController {
     private final DashboardService dashboardService;
     private final SesionActual sesion;
 
-    public ReportesController(AppContext contexto) {
-        this.reporteDAO = contexto.getReporteDAO();
-        this.dashboardService = contexto.getDashboardService();
-        this.sesion = contexto.getSesion();
+    public ReportesController(ReporteDAO reporteDAO, DashboardService dashboardService, SesionActual sesion) {
+        this.reporteDAO = reporteDAO;
+        this.dashboardService = dashboardService;
+        this.sesion = sesion;
     }
 
     @FXML

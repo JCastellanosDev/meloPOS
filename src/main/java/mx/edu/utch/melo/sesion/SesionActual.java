@@ -1,5 +1,6 @@
 package mx.edu.utch.melo.sesion;
 
+import mx.edu.utch.melo.model.TipoDescuento;
 import mx.edu.utch.melo.model.Usuario;
 
 import java.math.BigDecimal;
@@ -38,6 +39,7 @@ public class SesionActual {
     private volatile Integer ordenEnProcesoId;
     private volatile Integer clienteEnProcesoId;
     private volatile BigDecimal distanciaKmEnProceso;
+    private volatile TipoDescuento descuentoSeleccionadoEnProceso;
 
     public void iniciarSesion(Usuario usuario) {
         this.usuarioActivo = usuario;
@@ -78,5 +80,23 @@ public class SesionActual {
 
     public Optional<BigDecimal> getDistanciaKmEnProceso() {
         return Optional.ofNullable(distanciaKmEnProceso);
+    }
+
+    /**
+     * Categoría elegida en la ventana emergente de Descuento (ver Pantalla.SELECCIONAR_DESCUENTO,
+     * SeleccionarDescuentoController) antes de volver a la ventana de Cobrar, que la recoge cuando
+     * recupera el foco (ver PaymentPortalController). Mismo patrón que clienteEnProceso/
+     * distanciaKmEnProceso: una pantalla que abre una ventana emergente necesita enterarse de qué
+     * decidió ahí, y Navigator no pasa datos entre pantallas por sí mismo.
+     */
+    public void setDescuentoSeleccionado(TipoDescuento tipo) {
+        this.descuentoSeleccionadoEnProceso = tipo;
+    }
+
+    /** Regresa la categoría elegida y limpia el estado -- para no volver a procesarla dos veces. */
+    public Optional<TipoDescuento> consumirDescuentoSeleccionado() {
+        TipoDescuento valor = descuentoSeleccionadoEnProceso;
+        descuentoSeleccionadoEnProceso = null;
+        return Optional.ofNullable(valor);
     }
 }

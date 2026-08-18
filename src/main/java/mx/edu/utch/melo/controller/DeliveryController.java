@@ -8,7 +8,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.javafx.FontIcon;
-import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.dao.ClienteDAO;
 import mx.edu.utch.melo.dao.OrdenDAO;
@@ -38,9 +37,9 @@ public class DeliveryController {
     private final OrdenDAO ordenDAO;
     private final ClienteDAO clienteDAO;
 
-    public DeliveryController(AppContext contexto) {
-        this.ordenDAO = contexto.getOrdenDAO();
-        this.clienteDAO = contexto.getClienteDAO();
+    public DeliveryController(OrdenDAO ordenDAO, ClienteDAO clienteDAO) {
+        this.ordenDAO = ordenDAO;
+        this.clienteDAO = clienteDAO;
     }
 
     @FXML

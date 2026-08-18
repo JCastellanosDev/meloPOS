@@ -43,6 +43,7 @@ public class VentaService {
 
     /** Orden para comer en el local: se cobra antes de preparar, por eso queda PENDIENTE (ver PaymentPortalController). */
     public Orden crearOrdenComedor(int usuarioId, List<ItemOrden> items, boolean cobrarIva) {
+        validarItems(items);
         TotalesOrden totales = calcularTotales(items, cobrarIva, BigDecimal.ZERO);
         Orden orden = nuevaOrden(TipoOrden.COMEDOR, usuarioId, null, EstadoOrden.PENDIENTE,
                 totales, null, BigDecimal.ZERO);
@@ -52,17 +53,31 @@ public class VentaService {
     /** Pedido a domicilio: se cobra al entregar, por eso entra directo a EN_PREPARACION (sin pasar por cobro). */
     public Orden crearOrdenDomicilio(int usuarioId, Integer clienteId, List<ItemOrden> items, boolean cobrarIva,
                                       BigDecimal distanciaKm, BigDecimal costoEnvio) {
+        validarItems(items);
         TotalesOrden totales = calcularTotales(items, cobrarIva, costoEnvio);
         Orden orden = nuevaOrden(TipoOrden.DOMICILIO, usuarioId, clienteId, EstadoOrden.EN_PREPARACION,
                 totales, distanciaKm, costoEnvio);
         return persistir(orden, items);
     }
 
+    /**
+     * Los Controllers actuales ya evitan cobrar/mandar a cocina con el carrito vacío (ver
+     * MenuPOSController.onCobrarCuenta, MenuPedidoController.onMandarCocina), pero esa guarda vive
+     * en la UI -- el Service no debe confiar en que todo llamador futuro (otro Controller, una
+     * prueba, una API) la repita. Sin esto, una orden vacía se podría persistir con
+     * subtotal/total en cero y cero filas en detalle_orden (ver auditoría de Fase 7, "orden sin
+     * detalle").
+     */
+    private void validarItems(List<ItemOrden> items) {
+        if (items.isEmpty()) {
+            throw new IllegalArgumentException("No se puede crear una orden sin artículos.");
+        }
+    }
+
     private TotalesOrden calcularTotales(List<ItemOrden> items, boolean cobrarIva, BigDecimal costoEnvio) {
-        double subtotalDouble = Totales.subtotal(items);
-        BigDecimal subtotal = BigDecimal.valueOf(subtotalDouble);
-        BigDecimal impuestos = BigDecimal.valueOf(Totales.iva(subtotalDouble, cobrarIva));
-        BigDecimal total = BigDecimal.valueOf(Totales.total(subtotalDouble, cobrarIva)).add(costoEnvio);
+        BigDecimal subtotal = Totales.subtotal(items);
+        BigDecimal impuestos = Totales.iva(subtotal, cobrarIva);
+        BigDecimal total = Totales.total(subtotal, cobrarIva).add(costoEnvio);
         return new TotalesOrden(subtotal, impuestos, total);
     }
 
@@ -92,7 +107,7 @@ public class VentaService {
                 detalle.setOrdenId(creada.getId());
                 detalle.setProductoId(item.getProductoId());
                 detalle.setCantidad(item.getCantidad());
-                detalle.setPrecioUnitario(BigDecimal.valueOf(item.getPrecioUnitario()));
+                detalle.setPrecioUnitario(item.getPrecioUnitario());
                 detalle.setNota(item.getNota().isBlank() ? null : item.getNota());
                 detalleOrdenDAO.crear(detalle, conexion);
             }

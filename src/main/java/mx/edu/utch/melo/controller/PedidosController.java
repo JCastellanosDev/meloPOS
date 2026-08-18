@@ -7,7 +7,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
-import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.dao.SucursalDAO;
 import mx.edu.utch.melo.geo.Ruta;
@@ -75,11 +74,12 @@ public class PedidosController {
     /** Distancia real calculada al presionar "Ubicar" (ver onUbicar); null si no se ha calculado ninguna ruta. */
     private BigDecimal distanciaCalculadaKm;
 
-    public PedidosController(AppContext contexto) {
-        this.navigator = contexto.getNavigator();
-        this.clienteService = contexto.getClienteService();
-        this.sucursalDAO = contexto.getSucursalDAO();
-        this.sesion = contexto.getSesion();
+    public PedidosController(Navigator navigator, ClienteService clienteService, SucursalDAO sucursalDAO,
+                              SesionActual sesion) {
+        this.navigator = navigator;
+        this.clienteService = clienteService;
+        this.sucursalDAO = sucursalDAO;
+        this.sesion = sesion;
     }
 
     @FXML

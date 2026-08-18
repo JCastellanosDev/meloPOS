@@ -6,7 +6,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.dao.ProductoDAO;
 import mx.edu.utch.melo.model.Producto;
@@ -30,9 +29,9 @@ public class InventarioController {
     private final ProductoDAO productoDAO;
     private final SesionActual sesion;
 
-    public InventarioController(AppContext contexto) {
-        this.productoDAO = contexto.getProductoDAO();
-        this.sesion = contexto.getSesion();
+    public InventarioController(ProductoDAO productoDAO, SesionActual sesion) {
+        this.productoDAO = productoDAO;
+        this.sesion = sesion;
     }
 
     @FXML

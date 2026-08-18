@@ -1,6 +1,7 @@
 package mx.edu.utch.melo.dao;
 
 import mx.edu.utch.melo.model.dashboard.CategoriaVendida;
+import mx.edu.utch.melo.model.dashboard.ClienteRecurrente;
 import mx.edu.utch.melo.model.dashboard.ProductoSinVentas;
 import mx.edu.utch.melo.model.dashboard.ResumenDelivery;
 import mx.edu.utch.melo.model.dashboard.ResumenVentas;
@@ -41,4 +42,11 @@ public interface DashboardDAO {
     List<ProductoSinVentas> obtenerProductosSinVentas(int sucursalId, LocalDate desde, LocalDate hasta);
 
     ResumenDelivery obtenerResumenDelivery(int sucursalId, LocalDate desde, LocalDate hasta);
+
+    /**
+     * Clientes con más de una orden en el rango (ver auditoría de Fase 8). Solo cuenta órdenes con
+     * cliente_id capturado -- hoy únicamente el canal DOMICILIO/PEDIDOS lo hace (ver CLAUDE.md), así
+     * que COMEDOR nunca puede aparecer aquí con el esquema actual.
+     */
+    List<ClienteRecurrente> obtenerClientesRecurrentes(int sucursalId, LocalDate desde, LocalDate hasta);
 }

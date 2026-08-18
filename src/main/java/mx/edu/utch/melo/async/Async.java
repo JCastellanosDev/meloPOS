@@ -5,13 +5,6 @@ import javafx.concurrent.Task;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-/**
- * Corre trabajo bloqueante (acceso a BD, llamadas HTTP a Mapbox) fuera
- * del hilo de aplicación de JavaFX, y entrega el resultado de vuelta en
- * ese mismo hilo -- así los controladores pueden tocar la UI directamente
- * dentro de {@code alExito}/{@code alError} sin usar Platform.runLater
- * ellos mismos (javafx.concurrent.Task ya lo garantiza).
- */
 public final class Async {
 
     private Async() {

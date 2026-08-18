@@ -8,7 +8,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.dao.ClienteDAO;
 import mx.edu.utch.melo.dao.ProductoDAO;
@@ -81,12 +80,13 @@ public class MenuPedidoController {
     /** Si la sucursal activa cobra IVA (ver Sucursal.isAplicaIva); se resuelve al cargar la pantalla. */
     private boolean aplicaIva = true;
 
-    public MenuPedidoController(AppContext contexto) {
-        this.productoDAO = contexto.getProductoDAO();
-        this.ventaService = contexto.getVentaService();
-        this.clienteDAO = contexto.getClienteDAO();
-        this.sucursalDAO = contexto.getSucursalDAO();
-        this.sesion = contexto.getSesion();
+    public MenuPedidoController(ProductoDAO productoDAO, VentaService ventaService, ClienteDAO clienteDAO,
+                                 SucursalDAO sucursalDAO, SesionActual sesion) {
+        this.productoDAO = productoDAO;
+        this.ventaService = ventaService;
+        this.clienteDAO = clienteDAO;
+        this.sucursalDAO = sucursalDAO;
+        this.sesion = sesion;
     }
 
     @FXML
@@ -161,7 +161,7 @@ public class MenuPedidoController {
                 return;
             }
         }
-        articulos.add(new ItemOrden(producto.getId(), producto.getNombre(), producto.getPrecio().doubleValue(), 1));
+        articulos.add(new ItemOrden(producto.getId(), producto.getNombre(), producto.getPrecio(), 1));
         renderizarArticulos();
     }
 
@@ -190,9 +190,9 @@ public class MenuPedidoController {
     }
 
     private void actualizarTotales() {
-        double subtotal = Totales.subtotal(articulos);
-        double iva = Totales.iva(subtotal, aplicaIva);
-        double total = Totales.total(subtotal, aplicaIva);
+        BigDecimal subtotal = Totales.subtotal(articulos);
+        BigDecimal iva = Totales.iva(subtotal, aplicaIva);
+        BigDecimal total = Totales.total(subtotal, aplicaIva);
         lblSubtotal.setText(Dinero.formatear(subtotal));
         lblIva.setText(Dinero.formatear(iva));
         lblTotal.setText(Dinero.formatear(total));

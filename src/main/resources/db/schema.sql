@@ -50,6 +50,7 @@ DROP TABLE IF EXISTS producto_modificador;
 DROP TABLE IF EXISTS productos;
 DROP TABLE IF EXISTS turnos;
 DROP TABLE IF EXISTS mesas;
+DROP TABLE IF EXISTS bloqueo_pin_sucursal;
 DROP TABLE IF EXISTS usuarios;
 DROP TABLE IF EXISTS modificadores;
 DROP TABLE IF EXISTS clientes;
@@ -146,6 +147,22 @@ CREATE TABLE usuarios (
         ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
+-- Bloqueo temporal por intentos fallidos de PIN (ver auditoría de Fase 6, UsuarioService,
+-- ControlIntentosPinDAO). Deliberadamente por SUCURSAL, no por usuario: el login de melo es
+-- "PIN implica identidad" (UsuarioService.autenticarPorPin prueba el PIN contra todos los
+-- usuarios activos de la sucursal hasta encontrar coincidencia) -- un PIN que no coincide con
+-- nadie no se le puede atribuir a ningún usuario_id concreto, así que el contador de intentos
+-- fallidos vive en la terminal/sucursal que está recibiendo los intentos, no en una cuenta.
+-- Una fila por sucursal (PK = sucursal_id): se actualiza con upsert, nunca hay historial.
+CREATE TABLE bloqueo_pin_sucursal (
+    sucursal_id       INT      NOT NULL PRIMARY KEY,
+    intentos_fallidos INT      NOT NULL DEFAULT 0,
+    bloqueado_hasta   DATETIME NULL,
+    CONSTRAINT fk_bloqueopin_sucursal
+        FOREIGN KEY (sucursal_id) REFERENCES sucursales (id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 -- La mesa "12" puede existir en varias sucursales a la vez, cada una la suya.
 CREATE TABLE mesas (
     id           INT AUTO_INCREMENT PRIMARY KEY,
@@ -236,6 +253,12 @@ CREATE TABLE ordenes (
     distancia_km     DECIMAL(6, 2)   NULL,
     costo_envio      DECIMAL(10, 2)  NOT NULL DEFAULT 0,
     total            DECIMAL(10, 2)  NOT NULL,
+    -- Descuento aplicado en Cobrar (ver PagoService.aplicarDescuento, TipoDescuento): categorías
+    -- con porcentaje predefinido, autorizadas con PIN de Administrador. tipo_descuento NULL =
+    -- la orden nunca tuvo descuento; monto_descuento siempre es lo que ya se restó de `total`
+    -- (snapshot, mismo criterio que subtotal/impuestos/total -- ver el comentario de arriba).
+    tipo_descuento   ENUM('EMPLEADO', 'CORTESIA', 'PROMOCION', 'AJUSTE') NULL,
+    monto_descuento  DECIMAL(10, 2)  NOT NULL DEFAULT 0,
     fecha_creacion   DATETIME        NOT NULL,
     CONSTRAINT fk_ordenes_usuario
         FOREIGN KEY (usuario_id) REFERENCES usuarios (id)

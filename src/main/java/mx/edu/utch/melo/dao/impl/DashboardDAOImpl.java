@@ -5,6 +5,7 @@ import mx.edu.utch.melo.dao.PersistenciaException;
 import mx.edu.utch.melo.db.ConexionDB;
 import mx.edu.utch.melo.model.MetodoPago;
 import mx.edu.utch.melo.model.dashboard.CategoriaVendida;
+import mx.edu.utch.melo.model.dashboard.ClienteRecurrente;
 import mx.edu.utch.melo.model.dashboard.ProductoSinVentas;
 import mx.edu.utch.melo.model.dashboard.ResumenDelivery;
 import mx.edu.utch.melo.model.dashboard.ResumenVentas;
@@ -92,6 +93,16 @@ public class DashboardDAOImpl implements DashboardDAO {
                     + "GROUP BY p.id, p.nombre, p.precio "
                     + "HAVING COUNT(o.id) = 0 "
                     + "ORDER BY p.nombre";
+
+    // Solo cuenta órdenes con cliente_id (hoy solo DOMICILIO/PEDIDOS lo captura, ver CLAUDE.md) --
+    // el INNER JOIN con clientes ya descarta las que no tienen cliente asociado.
+    private static final String SQL_CLIENTES_RECURRENTES =
+            "SELECT c.nombre AS cliente, COUNT(*) AS numero_ordenes, COALESCE(SUM(o.total), 0) AS total_gastado "
+                    + "FROM ordenes o INNER JOIN usuarios u ON u.id = o.usuario_id "
+                    + "INNER JOIN clientes c ON c.id = o.cliente_id "
+                    + "WHERE u.sucursal_id = ? AND o.estado <> 'CANCELADA' "
+                    + "AND DATE(o.fecha_creacion) BETWEEN ? AND ? "
+                    + "GROUP BY c.id, c.nombre HAVING COUNT(*) > 1 ORDER BY numero_ordenes DESC";
 
     private static final String SQL_RESUMEN_DELIVERY =
             "SELECT COUNT(*) AS numero_pedidos, "
@@ -277,5 +288,26 @@ public class DashboardDAOImpl implements DashboardDAO {
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo obtener el resumen de delivery de la sucursal " + sucursalId, e);
         }
+    }
+
+    @Override
+    public List<ClienteRecurrente> obtenerClientesRecurrentes(int sucursalId, LocalDate desde, LocalDate hasta) {
+        List<ClienteRecurrente> clientes = new ArrayList<>();
+        try (Connection conexion = conexionDB.obtenerConexion();
+             PreparedStatement sentencia = conexion.prepareStatement(SQL_CLIENTES_RECURRENTES)) {
+
+            sentencia.setInt(1, sucursalId);
+            sentencia.setObject(2, desde);
+            sentencia.setObject(3, hasta);
+            try (ResultSet resultado = sentencia.executeQuery()) {
+                while (resultado.next()) {
+                    clientes.add(new ClienteRecurrente(resultado.getString("cliente"), resultado.getInt("numero_ordenes"),
+                            resultado.getBigDecimal("total_gastado")));
+                }
+            }
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudieron obtener los clientes recurrentes de la sucursal " + sucursalId, e);
+        }
+        return clientes;
     }
 }

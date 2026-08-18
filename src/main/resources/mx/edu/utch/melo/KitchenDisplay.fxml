@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.text.Font?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <!--
@@ -10,34 +19,56 @@
   Por eso no incluye Sidebar.fxml ni Topbar.fxml: es una terminal aparte,
   pensada para un monitor dedicado en cocina.
 -->
-<BorderPane xmlns="http://javafx.com/javafx/21"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="mx.edu.utch.melo.controller.KitchenDisplayController"
-            prefWidth="1280" prefHeight="800"
-            stylesheets="@styles.css">
+
+<BorderPane prefHeight="800" prefWidth="1280" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mx.edu.utch.melo.controller.KitchenDisplayController">
 
     <!-- ===== FRANJA DE ESTADO ===== -->
     <top>
-        <HBox prefHeight="56" alignment="CENTER_LEFT" spacing="12" styleClass="kds-status-bar">
-            <FontIcon iconLiteral="mdi2c-chef-hat" iconSize="22" styleClass="kds-status-icon"/>
-            <Label text="Pantalla de Cocina" styleClass="kds-status-title"/>
+        <HBox alignment="CENTER_LEFT" prefHeight="56" spacing="12" styleClass="kds-status-bar">
+            <FontIcon iconLiteral="mdi2c-chef-hat" iconSize="22" styleClass="kds-status-icon" />
+            <Label styleClass="kds-status-title" text="Pantalla de Cocina" />
             <!-- Insignia: se actualiza en tiempo de ejecución (ver KitchenDisplayController) -->
-            <Label fx:id="lblActivas" text="0 Activas" styleClass="badge badge-muted"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Label fx:id="lblClock" text="--:--:--" styleClass="kds-status-clock"/>
+            <Label fx:id="lblActivas" styleClass="badge badge-muted" text="0 Activas" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Label fx:id="lblClock" styleClass="kds-status-clock" text="00:00">
+            <HBox.margin>
+               <Insets right="500.0" />
+            </HBox.margin>
+            <font>
+               <Font size="18.0" />
+            </font></Label>
         </HBox>
     </top>
 
     <!-- ===== CENTRO: Tarjetas de órdenes (superficie oscura KDS) ===== -->
     <center>
         <StackPane styleClass="kds-surface">
-            <ScrollPane fitToHeight="true" styleClass="kds-scroll">
+            <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="kds-scroll">
                 <!--
-                  Contenedor dinámico: el controlador (KitchenDisplayController) llena este
-                  HBox con los tickets de las órdenes en preparación leídas desde la base de
-                  datos (ver TicketFactory). No debe contener tickets escritos de forma estática aquí.
+                  Cuadrícula fija de 4 columnas x 2 filas (8 tickets visibles a la vez), forzada
+                  a ocupar todo el ScrollPane (fitToWidth + fitToHeight, columnConstraints +
+                  rowConstraints al 100% entre las 4/2): el controlador (KitchenDisplayController)
+                  la llena con los tickets de las órdenes en preparación leídas desde la base de
+                  datos (ver TicketFactory), y cada tarjeta se estira para llenar su celda (ver
+                  GridPane.setHgrow/setVgrow en renderizarTickets). No debe contener tickets
+                  escritos de forma estática aquí.
+
+                  Límite conocido: al forzar fitToHeight, si hay más de 8 órdenes activas a la vez,
+                  la 3ra fila (sin rowConstraints propias) se aprieta en vez de habilitar scroll
+                  vertical: no se resolvió aquí porque no se pidió explícitamente.
                 -->
-                <HBox fx:id="contenedorTickets" styleClass="pad-16-20 gap-16" alignment="TOP_LEFT"/>
+                <GridPane fx:id="contenedorTickets" hgap="0" vgap="0">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="25" />
+                        <ColumnConstraints percentWidth="25" />
+                        <ColumnConstraints percentWidth="25" />
+                        <ColumnConstraints percentWidth="25" />
+                    </columnConstraints>
+                    <rowConstraints>
+                        <RowConstraints percentHeight="50" />
+                        <RowConstraints percentHeight="50" />
+                    </rowConstraints>
+                </GridPane>
             </ScrollPane>
         </StackPane>
     </center>

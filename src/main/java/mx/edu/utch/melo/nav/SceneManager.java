@@ -11,6 +11,8 @@ import mx.edu.utch.melo.security.ControlAcceso;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.EnumSet;
+import java.util.Set;
 
 
 public class SceneManager implements Navigator {
@@ -40,6 +42,17 @@ public class SceneManager implements Navigator {
         }
     }
 
+    /**
+     * Pantallas emergentes que deben quedar como diálogo flotante: tamaño justo de su contenido,
+     * centradas, sin poder redimensionarse -- a diferencia de COCINA, pensada como monitor aparte
+     * (ver CLAUDE.md). Antes esto congelaba la ventana principal cuando ella usaba pantalla
+     * completa NATIVA de macOS (ver HelloApplication) -- ya no aplica: la ventana principal ahora
+     * es UNDECORATED + maximizada, no fullscreen nativo, así que abrir una ventana emergente ya
+     * no choca con el modo Space de macOS.
+     */
+    private static final Set<Pantalla> VENTANAS_FLOTANTES =
+            EnumSet.of(Pantalla.CAMBIAR_USUARIO, Pantalla.ORDENES, Pantalla.SELECCIONAR_DESCUENTO);
+
     @Override
     public void abrirVentana(Pantalla pantalla, String titulo) {
         validarAcceso(pantalla);
@@ -47,6 +60,12 @@ public class SceneManager implements Navigator {
         Stage ventana = new Stage();
         ventana.setTitle(titulo);
         ventana.setScene(new Scene(raiz));
+        if (VENTANAS_FLOTANTES.contains(pantalla)) {
+            ventana.initOwner(stage);
+            ventana.setResizable(false);
+            ventana.sizeToScene();
+            ventana.centerOnScreen();
+        }
         ventana.show();
     }
 

@@ -32,6 +32,18 @@ public class ProductoService {
     }
 
     /**
+     * Menú de productos activos para tomar pedidos (ver MenuPOSController/MenuPedidoController).
+     * Nota de un bug preexistente, no corregido aquí porque no es el objetivo de este cambio (ver
+     * CLAUDE.md e InventarioController): a diferencia de {@link #obtenerPorSucursal(int)}, el DAO
+     * subyacente no filtra por sucursal_id -- en una cadena con más de una sucursal, el menú podría
+     * mostrar productos de otra sucursal. Se mueve la llamada del Controller al Service sin cambiar
+     * ese comportamiento.
+     */
+    public List<Producto> obtenerMenuActivo() {
+        return productoDAO.obtenerTodosActivos();
+    }
+
+    /**
      * Da de alta un producto básico: nombre, descripción, precio y categoría capturados por el
      * usuario; el resto de columnas ({@code tasaIva}, {@code disponible}, {@code stockMinimo}) quedan
      * con valores por defecto sensatos, editables después desde la base de datos o Inventario.

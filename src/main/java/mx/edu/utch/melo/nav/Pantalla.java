@@ -15,7 +15,8 @@ public enum Pantalla {
     INVENTARIO("Inventario.fxml"),
     CAJA("Caja.fxml"),
     AJUSTES("Ajustes.fxml"),
-    CAMBIAR_USUARIO("CambiarUsuario.fxml");
+    CAMBIAR_USUARIO("CambiarUsuario.fxml"),
+    SELECCIONAR_DESCUENTO("SeleccionarDescuento.fxml");
 
     private final String archivoFxml;
 

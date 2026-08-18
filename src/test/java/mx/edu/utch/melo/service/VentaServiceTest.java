@@ -44,8 +44,8 @@ class VentaServiceTest {
         VentaService service = new VentaService(ordenDAO, detalleDAO, TRANSACCIONADOR_FALSO);
 
         List<ItemOrden> items = List.of(
-                new ItemOrden(1, "Tacos al Pastor", 145.00, 2),
-                new ItemOrden(2, "Agua de Jamaica", 30.00, 1)
+                new ItemOrden(1, "Tacos al Pastor", new BigDecimal("145.00"), 2),
+                new ItemOrden(2, "Agua de Jamaica", new BigDecimal("30.00"), 1)
         );
 
         Orden creada = service.crearOrdenComedor(9, items, true);
@@ -60,7 +60,7 @@ class VentaServiceTest {
     void crearOrdenComedorSinIvaNoAgregaImpuesto() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
-        List<ItemOrden> items = List.of(new ItemOrden(1, "Tacos", 100.00, 1));
+        List<ItemOrden> items = List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1));
 
         Orden creada = service.crearOrdenComedor(9, items, false);
 
@@ -73,7 +73,7 @@ class VentaServiceTest {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
 
-        Orden creada = service.crearOrdenComedor(9, List.of(new ItemOrden(1, "Tacos", 100.00, 1)), true);
+        Orden creada = service.crearOrdenComedor(9, List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1)), true);
 
         assertEquals(TipoOrden.COMEDOR, creada.getTipoOrden());
         assertEquals(EstadoOrden.PENDIENTE, creada.getEstado(), "comedor se cobra antes de preparar (ver CLAUDE.md)");
@@ -88,7 +88,7 @@ class VentaServiceTest {
     void crearOrdenDomicilioEntraDirectoAEnPreparacionYSumaElCostoDeEnvio() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
-        List<ItemOrden> items = List.of(new ItemOrden(1, "Tacos", 100.00, 1));
+        List<ItemOrden> items = List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1));
 
         Orden creada = service.crearOrdenDomicilio(9, 55, items, true,
                 new BigDecimal("4.2"), new BigDecimal("50.00"));
@@ -108,9 +108,9 @@ class VentaServiceTest {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
         VentaService service = new VentaService(ordenDAO, detalleDAO, TRANSACCIONADOR_FALSO);
-        ItemOrden conNota = new ItemOrden(1, "Tacos", 100.00, 2);
+        ItemOrden conNota = new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 2);
         conNota.setNota("sin cebolla");
-        ItemOrden sinNota = new ItemOrden(2, "Agua", 30.00, 1);
+        ItemOrden sinNota = new ItemOrden(2, "Agua", new BigDecimal("30.00"), 1);
         sinNota.setNota("   ");
 
         service.crearOrdenComedor(9, List.of(conNota, sinNota), true);
@@ -138,11 +138,32 @@ class VentaServiceTest {
         detalleDAO.lanzarEnElSegundo = true;
         VentaService service = new VentaService(ordenDAO, detalleDAO, TRANSACCIONADOR_FALSO);
         List<ItemOrden> items = List.of(
-                new ItemOrden(1, "Tacos", 100.00, 1),
-                new ItemOrden(2, "Agua", 30.00, 1)
+                new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1),
+                new ItemOrden(2, "Agua", new BigDecimal("30.00"), 1)
         );
 
         assertThrows(RuntimeException.class, () -> service.crearOrdenComedor(9, items, true));
+    }
+
+    @Test
+    void crearOrdenComedorRechazaUnaListaDeArticulosVacia() {
+        // ver auditoría de Fase 7: la guarda de "carrito vacío" hoy solo vive en los Controllers
+        // (MenuPOSController/MenuPedidoController) -- el Service no debe confiar en que la repitan.
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
+
+        assertThrows(IllegalArgumentException.class, () -> service.crearOrdenComedor(9, List.of(), true));
+        assertNull(ordenDAO.ultimoCreado, "no debe llegar a persistir nada si la lista está vacía");
+    }
+
+    @Test
+    void crearOrdenDomicilioRechazaUnaListaDeArticulosVacia() {
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                service.crearOrdenDomicilio(9, 55, List.of(), true, new BigDecimal("4.2"), new BigDecimal("50.00")));
+        assertNull(ordenDAO.ultimoCreado);
     }
 
     private static class OrdenDAOFalso implements OrdenDAO {

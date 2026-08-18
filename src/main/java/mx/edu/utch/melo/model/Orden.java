@@ -19,6 +19,10 @@ import java.time.LocalDateTime;
  * comentario en db/schema.sql sobre por qué esto no es la duplicidad
  * que se evitó en el resto del esquema.
  *
+ * tipoDescuento/montoDescuento: descuento aplicado en Cobrar (ver PagoService.aplicarDescuento).
+ * tipoDescuento null = nunca tuvo descuento; montoDescuento es lo que ya se restó de total (mismo
+ * criterio "snapshot" que el resto de los campos monetarios de esta clase).
+ *
  * Esta clase NO lleva sucursalId: se deriva de usuarioId -> Usuario.sucursalId.
  */
 public class Orden {
@@ -34,6 +38,8 @@ public class Orden {
     private BigDecimal impuestos;
     private BigDecimal distanciaKm;
     private BigDecimal costoEnvio;
+    private TipoDescuento tipoDescuento;
+    private BigDecimal montoDescuento = BigDecimal.ZERO;
     private BigDecimal total;
     private LocalDateTime fechaCreacion;
 
@@ -42,7 +48,8 @@ public class Orden {
 
     public Orden(int id, TipoOrden tipoOrden, Integer mesaId, int usuarioId, Integer clienteId, Integer turnoId,
                  EstadoOrden estado, BigDecimal subtotal, BigDecimal impuestos, BigDecimal distanciaKm,
-                 BigDecimal costoEnvio, BigDecimal total, LocalDateTime fechaCreacion) {
+                 BigDecimal costoEnvio, TipoDescuento tipoDescuento, BigDecimal montoDescuento, BigDecimal total,
+                 LocalDateTime fechaCreacion) {
         this.id = id;
         this.tipoOrden = tipoOrden;
         this.mesaId = mesaId;
@@ -54,6 +61,8 @@ public class Orden {
         this.impuestos = impuestos;
         this.distanciaKm = distanciaKm;
         this.costoEnvio = costoEnvio;
+        this.tipoDescuento = tipoDescuento;
+        this.montoDescuento = montoDescuento;
         this.total = total;
         this.fechaCreacion = fechaCreacion;
     }
@@ -144,6 +153,22 @@ public class Orden {
 
     public void setCostoEnvio(BigDecimal costoEnvio) {
         this.costoEnvio = costoEnvio;
+    }
+
+    public TipoDescuento getTipoDescuento() {
+        return tipoDescuento;
+    }
+
+    public void setTipoDescuento(TipoDescuento tipoDescuento) {
+        this.tipoDescuento = tipoDescuento;
+    }
+
+    public BigDecimal getMontoDescuento() {
+        return montoDescuento;
+    }
+
+    public void setMontoDescuento(BigDecimal montoDescuento) {
+        this.montoDescuento = montoDescuento;
     }
 
     public BigDecimal getTotal() {

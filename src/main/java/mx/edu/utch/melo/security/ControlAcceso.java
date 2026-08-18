@@ -58,7 +58,7 @@ public final class ControlAcceso {
 
         mapa.put(Rol.CAJERO, EnumSet.of(
                 Pantalla.DASHBOARD, Pantalla.CAMBIAR_USUARIO,
-                Pantalla.MENU, Pantalla.ORDENES, Pantalla.CAJA, Pantalla.DOMICILIO));
+                Pantalla.MENU, Pantalla.ORDENES, Pantalla.CAJA, Pantalla.DOMICILIO, Pantalla.SELECCIONAR_DESCUENTO));
 
         mapa.put(Rol.COCINA, EnumSet.of(
                 Pantalla.DASHBOARD, Pantalla.CAMBIAR_USUARIO,

@@ -5,6 +5,7 @@ import mx.edu.utch.melo.dao.PersistenciaException;
 import mx.edu.utch.melo.db.ConexionDB;
 import mx.edu.utch.melo.model.EstadoOrden;
 import mx.edu.utch.melo.model.Orden;
+import mx.edu.utch.melo.model.TipoDescuento;
 import mx.edu.utch.melo.model.TipoOrden;
 
 import java.math.BigDecimal;
@@ -24,16 +25,16 @@ public class OrdenDAOImpl implements OrdenDAO {
 
     private static final String SQL_INSERTAR =
             "INSERT INTO ordenes (tipo_orden, mesa_id, usuario_id, cliente_id, turno_id, estado, subtotal, "
-                    + "impuestos, distancia_km, costo_envio, total, fecha_creacion) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    + "impuestos, distancia_km, costo_envio, tipo_descuento, monto_descuento, total, fecha_creacion) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String SQL_ACTUALIZAR =
             "UPDATE ordenes SET tipo_orden = ?, mesa_id = ?, usuario_id = ?, cliente_id = ?, turno_id = ?, "
-                    + "estado = ?, subtotal = ?, impuestos = ?, distancia_km = ?, costo_envio = ?, total = ? "
-                    + "WHERE id = ?";
+                    + "estado = ?, subtotal = ?, impuestos = ?, distancia_km = ?, costo_envio = ?, "
+                    + "tipo_descuento = ?, monto_descuento = ?, total = ? WHERE id = ?";
     private static final String SQL_ELIMINAR = "DELETE FROM ordenes WHERE id = ?";
     private static final String SQL_BASE =
             "SELECT id, tipo_orden, mesa_id, usuario_id, cliente_id, turno_id, estado, subtotal, impuestos, "
-                    + "distancia_km, costo_envio, total, fecha_creacion FROM ordenes";
+                    + "distancia_km, costo_envio, tipo_descuento, monto_descuento, total, fecha_creacion FROM ordenes";
     private static final String SQL_POR_ID = SQL_BASE + " WHERE id = ?";
     private static final String SQL_POR_ESTADO = SQL_BASE + " WHERE estado = ?";
     private static final String SQL_ACTIVAS_POR_MESA =
@@ -74,8 +75,10 @@ public class OrdenDAOImpl implements OrdenDAO {
             sentencia.setBigDecimal(8, orden.getImpuestos());
             mapearDecimalNulo(sentencia, 9, orden.getDistanciaKm());
             sentencia.setBigDecimal(10, orden.getCostoEnvio());
-            sentencia.setBigDecimal(11, orden.getTotal());
-            sentencia.setTimestamp(12, Timestamp.valueOf(orden.getFechaCreacion()));
+            mapearTipoDescuentoNulo(sentencia, 11, orden.getTipoDescuento());
+            sentencia.setBigDecimal(12, orden.getMontoDescuento());
+            sentencia.setBigDecimal(13, orden.getTotal());
+            sentencia.setTimestamp(14, Timestamp.valueOf(orden.getFechaCreacion()));
             sentencia.executeUpdate();
 
             try (ResultSet llaves = sentencia.getGeneratedKeys()) {
@@ -208,8 +211,10 @@ public class OrdenDAOImpl implements OrdenDAO {
             sentencia.setBigDecimal(8, orden.getImpuestos());
             mapearDecimalNulo(sentencia, 9, orden.getDistanciaKm());
             sentencia.setBigDecimal(10, orden.getCostoEnvio());
-            sentencia.setBigDecimal(11, orden.getTotal());
-            sentencia.setInt(12, orden.getId());
+            mapearTipoDescuentoNulo(sentencia, 11, orden.getTipoDescuento());
+            sentencia.setBigDecimal(12, orden.getMontoDescuento());
+            sentencia.setBigDecimal(13, orden.getTotal());
+            sentencia.setInt(14, orden.getId());
             return sentencia.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo actualizar la orden con id " + orden.getId(), e);
@@ -259,6 +264,14 @@ public class OrdenDAOImpl implements OrdenDAO {
         }
     }
 
+    private void mapearTipoDescuentoNulo(PreparedStatement sentencia, int indice, TipoDescuento valor) throws SQLException {
+        if (valor == null) {
+            sentencia.setNull(indice, Types.VARCHAR);
+        } else {
+            sentencia.setString(indice, valor.name());
+        }
+    }
+
     private Integer leerEnteroNulo(ResultSet resultado, String columna) throws SQLException {
         int valor = resultado.getInt(columna);
         return resultado.wasNull() ? null : valor;
@@ -277,6 +290,9 @@ public class OrdenDAOImpl implements OrdenDAO {
         orden.setImpuestos(resultado.getBigDecimal("impuestos"));
         orden.setDistanciaKm(resultado.getBigDecimal("distancia_km"));
         orden.setCostoEnvio(resultado.getBigDecimal("costo_envio"));
+        String tipoDescuento = resultado.getString("tipo_descuento");
+        orden.setTipoDescuento(tipoDescuento == null ? null : TipoDescuento.valueOf(tipoDescuento));
+        orden.setMontoDescuento(resultado.getBigDecimal("monto_descuento"));
         orden.setTotal(resultado.getBigDecimal("total"));
         orden.setFechaCreacion(resultado.getTimestamp("fecha_creacion").toLocalDateTime());
         return orden;

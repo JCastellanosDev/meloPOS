@@ -8,17 +8,18 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
-import mx.edu.utch.melo.dao.CategoriaDAO;
-import mx.edu.utch.melo.dao.ProductoDAO;
-import mx.edu.utch.melo.dao.SucursalDAO;
 import mx.edu.utch.melo.model.Categoria;
 import mx.edu.utch.melo.model.ItemOrden;
 import mx.edu.utch.melo.model.Producto;
 import mx.edu.utch.melo.model.Sucursal;
+import mx.edu.utch.melo.model.Rol;
 import mx.edu.utch.melo.nav.Navigator;
 import mx.edu.utch.melo.nav.Pantalla;
+import mx.edu.utch.melo.security.ControlAcceso;
+import mx.edu.utch.melo.service.CategoriaService;
+import mx.edu.utch.melo.service.ProductoService;
+import mx.edu.utch.melo.service.SucursalService;
 import mx.edu.utch.melo.service.VentaService;
 import mx.edu.utch.melo.sesion.SesionActual;
 import mx.edu.utch.melo.util.Dinero;
@@ -27,6 +28,7 @@ import mx.edu.utch.melo.view.FilaArticuloFactory;
 import mx.edu.utch.melo.view.TarjetaProductoFactory;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -91,10 +93,10 @@ public class MenuPOSController {
     private SidebarController sidebarController;
 
     private final Navigator navigator;
-    private final ProductoDAO productoDAO;
-    private final CategoriaDAO categoriaDAO;
+    private final ProductoService productoService;
+    private final CategoriaService categoriaService;
     private final VentaService ventaService;
-    private final SucursalDAO sucursalDAO;
+    private final SucursalService sucursalService;
     private final SesionActual sesion;
 
     /** Carrito en memoria de la mesa activa. Se persiste solo hasta que se cobra (ver onCobrarCuenta). */
@@ -118,13 +120,14 @@ public class MenuPOSController {
     /** null = "Todos"; si no, solo se muestran productos de esta categoría (ver onSeleccionarCategoria). */
     private Integer categoriaSeleccionadaId;
 
-    public MenuPOSController(AppContext contexto) {
-        this.navigator = contexto.getNavigator();
-        this.productoDAO = contexto.getProductoDAO();
-        this.categoriaDAO = contexto.getCategoriaDAO();
-        this.ventaService = contexto.getVentaService();
-        this.sucursalDAO = contexto.getSucursalDAO();
-        this.sesion = contexto.getSesion();
+    public MenuPOSController(Navigator navigator, ProductoService productoService, CategoriaService categoriaService,
+                              VentaService ventaService, SucursalService sucursalService, SesionActual sesion) {
+        this.navigator = navigator;
+        this.productoService = productoService;
+        this.categoriaService = categoriaService;
+        this.ventaService = ventaService;
+        this.sucursalService = sucursalService;
+        this.sesion = sesion;
     }
 
     @FXML
@@ -145,9 +148,9 @@ public class MenuPOSController {
     /** Se ejecuta en un hilo aparte (ver Async): productos, categorías, sucursal, cajero y siguiente # de orden, juntos. */
     private DatosIniciales construirDatosIniciales() {
         int sucursalId = sesion.getSucursalActivaId();
-        List<Producto> productos = productoDAO.obtenerTodosActivos();
-        List<Categoria> categorias = categoriaDAO.obtenerTodos();
-        Sucursal sucursal = sucursalDAO.obtenerPorId(sucursalId).orElse(null);
+        List<Producto> productos = productoService.obtenerMenuActivo();
+        List<Categoria> categorias = categoriaService.obtenerTodos();
+        Sucursal sucursal = sucursalService.obtenerPorIdOpcional(sucursalId).orElse(null);
         boolean iva = sucursal == null || sucursal.isAplicaIva();
         int siguienteNumero = ventaService.siguienteNumeroOrden(sucursalId);
         String nombreCajero = sesion.getUsuarioActivo().getNombre();
@@ -232,7 +235,7 @@ public class MenuPOSController {
                 return;
             }
         }
-        articulos.add(new ItemOrden(producto.getId(), producto.getNombre(), producto.getPrecio().doubleValue(), 1));
+        articulos.add(new ItemOrden(producto.getId(), producto.getNombre(), producto.getPrecio(), 1));
         renderizarArticulos();
     }
 
@@ -261,9 +264,9 @@ public class MenuPOSController {
     }
 
     private void actualizarTotales() {
-        double subtotal = Totales.subtotal(articulos);
-        double iva = Totales.iva(subtotal, aplicaIva);
-        double total = Totales.total(subtotal, aplicaIva);
+        BigDecimal subtotal = Totales.subtotal(articulos);
+        BigDecimal iva = Totales.iva(subtotal, aplicaIva);
+        BigDecimal total = Totales.total(subtotal, aplicaIva);
         lblSubtotal.setText(Dinero.formatear(subtotal));
         lblIva.setText(Dinero.formatear(iva));
         lblTotal.setText(Dinero.formatear(total));
@@ -279,6 +282,13 @@ public class MenuPOSController {
             return;
         }
         ocultarErrorCobro();
+
+        Rol rol = sesion.getUsuarioActivo().getRol();
+        if (!ControlAcceso.puedeAcceder(rol, Pantalla.ORDENES)) {
+            mostrarErrorCobro("Tu rol no puede cobrar cuentas. Pide ayuda a un cajero.");
+            return;
+        }
+
         btnCobrar.setDisable(true);
         List<ItemOrden> copiaArticulos = List.copyOf(articulos);
         boolean cobrarIva = aplicaIva;
@@ -292,7 +302,16 @@ public class MenuPOSController {
                     mostrarNumeroOrden(ordenCreada.getId() + 1);
                     // El cobro es una ventana emergente (ver Pantalla.ORDENES), no una pestaña:
                     // el Menú se queda abierto detrás, ya con el carrito vacío.
-                    navigator.abrirVentana(Pantalla.ORDENES, "melo - Cobrar");
+                    // La orden ya se creó y guardó en la sesión aunque abrirVentana falle abajo:
+                    // no se revierte, pero al menos el usuario ve por qué no se abrió el cobro.
+                    try {
+                        navigator.abrirVentana(Pantalla.ORDENES, "melo - Cobrar");
+                    } catch (RuntimeException fallaNavegacion) {
+                        mostrarErrorCobro("La orden #" + (ordenCreada.getId() + 1)
+                                + " se guardó, pero no se pudo abrir la ventana de cobro.");
+                    } finally {
+                        btnCobrar.setDisable(articulos.isEmpty());
+                    }
                 },
                 error -> {
                     btnCobrar.setDisable(false);

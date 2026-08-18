@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<!--
+  Ventana emergente chica para elegir la categoría de descuento (ver PaymentPortalController.
+  onAbrirSeleccionDescuento, Navigator.abrirVentana). Solo elige la categoría: la autorización
+  con PIN de Administrador sigue viviendo en PaymentPortal (ver SesionActual.setDescuentoSeleccionado).
+-->
+<VBox fx:id="raiz" xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="mx.edu.utch.melo.controller.SeleccionarDescuentoController"
+      prefWidth="300" alignment="TOP_CENTER" styleClass="pad-32 gap-8"
+      stylesheets="@styles.css">
+
+    <FontIcon iconLiteral="mdi2s-sale" iconSize="32" styleClass="text-icon-lg-accent">
+        <VBox.margin><Insets bottom="8"/></VBox.margin>
+    </FontIcon>
+    <Label text="Aplicar Descuento" styleClass="text-subtitle"/>
+    <Label text="Elige la categoría." styleClass="text-muted" wrapText="true">
+        <VBox.margin><Insets bottom="16"/></VBox.margin>
+    </Label>
+
+    <GridPane hgap="10" vgap="10">
+        <VBox.margin><Insets bottom="16"/></VBox.margin>
+        <Button text="Empleado" maxWidth="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="0"
+                styleClass="btn-outline-accent" onAction="#onDescuentoEmpleado"/>
+        <Button text="Cortesía" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0"
+                styleClass="btn-outline-accent" onAction="#onDescuentoCortesia"/>
+        <Button text="Promoción" maxWidth="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="1"
+                styleClass="btn-outline-accent" onAction="#onDescuentoPromocion"/>
+        <Button text="Ajuste" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1"
+                styleClass="btn-outline-accent" onAction="#onDescuentoAjuste"/>
+        <columnConstraints>
+            <ColumnConstraints percentWidth="50"/>
+            <ColumnConstraints percentWidth="50"/>
+        </columnConstraints>
+    </GridPane>
+
+    <Button text="Cancelar" maxWidth="Infinity" styleClass="btn-outline" onAction="#onCancelar"/>
+
+</VBox>

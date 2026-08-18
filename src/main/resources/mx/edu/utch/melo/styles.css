@@ -961,6 +961,44 @@
     -fx-padding: 14 16 10 16;
     -fx-alignment: center-left;
 }
+.ticket-expand-btn {
+    -fx-background-color: #3A3A3A;
+    -fx-text-fill: -bg-white;
+    -fx-icon-color: -bg-white;
+    -fx-font-size: 12;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-padding: 8 14;
+    -fx-background-radius: 8;
+    -fx-min-height: 34;
+}
+.ticket-expand-btn:hover {
+    -fx-background-color: -accent;
+}
+
+/* Ticket ocupando las 2 filas de su columna en la cuadrícula (ver
+   KitchenDisplayController.renderizarTickets, GridPane.setRowSpan): mismas clases base de
+   .ticket*, solo con tipografía más grande para leer a distancia. */
+.ticket-ampliado .ticket-title {
+    -fx-font-size: 22;
+}
+.ticket-ampliado .ticket-meta {
+    -fx-font-size: 15;
+}
+.ticket-ampliado .ticket-item {
+    -fx-font-size: 19;
+}
+.ticket-ampliado .ticket-item-tachado {
+    -fx-font-size: 19;
+}
+.ticket-ampliado .ticket-item-note {
+    -fx-font-size: 15;
+}
+.ticket-ampliado .text-time-ok,
+.ticket-ampliado .text-time-warn,
+.ticket-ampliado .text-time-urgent {
+    -fx-font-size: 28;
+}
 .ticket-title {
     -fx-font-size: 15;
     -fx-font-weight: bold;
@@ -978,6 +1016,15 @@
 .ticket-item {
     -fx-text-fill: #DDDDDD;
     -fx-font-size: 13;
+    -fx-cursor: hand;
+}
+/* El cocinero toca un artículo para marcarlo preparado (ver TicketFactory, onTacharLinea) --
+   solo visual, no se guarda en base de datos. */
+.ticket-item-tachado {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 13;
+    -fx-strikethrough: true;
+    -fx-cursor: hand;
 }
 .ticket-item-strong {
     -fx-text-fill: -bg-white;
@@ -1092,6 +1139,19 @@
     -fx-border-color: -accent;
     -fx-border-radius: 8;
     -fx-border-width: 1.5;
+    -fx-padding: 12 16;
+    -fx-background-radius: 8;
+    -fx-alignment: center-left;
+    -fx-spacing: 8;
+}
+/* Autocontenida (no se combina con .amount-box) por la misma razón que .card-lg -- ver el aviso
+   al inicio del archivo. Campo activo del pago dividido en PaymentPortal (ver PaymentPortalController):
+   mismo look que .amount-box, solo con el borde más grueso para marcar cuál recibe el teclado. */
+.amount-box-active {
+    -fx-background-color: -bg-white;
+    -fx-border-color: -accent;
+    -fx-border-radius: 8;
+    -fx-border-width: 2.5;
     -fx-padding: 12 16;
     -fx-background-radius: 8;
     -fx-alignment: center-left;

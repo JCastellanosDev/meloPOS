@@ -2,6 +2,7 @@ package mx.edu.utch.melo.app;
 
 import mx.edu.utch.melo.dao.CategoriaDAO;
 import mx.edu.utch.melo.dao.ClienteDAO;
+import mx.edu.utch.melo.dao.ControlIntentosPinDAO;
 import mx.edu.utch.melo.dao.DashboardDAO;
 import mx.edu.utch.melo.dao.DetalleOrdenDAO;
 import mx.edu.utch.melo.dao.MesaDAO;
@@ -78,7 +79,7 @@ public class AppContext {
                        ClienteDAO clienteDAO, ModificadorDAO modificadorDAO, MesaDAO mesaDAO, TurnoDAO turnoDAO,
                        ProductoDAO productoDAO, OrdenDAO ordenDAO, DetalleOrdenDAO detalleOrdenDAO, PagoDAO pagoDAO,
                        ReporteDAO reporteDAO, DashboardDAO dashboardDAO, ServicioRutas servicioRutas,
-                       ConexionDB conexionDB) {
+                       ControlIntentosPinDAO controlIntentosPinDAO, ConexionDB conexionDB) {
         this.navigator = navigator;
         this.sesion = sesion;
         this.geocodificador = geocodificador;
@@ -100,7 +101,7 @@ public class AppContext {
         this.sucursalService = new SucursalService(sucursalDAO);
         this.categoriaService = new CategoriaService(categoriaDAO);
         this.productoService = new ProductoService(productoDAO);
-        this.usuarioService = new UsuarioService(usuarioDAO);
+        this.usuarioService = new UsuarioService(usuarioDAO, controlIntentosPinDAO);
         this.ventaService = new VentaService(ordenDAO, detalleOrdenDAO, conexionDB);
         this.pagoService = new PagoService(ordenDAO, detalleOrdenDAO, productoDAO, pagoDAO, usuarioDAO, turnoDAO,
                 sucursalDAO, conexionDB);

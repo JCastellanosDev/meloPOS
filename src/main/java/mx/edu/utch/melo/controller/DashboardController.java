@@ -4,7 +4,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
-import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.dao.OrdenDAO;
 import mx.edu.utch.melo.dao.ReporteDAO;
@@ -62,11 +61,11 @@ public class DashboardController {
     private final ReporteDAO reporteDAO;
     private final SesionActual sesion;
 
-    public DashboardController(AppContext contexto) {
-        this.navigator = contexto.getNavigator();
-        this.ordenDAO = contexto.getOrdenDAO();
-        this.reporteDAO = contexto.getReporteDAO();
-        this.sesion = contexto.getSesion();
+    public DashboardController(Navigator navigator, OrdenDAO ordenDAO, ReporteDAO reporteDAO, SesionActual sesion) {
+        this.navigator = navigator;
+        this.ordenDAO = ordenDAO;
+        this.reporteDAO = reporteDAO;
+        this.sesion = sesion;
     }
 
     @FXML

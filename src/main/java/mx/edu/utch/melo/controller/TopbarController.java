@@ -2,7 +2,6 @@ package mx.edu.utch.melo.controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.nav.Navigator;
 import mx.edu.utch.melo.nav.Pantalla;
 
@@ -16,8 +15,8 @@ public class TopbarController {
 
     private final Navigator navigator;
 
-    public TopbarController(AppContext contexto) {
-        this.navigator = contexto.getNavigator();
+    public TopbarController(Navigator navigator) {
+        this.navigator = navigator;
     }
 
     @FXML

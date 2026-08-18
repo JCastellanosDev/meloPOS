@@ -5,7 +5,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.async.Async;
 import mx.edu.utch.melo.model.Turno;
 import mx.edu.utch.melo.model.reporte.ResumenTurno;
@@ -82,9 +81,9 @@ public class CajaController {
 
     private Turno turnoActivo;
 
-    public CajaController(AppContext contexto) {
-        this.turnoService = contexto.getTurnoService();
-        this.sesion = contexto.getSesion();
+    public CajaController(TurnoService turnoService, SesionActual sesion) {
+        this.turnoService = turnoService;
+        this.sesion = sesion;
     }
 
     @FXML

@@ -1,10 +1,17 @@
 package mx.edu.utch.melo.model;
 
+import java.math.BigDecimal;
+
 /**
  * Buffer de dígitos que el cajero teclea para capturar un monto (p. ej. en el
  * numpad de PaymentPortal). Sin dependencias de JavaFX UI: se puede probar
  * de forma unitaria y reutilizar en cualquier pantalla que necesite captura
  * numérica.
+ *
+ * {@link #valor()} regresa BigDecimal (ver auditoría de Fase 4, melo-java25): el monto recibido
+ * y el cambio calculado a partir de él son dinero real, no un valor de UI de solo lectura -- antes
+ * pasaba por double y PaymentPortalController volvía a convertir a BigDecimal para comparar contra
+ * el total de la orden.
  */
 public class EntradaMonetaria {
 
@@ -24,22 +31,22 @@ public class EntradaMonetaria {
         }
     }
 
-    public void establecer(double valor) {
-        buffer = String.valueOf(valor);
+    public void establecer(BigDecimal valor) {
+        buffer = valor.toPlainString();
     }
 
     public void reiniciar() {
         buffer = "";
     }
 
-    public double valor() {
+    public BigDecimal valor() {
         if (buffer.isEmpty() || buffer.equals(TECLA_PUNTO)) {
-            return 0.0;
+            return BigDecimal.ZERO;
         }
         try {
-            return Double.parseDouble(buffer);
+            return new BigDecimal(buffer);
         } catch (NumberFormatException ex) {
-            return 0.0;
+            return BigDecimal.ZERO;
         }
     }
 
