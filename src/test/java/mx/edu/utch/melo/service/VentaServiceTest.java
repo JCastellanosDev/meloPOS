@@ -12,7 +12,9 @@ import mx.edu.utch.melo.model.Modificador;
 import mx.edu.utch.melo.model.ModificadorAplicado;
 import mx.edu.utch.melo.model.Orden;
 import mx.edu.utch.melo.model.Producto;
+import mx.edu.utch.melo.model.Rol;
 import mx.edu.utch.melo.model.TipoOrden;
+import mx.edu.utch.melo.security.AccesoDenegadoException;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -355,6 +357,154 @@ class VentaServiceTest {
                 List.of(new ItemOrden(2, "Agua de Jamaica", new BigDecimal("30.00"), 1)), true));
     }
 
+    // --- cancelarOrden -------------------------------------------------------------------
+
+    @Test
+    void cancelarOrdenRestauraElStockDeUnSoloArticulo() {
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 10);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        service.crearOrdenComedor(9, List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 3)), true);
+        assertEquals(7, productoDAO.stockDisponible.get(1), "la venta debe haber descontado el stock primero");
+
+        Orden cancelada = service.cancelarOrden(Rol.CAJERO, 1);
+
+        assertEquals(EstadoOrden.CANCELADA, cancelada.getEstado());
+        assertEquals(10, productoDAO.stockDisponible.get(1), "debe restaurar exactamente la cantidad vendida");
+    }
+
+    @Test
+    void cancelarOrdenRestauraElStockDeCadaArticuloDeVariosArticulos() {
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 10);
+        productoDAO.stockDisponible.put(2, 5);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        List<ItemOrden> items = List.of(
+                new ItemOrden(1, "Tacos al Pastor", new BigDecimal("145.00"), 2),
+                new ItemOrden(2, "Agua de Jamaica", new BigDecimal("30.00"), 1)
+        );
+        service.crearOrdenComedor(9, items, true);
+        assertEquals(8, productoDAO.stockDisponible.get(1));
+        assertEquals(4, productoDAO.stockDisponible.get(2));
+
+        service.cancelarOrden(Rol.CAJERO, 1);
+
+        assertEquals(10, productoDAO.stockDisponible.get(1), "cada artículo debe restaurarse por separado, no solo el primero");
+        assertEquals(5, productoDAO.stockDisponible.get(2));
+    }
+
+    @Test
+    void cancelarOrdenRestauraElStockExactamenteAlNivelPrevioALaVenta() {
+        // No solo "algo" de stock debe volver -- debe quedar exactamente igual a como estaba
+        // antes de vender, ni más ni menos.
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        int stockOriginal = 23;
+        productoDAO.stockDisponible.put(1, stockOriginal);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        service.crearOrdenComedor(9, List.of(new ItemOrden(1, "Tacos", new BigDecimal("145.00"), 5)), true);
+
+        service.cancelarOrden(Rol.CAJERO, 1);
+
+        assertEquals(stockOriginal, productoDAO.stockDisponible.get(1),
+                "debe quedar exactamente en el nivel previo a la venta, no en un valor parcial");
+    }
+
+    @Test
+    void cancelarOrdenDosVecesLaSegundaVezSeRechazaYNoDuplicaLaRestauracion() {
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 10);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        service.crearOrdenComedor(9, List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 3)), true);
+
+        service.cancelarOrden(Rol.CAJERO, 1);
+        assertEquals(10, productoDAO.stockDisponible.get(1));
+
+        assertThrows(VentaService.CancelacionInvalidaException.class, () -> service.cancelarOrden(Rol.CAJERO, 1));
+        assertEquals(10, productoDAO.stockDisponible.get(1), "la segunda cancelación no debe restaurar stock otra vez");
+    }
+
+    @Test
+    void cancelarOrdenNoRestauraStockSiFallaElCambioDeEstado() {
+        // "Rollback": si el paso de cambiar el estado falla, el ciclo de restaurar stock ni
+        // siquiera debe empezar (aquí ordenDAO.cancelar se llama ANTES del bucle de restaurar
+        // stock en VentaService.cancelarOrden) -- a diferencia de otros tests de rollback en esta
+        // clase (ver persistirNoDescuentaStockDeArticulosPosterioresAlQueFalloElStock), esta
+        // aserción no depende de que el Transaccionador falso simule un rollback real: es
+        // simplemente que el código nunca llega a tocar el stock si el primer paso lanza.
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.ultimoCreado = ordenExistente(EstadoOrden.PENDIENTE);
+        ordenDAO.lanzarEnCancelar = true;
+        DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
+        detalleDAO.creados.add(detalleExistente(1, "100.00"));
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 5);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+
+        assertThrows(RuntimeException.class, () -> service.cancelarOrden(Rol.CAJERO, 1));
+
+        assertEquals(5, productoDAO.stockDisponible.get(1), "si falla el cambio de estado, no debe restaurarse ningún stock");
+        assertEquals(EstadoOrden.PENDIENTE, ordenDAO.ultimoCreado.getEstado(),
+                "la orden no debe quedar marcada CANCELADA si la operación completa falló");
+    }
+
+    @Test
+    void cancelarOrdenEnEstadoPagadaSeRechazaConUnaExcepcionClara() {
+        // PAGADA/ENTREGADA quedan fuera a propósito: cancelar una venta ya cobrada necesita un
+        // flujo de reembolso, que esta operación explícitamente no implementa (ver Javadoc de
+        // VentaService.cancelarOrden).
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.ultimoCreado = ordenExistente(EstadoOrden.PAGADA);
+        DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
+        detalleDAO.creados.add(detalleExistente(1, "100.00"));
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 7);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+
+        VentaService.CancelacionInvalidaException excepcion = assertThrows(
+                VentaService.CancelacionInvalidaException.class, () -> service.cancelarOrden(Rol.CAJERO, 1));
+
+        assertTrue(excepcion.getMessage().contains("PAGADA"), "el mensaje debe indicar el estado real que bloqueó la cancelación");
+        assertEquals(7, productoDAO.stockDisponible.get(1), "no debe restaurar stock si el estado no permite cancelar");
+    }
+
+    @Test
+    void cancelarOrdenQueNoExisteLanzaOrdenNoEncontrada() {
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
+
+        assertThrows(VentaService.OrdenNoEncontradaException.class, () -> service.cancelarOrden(Rol.CAJERO, 999));
+    }
+
+    @Test
+    void cancelarOrdenExigeUnRolPermitido() {
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.ultimoCreado = ordenExistente(EstadoOrden.PENDIENTE);
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
+
+        assertThrows(AccesoDenegadoException.class, () -> service.cancelarOrden(Rol.COCINA, 1));
+    }
+
+    private static Orden ordenExistente(EstadoOrden estado) {
+        Orden orden = new Orden();
+        orden.setId(1);
+        orden.setTipoOrden(TipoOrden.COMEDOR);
+        orden.setUsuarioId(9);
+        orden.setEstado(estado);
+        orden.setSubtotal(new BigDecimal("100.00"));
+        orden.setImpuestos(new BigDecimal("16.00"));
+        orden.setCostoEnvio(BigDecimal.ZERO);
+        orden.setTotal(new BigDecimal("116.00"));
+        return orden;
+    }
+
     private static Orden ordenDomicilioExistente() {
         Orden orden = new Orden();
         orden.setId(1);
@@ -382,6 +532,7 @@ class VentaServiceTest {
     private static class OrdenDAOFalso implements OrdenDAO {
         int siguienteNumero;
         Orden ultimoCreado;
+        boolean lanzarEnCancelar;
 
         @Override
         public Orden crear(Orden orden) {
@@ -443,6 +594,25 @@ class VentaServiceTest {
         @Override
         public int siguienteNumeroOrden(int sucursalId) {
             return siguienteNumero;
+        }
+
+        /** Simula el UPDATE atómico real (ver OrdenDAO.cancelar): solo un registro (ultimoCreado). */
+        @Override
+        public boolean cancelar(int ordenId, Connection conexion) {
+            if (lanzarEnCancelar) {
+                throw new RuntimeException("fallo simulado al cancelar la orden");
+            }
+            if (ultimoCreado == null || ultimoCreado.getId() != ordenId) {
+                return false;
+            }
+            EstadoOrden estado = ultimoCreado.getEstado();
+            boolean permiteCancelar = estado == EstadoOrden.PENDIENTE || estado == EstadoOrden.EN_PREPARACION
+                    || estado == EstadoOrden.LISTA;
+            if (!permiteCancelar) {
+                return false;
+            }
+            ultimoCreado.setEstado(EstadoOrden.CANCELADA);
+            return true;
         }
     }
 
@@ -570,6 +740,13 @@ class VentaServiceTest {
             }
             stockDisponible.put(productoId, actual - cantidad);
             return true;
+        }
+
+        /** Simula el UPDATE real: siempre suma, sin guarda (sumar nunca deja stock negativo). */
+        @Override
+        public void restaurarStock(int productoId, int cantidad, Connection conexion) {
+            int actual = stockDisponible.getOrDefault(productoId, 0);
+            stockDisponible.put(productoId, actual + cantidad);
         }
     }
 }

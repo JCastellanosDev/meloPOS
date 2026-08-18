@@ -146,5 +146,9 @@ class ProductoServiceTest {
         public boolean descontarStock(int productoId, int cantidad, java.sql.Connection conexion) {
             return true;
         }
+
+        @Override
+        public void restaurarStock(int productoId, int cantidad, java.sql.Connection conexion) {
+        }
     }
 }

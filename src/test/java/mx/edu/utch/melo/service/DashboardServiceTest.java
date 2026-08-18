@@ -295,6 +295,10 @@ class DashboardServiceTest {
         public boolean descontarStock(int productoId, int cantidad, java.sql.Connection conexion) {
             return true;
         }
+
+        @Override
+        public void restaurarStock(int productoId, int cantidad, java.sql.Connection conexion) {
+        }
     }
 
     private static class OrdenDAOFalso implements OrdenDAO {
@@ -358,6 +362,11 @@ class DashboardServiceTest {
         @Override
         public int siguienteNumeroOrden(int sucursalId) {
             return 1;
+        }
+
+        @Override
+        public boolean cancelar(int ordenId, java.sql.Connection conexion) {
+            return true;
         }
     }
 

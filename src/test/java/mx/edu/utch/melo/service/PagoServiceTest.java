@@ -183,6 +183,10 @@ class PagoServiceTest {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.orden = ordenDeEjemplo();
         ordenDAO.orden.setTipoOrden(TipoOrden.PARA_RECOGER);
+        // igual que DOMICILIO: nace en EN_PREPARACION y se cobra ahí (ver
+        // PagoService.estadoEsperadoAntesDePagar) -- CLAUDE.md agrupa pickup/domicilio bajo el
+        // mismo flujo "Ordenar -> Preparar -> Recoger/Entregar -> Pagar".
+        ordenDAO.orden.setEstado(EstadoOrden.EN_PREPARACION);
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
                 new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
 
@@ -354,6 +358,103 @@ class PagoServiceTest {
         assertEquals(0, new BigDecimal("371.20").compareTo(resultado.getTotal()));
     }
 
+    @Test
+    void quitarDescuentoConRolRechazaARolesQueNoSonAdministrador() {
+        // asimetría de autorización encontrada en esta auditoría: la sobrecarga con Rol es la
+        // versión segura -- ver PagoService.quitarDescuento(Rol, int) y su Javadoc, y el Javadoc de
+        // quitarDescuento(int) (deprecated) que documenta por qué la insegura sigue existiendo.
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.orden = ordenDeEjemplo();
+        PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
+                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+        service.aplicarDescuento(Rol.ADMINISTRADOR, 1, TipoDescuento.EMPLEADO); // 20% -> total 296.96
+
+        assertThrows(AccesoDenegadoException.class, () -> service.quitarDescuento(Rol.CAJERO, 1));
+        assertEquals(TipoDescuento.EMPLEADO, ordenDAO.orden.getTipoDescuento(), "el descuento no debe quitarse si el rol no autoriza");
+        assertEquals(0, new BigDecimal("296.96").compareTo(ordenDAO.orden.getTotal()));
+    }
+
+    @Test
+    void quitarDescuentoConRolPermiteAAdministradorYRegresaElTotalOriginal() {
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.orden = ordenDeEjemplo();
+        PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
+                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+        service.aplicarDescuento(Rol.ADMINISTRADOR, 1, TipoDescuento.EMPLEADO);
+
+        Orden actualizada = service.quitarDescuento(Rol.ADMINISTRADOR, 1);
+
+        assertNull(actualizada.getTipoDescuento());
+        assertEquals(0, new BigDecimal("371.20").compareTo(actualizada.getTotal()));
+    }
+
+    @Test
+    void registrarPagoRechazaMontoNegativo() {
+        // ver auditoría de integridad de pagos: ningún escenario de negocio válido paga un monto
+        // negativo -- la guardia debe rechazarlo de forma explícita, no depender solo de que el
+        // total de la orden nunca sea negativo (invariante indirecta, no una regla enforced aquí).
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.orden = ordenDeEjemplo();
+        PagoDAOFalso pagoDAO = new PagoDAOFalso();
+        PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), pagoDAO,
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+
+        assertThrows(PagoService.MontoInvalidoException.class,
+                () -> service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("-10.00"), 9));
+        assertTrue(pagoDAO.creados.isEmpty());
+        assertEquals(EstadoOrden.PENDIENTE, ordenDAO.orden.getEstado());
+    }
+
+    @Test
+    void registrarPagoAceptaMontoCeroCuandoElTotalYaEsCeroPorCortesia() {
+        // contraste con el caso negativo: CORTESIA (ver TipoDescuento) es un descuento del 100% --
+        // un total legítimamente en cero, que debe poder "cobrarse" con un pago de monto cero para
+        // avanzar la orden igual que cualquier otro cobro.
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.orden = ordenDeEjemplo();
+        PagoDAOFalso pagoDAO = new PagoDAOFalso();
+        PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), pagoDAO,
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+        service.aplicarDescuento(Rol.ADMINISTRADOR, 1, TipoDescuento.CORTESIA); // 100% -> total 0.00
+
+        boolean resultado = service.registrarPago(1, MetodoPago.EFECTIVO, BigDecimal.ZERO, 9);
+
+        assertTrue(resultado);
+        assertEquals(EstadoOrden.EN_PREPARACION, ordenDAO.orden.getEstado());
+    }
+
+    @Test
+    void registrarPagoRechazaUnSegundoCobroSobreUnaOrdenYaPagada() {
+        // ver auditoría de integridad de pagos: el total de la orden NO cambia entre el primer y
+        // el segundo intento, así que sin esta guardia "la suma coincide con el total" por sí sola
+        // no detecta el doble cobro -- este test reproduce justo ese escenario.
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.orden = ordenDeEjemplo();
+        PagoDAOFalso pagoDAO = new PagoDAOFalso();
+        PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), pagoDAO,
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+        service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("371.20"), 9);
+        assertEquals(1, pagoDAO.creados.size());
+
+        assertThrows(PagoService.OrdenYaFueCobradaException.class,
+                () -> service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("371.20"), 9));
+        assertEquals(1, pagoDAO.creados.size(), "el segundo intento no debe crear un segundo Pago");
+    }
+
+    @Test
+    void registrarPagoRechazaCobrarUnaOrdenCancelada() {
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.orden = ordenDeEjemplo();
+        ordenDAO.orden.setEstado(EstadoOrden.CANCELADA);
+        PagoDAOFalso pagoDAO = new PagoDAOFalso();
+        PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), pagoDAO,
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+
+        assertThrows(PagoService.OrdenCanceladaException.class,
+                () -> service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("371.20"), 9));
+        assertTrue(pagoDAO.creados.isEmpty());
+    }
+
     private static Orden ordenDeEjemplo() {
         Orden orden = new Orden();
         orden.setId(1);
@@ -452,6 +553,15 @@ class PagoServiceTest {
         @Override
         public int siguienteNumeroOrden(int sucursalId) {
             return 1;
+        }
+
+        @Override
+        public boolean cancelar(int ordenId, Connection conexion) {
+            if (orden != null && orden.getId() == ordenId) {
+                orden.setEstado(EstadoOrden.CANCELADA);
+                return true;
+            }
+            return false;
         }
     }
 
@@ -567,6 +677,10 @@ class PagoServiceTest {
         @Override
         public boolean descontarStock(int productoId, int cantidad, Connection conexion) {
             return true;
+        }
+
+        @Override
+        public void restaurarStock(int productoId, int cantidad, Connection conexion) {
         }
     }
 
