@@ -4,6 +4,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.model.Rol;
 import mx.edu.utch.melo.security.AccesoDenegadoException;
@@ -61,12 +62,30 @@ public class SceneManager implements Navigator {
         ventana.setTitle(titulo);
         ventana.setScene(new Scene(raiz));
         if (VENTANAS_FLOTANTES.contains(pantalla)) {
-            ventana.initOwner(stage);
+            ventana.initOwner(ventanaActiva());
             ventana.setResizable(false);
             ventana.sizeToScene();
             ventana.centerOnScreen();
         }
         ventana.show();
+    }
+
+    /**
+     * La ventana que realmente tiene el foco ahora mismo -- puede ser otra ventana emergente ya
+     * abierta, no siempre la ventana principal. Bug real: SELECCIONAR_DESCUENTO abierta desde
+     * PaymentPortal (ella misma otra ventana emergente) se dueñaba siempre de {@code stage} (la
+     * ventana principal) en vez de PaymentPortal -- quedaban como hermanas, no como padre/hija, así
+     * que al cerrar SELECCIONAR_DESCUENTO el foco no regresaba de forma confiable a PaymentPortal, y
+     * su listener de "recuperó el foco" (ver PaymentPortalController.habilitarRecogerDescuentoAlRegresarElFoco)
+     * no disparaba -- el cajero tenía que volver a interactuar con la ventana de Cobrar a mano para
+     * que apareciera el PIN. Dueñar cada ventana emergente de la que esté realmente activa en ese
+     * momento arregla esto para cualquier ventana flotante abierta desde otra, no solo esta.
+     */
+    private Window ventanaActiva() {
+        return Window.getWindows().stream()
+                .filter(Window::isFocused)
+                .findFirst()
+                .orElse(stage);
     }
 
     /**
