@@ -8,7 +8,10 @@ import mx.edu.utch.melo.model.DetalleOrden;
 import mx.edu.utch.melo.model.EstadoOrden;
 import mx.edu.utch.melo.model.ItemOrden;
 import mx.edu.utch.melo.model.Orden;
+import mx.edu.utch.melo.model.Rol;
 import mx.edu.utch.melo.model.TipoOrden;
+import mx.edu.utch.melo.security.Auditoria;
+import mx.edu.utch.melo.security.ControlAcceso;
 import mx.edu.utch.melo.util.Totales;
 
 import java.math.BigDecimal;
@@ -214,6 +217,65 @@ public class VentaService {
         }
     }
 
+    /**
+     * Cancela una orden: la pasa a {@code CANCELADA} y restaura el stock de cada artículo de su
+     * detalle, en la misma transacción -- mismo patrón que {@link #persistir} (transacción única
+     * para el cambio de estado + el efecto en inventario, ver el Javadoc de la clase).
+     *
+     * <p><b>Estados válidos de origen</b>: PENDIENTE, EN_PREPARACION, LISTA -- cualquier orden que
+     * todavía no se pagó ni se entregó/cerró. {@code PAGADA} y {@code ENTREGADA} quedan fuera a
+     * propósito: cancelar una venta ya cobrada requeriría devolver dinero (reembolso), un flujo de
+     * negocio distinto que esta operación explícitamente NO resuelve (ver CLAUDE.md: la división de
+     * pago entre métodos ni siquiera está implementada todavía como para soportar un reembolso
+     * real). {@code CANCELADA} tampoco es válida como origen -- evita doble cancelación (y doble
+     * restauración de stock). {@link OrdenDAO#cancelar} hace esta comprobación de forma atómica
+     * dentro del propio {@code UPDATE} (no lee el estado primero y decide después en Java, lo que
+     * sería una condición de carrera entre dos cancelaciones concurrentes de la misma orden).</p>
+     *
+     * <p><b>Sobre el stock que se restaura</b>: asume que la orden en verdad descontó su stock al
+     * crearse (ver {@link #descontarStock}) -- cierto para toda orden creada con el
+     * {@link ProductoDAO} real conectado (ver AppContext, ya wireado con el constructor de 4
+     * parámetros). El único hueco conocido es el constructor deprecado de 3 parámetros
+     * ({@code productoDAO} null) -- una orden creada por ese camino nunca descontó stock, así que
+     * cancelarla sumaría stock que nunca se restó. Ese constructor está marcado para eliminarse (ver
+     * reporte de este cambio); no se agrega aquí detección adicional (p.ej. una columna nueva
+     * "stockDescontado") porque no hay forma barata de distinguirlo sin cambiar el esquema, y el
+     * hueco desaparece con esa limpieza ya en curso. Aquí se sigue el mismo patrón defensivo que
+     * {@link #descontarStock}: si {@link #productoDAO} es null, restaurar stock es un no-op (nunca
+     * un NullPointerException).</p>
+     *
+     * @throws OrdenNoEncontradaException si no existe una orden con ese id.
+     * @throws CancelacionInvalidaException si la orden existe pero su estado actual no permite
+     *         cancelar (ya {@code PAGADA}, {@code ENTREGADA} o {@code CANCELADA}).
+     */
+    public Orden cancelarOrden(Rol rolSolicitante, int ordenId) {
+        ControlAcceso.exigirRol(rolSolicitante, "cancelar una orden",
+                Rol.MESERO, Rol.CAJERO, Rol.ADMINISTRADOR);
+        Orden cancelada = transaccionador.ejecutarEnTransaccion(conexion -> {
+            boolean actualizada = ordenDAO.cancelar(ordenId, conexion);
+            if (!actualizada) {
+                Orden existente = ordenDAO.obtenerPorId(ordenId, conexion).orElse(null);
+                if (existente == null) {
+                    throw new OrdenNoEncontradaException(ordenId);
+                }
+                throw new CancelacionInvalidaException(ordenId, existente.getEstado());
+            }
+            for (DetalleOrden detalle : detalleOrdenDAO.obtenerPorOrden(ordenId, conexion)) {
+                restaurarStock(detalle.getProductoId(), detalle.getCantidad(), conexion);
+            }
+            return ordenDAO.obtenerPorId(ordenId, conexion).orElseThrow();
+        });
+        Auditoria.registrar(rolSolicitante, "cancelación de orden", "ordenId=" + ordenId);
+        return cancelada;
+    }
+
+    private void restaurarStock(int productoId, int cantidad, Connection conexion) {
+        if (productoDAO == null) {
+            return;
+        }
+        productoDAO.restaurarStock(productoId, cantidad, conexion);
+    }
+
     private record TotalesOrden(BigDecimal subtotal, BigDecimal impuestos, BigDecimal total) {
     }
 
@@ -226,6 +288,26 @@ public class VentaService {
         public StockInsuficienteException(int productoId, int cantidadSolicitada) {
             super("No hay suficiente stock del producto " + productoId + " para vender "
                     + cantidadSolicitada + " unidades.");
+        }
+    }
+
+    /** Se lanza al intentar cancelar una orden que no existe. */
+    public static class OrdenNoEncontradaException extends RuntimeException {
+        public OrdenNoEncontradaException(int ordenId) {
+            super("No existe una orden con id " + ordenId + ".");
+        }
+    }
+
+    /**
+     * Se lanza al intentar cancelar una orden cuyo estado actual no lo permite -- ya está
+     * {@code CANCELADA} (evita doble cancelación) o ya avanzó a {@code PAGADA}/{@code ENTREGADA}
+     * (cancelar una venta ya cobrada necesita un flujo de reembolso aparte, no esta operación; ver
+     * Javadoc de {@link #cancelarOrden}).
+     */
+    public static class CancelacionInvalidaException extends RuntimeException {
+        public CancelacionInvalidaException(int ordenId, EstadoOrden estadoActual) {
+            super("No se puede cancelar la orden " + ordenId + ": su estado actual es " + estadoActual
+                    + " (solo se puede cancelar desde PENDIENTE, EN_PREPARACION o LISTA).");
         }
     }
 }

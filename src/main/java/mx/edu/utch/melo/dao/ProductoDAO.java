@@ -35,4 +35,14 @@ public interface ProductoDAO extends CrudDAO<Producto, Integer> {
      * sentido llamarla fuera de una.
      */
     boolean descontarStock(int productoId, int cantidad, Connection conexion);
+
+    /**
+     * Restaura {@code cantidad} unidades al inventario de un producto (ver
+     * VentaService.cancelarOrden) -- operación simétrica a {@link #descontarStock}, pero sin
+     * necesidad de la guarda de "hay suficiente": sumar stock nunca puede dejarlo en negativo, así
+     * que no hace falta la cláusula {@code WHERE cantidad_disponible >= ?} que sí necesita el
+     * descuento. Participa siempre en una transacción ya abierta (mismo patrón que
+     * {@link #descontarStock}).
+     */
+    void restaurarStock(int productoId, int cantidad, Connection conexion);
 }

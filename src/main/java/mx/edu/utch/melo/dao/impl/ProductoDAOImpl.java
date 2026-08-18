@@ -47,6 +47,8 @@ public class ProductoDAOImpl implements ProductoDAO {
             "DELETE FROM producto_modificador WHERE producto_id = ? AND modificador_id = ?";
     private static final String SQL_DESCONTAR_STOCK =
             "UPDATE productos SET cantidad_disponible = cantidad_disponible - ? WHERE id = ? AND cantidad_disponible >= ?";
+    private static final String SQL_RESTAURAR_STOCK =
+            "UPDATE productos SET cantidad_disponible = cantidad_disponible + ? WHERE id = ?";
 
     private final ConexionDB conexionDB;
 
@@ -218,6 +220,18 @@ public class ProductoDAOImpl implements ProductoDAO {
             return sentencia.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo descontar el stock del producto " + productoId, e);
+        }
+    }
+
+    @Override
+    public void restaurarStock(int productoId, int cantidad, Connection conexion) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(SQL_RESTAURAR_STOCK)) {
+
+            sentencia.setInt(1, cantidad);
+            sentencia.setInt(2, productoId);
+            sentencia.executeUpdate();
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo restaurar el stock del producto " + productoId, e);
         }
     }
 

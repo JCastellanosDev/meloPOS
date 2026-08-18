@@ -32,6 +32,11 @@ public class OrdenDAOImpl implements OrdenDAO {
                     + "estado = ?, subtotal = ?, impuestos = ?, distancia_km = ?, costo_envio = ?, "
                     + "tipo_descuento = ?, monto_descuento = ?, total = ? WHERE id = ?";
     private static final String SQL_ELIMINAR = "DELETE FROM ordenes WHERE id = ?";
+    // Un solo UPDATE decide "existe y su estado permite cancelar" de forma atómica -- ver Javadoc
+    // de OrdenDAO.cancelar. Afecta 0 filas tanto si la orden no existe como si ya está
+    // CANCELADA/PAGADA/ENTREGADA; el llamador distingue esos casos leyendo la orden aparte.
+    private static final String SQL_CANCELAR =
+            "UPDATE ordenes SET estado = 'CANCELADA' WHERE id = ? AND estado IN ('PENDIENTE', 'EN_PREPARACION', 'LISTA')";
     private static final String SQL_BASE =
             "SELECT id, tipo_orden, mesa_id, usuario_id, cliente_id, turno_id, estado, subtotal, impuestos, "
                     + "distancia_km, costo_envio, tipo_descuento, monto_descuento, total, fecha_creacion FROM ordenes";
@@ -234,6 +239,17 @@ public class OrdenDAOImpl implements OrdenDAO {
             return sentencia.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo eliminar la orden con id " + id, e);
+        }
+    }
+
+    @Override
+    public boolean cancelar(int ordenId, Connection conexion) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(SQL_CANCELAR)) {
+
+            sentencia.setInt(1, ordenId);
+            return sentencia.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo cancelar la orden " + ordenId, e);
         }
     }
 
