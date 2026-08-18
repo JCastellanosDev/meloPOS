@@ -39,6 +39,11 @@ class DeliveryServiceTest {
         assertEquals("Ana Pérez", pedidos.get(0).cliente().getNombre());
         assertEquals("Luis Ruiz", pedidos.get(1).cliente().getNombre());
         assertEquals(TipoOrden.DOMICILIO, ordenDAO.tipoConsultado);
+        // Prueba de la optimización N+1 -> 2 consultas: una sola llamada en lote a
+        // ClienteDAO.obtenerPorIds con los ids de ambas órdenes, no una por orden.
+        assertEquals(1, clienteDAO.llamadasObtenerPorIds.size(),
+                "debe resolver todos los clientes en una sola llamada en lote, no una por orden");
+        assertEquals(List.of(10, 11), clienteDAO.llamadasObtenerPorIds.get(0).stream().sorted().toList());
     }
 
     /**
@@ -46,7 +51,9 @@ class DeliveryServiceTest {
      * de un lugar sin cliente asociado (ver VentaService.crearOrdenDomicilio, clienteId nullable)
      * -- obtenerPedidosActivos no debe intentar resolverlo contra ClienteDAO, ni la tarjeta debe
      * reventar más adelante en DeliveryController.construirTarjetaPedido (que ya trata cliente
-     * null como "Sin registrar").
+     * null como "Sin registrar"). Con el batch fetch, "no consultar" se traduce en pasar una
+     * lista de ids vacía a obtenerPorIds -- que en la implementación JDBC real
+     * (ClienteDAOImpl.obtenerPorIds) devuelve una lista vacía sin llegar a tocar la base.
      */
     @Test
     void obtenerPedidosActivosNoConsultaClienteSiLaOrdenNoTieneClienteId() {
@@ -61,7 +68,9 @@ class DeliveryServiceTest {
 
         assertEquals(1, pedidos.size());
         assertNull(pedidos.get(0).cliente());
-        assertTrue(clienteDAO.idsConsultados.isEmpty());
+        assertEquals(1, clienteDAO.llamadasObtenerPorIds.size());
+        assertTrue(clienteDAO.llamadasObtenerPorIds.get(0).isEmpty(),
+                "sin clienteId en ninguna orden, la lista de ids a resolver debe quedar vacía");
     }
 
     @Test
@@ -102,6 +111,8 @@ class DeliveryServiceTest {
         List<DeliveryService.PedidoActivo> pedidos = service.obtenerPedidosActivos();
 
         assertEquals(3, pedidos.size(), "PENDIENTE, EN_PREPARACION y LISTA deben aparecer, ninguna se debe filtrar aquí");
+        assertEquals(1, clienteDAO.llamadasObtenerPorIds.size(),
+                "3 órdenes, 3 clientes distintos, pero una sola llamada en lote");
     }
 
     /**
@@ -210,6 +221,11 @@ class DeliveryServiceTest {
         }
 
         @Override
+        public boolean cancelar(int ordenId, Connection conexion) {
+            throw new UnsupportedOperationException("no usado en esta prueba");
+        }
+
+        @Override
         public Orden crear(Orden entidad) {
             throw new UnsupportedOperationException("no usado en esta prueba");
         }
@@ -259,9 +275,14 @@ class DeliveryServiceTest {
         }
     }
 
+    /**
+     * obtenerPorId lanza a propósito (en vez de simplemente no usarse): si DeliveryService
+     * regresara a resolver clientes uno por uno (el N+1 original), esta prueba lo detectaría de
+     * inmediato con una excepción en vez de solo "pasar por casualidad".
+     */
     private static class ClienteDAOFalso implements ClienteDAO {
         java.util.Map<Integer, Cliente> porId = new java.util.HashMap<>();
-        List<Integer> idsConsultados = new ArrayList<>();
+        List<List<Integer>> llamadasObtenerPorIds = new ArrayList<>();
 
         @Override
         public Optional<Cliente> obtenerPorTelefono(String telefono) {
@@ -275,8 +296,17 @@ class DeliveryServiceTest {
 
         @Override
         public Optional<Cliente> obtenerPorId(Integer id) {
-            idsConsultados.add(id);
-            return Optional.ofNullable(porId.get(id));
+            throw new UnsupportedOperationException(
+                    "DeliveryService ya no debe resolver clientes uno por uno -- ver obtenerPorIds");
+        }
+
+        @Override
+        public List<Cliente> obtenerPorIds(List<Integer> ids) {
+            llamadasObtenerPorIds.add(List.copyOf(ids));
+            return ids.stream()
+                    .map(porId::get)
+                    .filter(java.util.Objects::nonNull)
+                    .toList();
         }
 
         @Override

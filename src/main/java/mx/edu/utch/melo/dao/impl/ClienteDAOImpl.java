@@ -26,6 +26,9 @@ public class ClienteDAOImpl implements ClienteDAO {
             "SELECT id, nombre, telefono, direccion, latitud, longitud, notas FROM clientes";
     private static final String SQL_POR_ID = SQL_BASE + " WHERE id = ?";
     private static final String SQL_POR_TELEFONO = SQL_BASE + " WHERE telefono = ?";
+    // SQL_BASE + " WHERE id IN (...)" con tantos "?" como ids se pidan -- se arma en obtenerPorIds,
+    // nunca por concatenación del valor en sí (los ids van como parámetros de PreparedStatement).
+    private static final String SQL_POR_IDS_PREFIJO = SQL_BASE + " WHERE id IN (";
 
     private final ConexionDB conexionDB;
 
@@ -78,6 +81,31 @@ public class ClienteDAOImpl implements ClienteDAO {
         } catch (SQLException e) {
             throw new PersistenciaException("No se pudo buscar el cliente con teléfono " + telefono, e);
         }
+    }
+
+    @Override
+    public List<Cliente> obtenerPorIds(List<Integer> ids) {
+        List<Cliente> clientes = new ArrayList<>();
+        if (ids == null || ids.isEmpty()) {
+            return clientes;
+        }
+        String marcadores = String.join(", ", java.util.Collections.nCopies(ids.size(), "?"));
+        String sql = SQL_POR_IDS_PREFIJO + marcadores + ")";
+        try (Connection conexion = conexionDB.obtenerConexion();
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+
+            for (int i = 0; i < ids.size(); i++) {
+                sentencia.setInt(i + 1, ids.get(i));
+            }
+            try (ResultSet resultado = sentencia.executeQuery()) {
+                while (resultado.next()) {
+                    clientes.add(mapearFila(resultado));
+                }
+            }
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo obtener los clientes con ids " + ids, e);
+        }
+        return clientes;
     }
 
     @Override

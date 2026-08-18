@@ -167,6 +167,11 @@ class ClienteServiceTest {
         public Optional<Cliente> obtenerPorTelefono(String telefono) {
             return Optional.ofNullable(existentePorTelefono);
         }
+
+        @Override
+        public List<Cliente> obtenerPorIds(List<Integer> ids) {
+            return List.of();
+        }
     }
 
     private static class SucursalDAOFalso implements SucursalDAO {
