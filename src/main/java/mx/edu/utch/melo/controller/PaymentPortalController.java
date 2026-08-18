@@ -369,6 +369,9 @@ public class PaymentPortalController {
                     descuentoPendienteAutorizar = null;
                     panelAutorizacion.setVisible(false);
                     panelAutorizacion.setManaged(false);
+                    // El total cambió -- re-sincroniza "Recibido" (ver cargarOrden) para que no se
+                    // quede apuntando al monto de antes del descuento.
+                    entradaRecibido.establecer(ordenActualizada.getTotal());
                     actualizarTotales();
                 },
                 error -> mostrarErrorDescuento("No se pudo aplicar el descuento. Intenta de nuevo.")
@@ -381,6 +384,7 @@ public class PaymentPortalController {
                 () -> pagoService.quitarDescuento(ordenActiva.getId()),
                 ordenActualizada -> {
                     this.ordenActiva = ordenActualizada;
+                    entradaRecibido.establecer(ordenActualizada.getTotal());
                     actualizarTotales();
                 },
                 error -> mostrarErrorPago("No se pudo quitar el descuento. Intenta de nuevo.")
