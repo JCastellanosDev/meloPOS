@@ -14,19 +14,16 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 import mx.edu.utch.melo.async.Async;
-import mx.edu.utch.melo.dao.ClienteDAO;
-import mx.edu.utch.melo.dao.OrdenDAO;
 import mx.edu.utch.melo.model.Cliente;
 import mx.edu.utch.melo.model.EstadoOrden;
 import mx.edu.utch.melo.model.Orden;
-import mx.edu.utch.melo.model.TipoOrden;
 import mx.edu.utch.melo.nav.Navigator;
 import mx.edu.utch.melo.nav.Pantalla;
+import mx.edu.utch.melo.service.DeliveryService;
 import mx.edu.utch.melo.sesion.SesionActual;
 import mx.edu.utch.melo.util.Dinero;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -60,17 +57,15 @@ public class DeliveryController {
     @FXML
     private SidebarController sidebarController;
 
-    private final OrdenDAO ordenDAO;
-    private final ClienteDAO clienteDAO;
+    private final DeliveryService deliveryService;
     private final Navigator navigator;
     private final SesionActual sesion;
 
     /** Último resultado cargado de BD (ver cargarPedidos); el filtro de búsqueda opera sobre esta copia sin volver a consultar. */
-    private List<DatosPedido> ultimosDatos = List.of();
+    private List<DeliveryService.PedidoActivo> ultimosDatos = List.of();
 
-    public DeliveryController(OrdenDAO ordenDAO, ClienteDAO clienteDAO, Navigator navigator, SesionActual sesion) {
-        this.ordenDAO = ordenDAO;
-        this.clienteDAO = clienteDAO;
+    public DeliveryController(DeliveryService deliveryService, Navigator navigator, SesionActual sesion) {
+        this.deliveryService = deliveryService;
         this.navigator = navigator;
         this.sesion = sesion;
     }
@@ -116,19 +111,12 @@ public class DeliveryController {
         );
     }
 
-    /** Se ejecuta en un hilo aparte (ver Async): todas las consultas a BD juntas, la UI se arma después. */
-    private List<DatosPedido> construirDatosPedidos() {
-        List<DatosPedido> resultado = new ArrayList<>();
-        for (Orden orden : ordenDAO.obtenerActivasPorTipo(TipoOrden.DOMICILIO)) {
-            Cliente cliente = orden.getClienteId() == null
-                    ? null
-                    : clienteDAO.obtenerPorId(orden.getClienteId()).orElse(null);
-            resultado.add(new DatosPedido(orden, cliente));
-        }
-        return resultado;
+    /** Se ejecuta en un hilo aparte (ver Async): la consulta agregada vive en DeliveryService, la UI se arma después. */
+    private List<DeliveryService.PedidoActivo> construirDatosPedidos() {
+        return deliveryService.obtenerPedidosActivos();
     }
 
-    private void renderizarPedidos(List<DatosPedido> datos) {
+    private void renderizarPedidos(List<DeliveryService.PedidoActivo> datos) {
         ultimosDatos = datos;
         // Las estadísticas siempre reflejan TODOS los pedidos activos, no solo lo que el filtro
         // de búsqueda deja visible -- solo la lista de tarjetas se acota (ver aplicarFiltro).
@@ -139,7 +127,7 @@ public class DeliveryController {
     /** Filtra ultimosDatos por # de pedido (ver txtBuscarPedido) sin volver a consultar la base de datos. */
     private void aplicarFiltro() {
         String filtro = txtBuscarPedido.getText();
-        List<DatosPedido> visibles = (filtro == null || filtro.isBlank())
+        List<DeliveryService.PedidoActivo> visibles = (filtro == null || filtro.isBlank())
                 ? ultimosDatos
                 : ultimosDatos.stream()
                         .filter(dato -> String.valueOf(dato.orden().getId()).contains(filtro.trim()))
@@ -155,7 +143,7 @@ public class DeliveryController {
     }
 
     /** Estadísticas con datos reales ya disponibles -- nada de tiempos de entrega ni repartidores (ver CLAUDE.md). */
-    private void actualizarEstadisticas(List<DatosPedido> datos) {
+    private void actualizarEstadisticas(List<DeliveryService.PedidoActivo> datos) {
         lblTotalPedidos.setText(String.valueOf(datos.size()));
         BigDecimal sumaTotales = datos.stream()
                 .map(dato -> dato.orden().getTotal())
@@ -163,7 +151,7 @@ public class DeliveryController {
         lblSumaTotales.setText(Dinero.formatear(sumaTotales));
     }
 
-    private VBox construirTarjetaPedido(DatosPedido dato) {
+    private VBox construirTarjetaPedido(DeliveryService.PedidoActivo dato) {
         Orden orden = dato.orden();
         Cliente cliente = dato.cliente();
 
@@ -260,8 +248,5 @@ public class DeliveryController {
         Label etiqueta = new Label("No se pudieron cargar los pedidos. Revisa la conexión con la base de datos.");
         etiqueta.getStyleClass().add("form-error");
         contenedorPedidos.getChildren().setAll(etiqueta);
-    }
-
-    private record DatosPedido(Orden orden, Cliente cliente) {
     }
 }

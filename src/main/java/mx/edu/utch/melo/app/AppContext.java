@@ -21,6 +21,7 @@ import mx.edu.utch.melo.nav.Navigator;
 import mx.edu.utch.melo.service.CategoriaService;
 import mx.edu.utch.melo.service.ClienteService;
 import mx.edu.utch.melo.service.DashboardService;
+import mx.edu.utch.melo.service.DeliveryService;
 import mx.edu.utch.melo.service.PagoService;
 import mx.edu.utch.melo.service.ProductoService;
 import mx.edu.utch.melo.service.SucursalService;
@@ -73,6 +74,7 @@ public class AppContext {
     private final ClienteService clienteService;
     private final TurnoService turnoService;
     private final DashboardService dashboardService;
+    private final DeliveryService deliveryService;
 
     public AppContext(Navigator navigator, SesionActual sesion, Geocodificador geocodificador,
                        UsuarioDAO usuarioDAO, SucursalDAO sucursalDAO, CategoriaDAO categoriaDAO,
@@ -102,12 +104,13 @@ public class AppContext {
         this.categoriaService = new CategoriaService(categoriaDAO);
         this.productoService = new ProductoService(productoDAO);
         this.usuarioService = new UsuarioService(usuarioDAO, controlIntentosPinDAO);
-        this.ventaService = new VentaService(ordenDAO, detalleOrdenDAO, conexionDB);
+        this.ventaService = new VentaService(ordenDAO, detalleOrdenDAO, productoDAO, conexionDB);
         this.pagoService = new PagoService(ordenDAO, detalleOrdenDAO, productoDAO, pagoDAO, usuarioDAO, turnoDAO,
                 sucursalDAO, conexionDB);
         this.clienteService = new ClienteService(clienteDAO, sucursalDAO, geocodificador, servicioRutas);
         this.turnoService = new TurnoService(turnoDAO, reporteDAO);
         this.dashboardService = new DashboardService(dashboardDAO, productoDAO, ordenDAO, this.turnoService);
+        this.deliveryService = new DeliveryService(ordenDAO, clienteDAO);
     }
 
     public Navigator getNavigator() {
@@ -212,5 +215,9 @@ public class AppContext {
 
     public DashboardService getDashboardService() {
         return dashboardService;
+    }
+
+    public DeliveryService getDeliveryService() {
+        return deliveryService;
     }
 }

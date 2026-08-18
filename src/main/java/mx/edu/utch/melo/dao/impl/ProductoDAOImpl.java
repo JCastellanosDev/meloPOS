@@ -45,6 +45,8 @@ public class ProductoDAOImpl implements ProductoDAO {
             "INSERT INTO producto_modificador (producto_id, modificador_id) VALUES (?, ?)";
     private static final String SQL_QUITAR_MODIFICADOR =
             "DELETE FROM producto_modificador WHERE producto_id = ? AND modificador_id = ?";
+    private static final String SQL_DESCONTAR_STOCK =
+            "UPDATE productos SET cantidad_disponible = cantidad_disponible - ? WHERE id = ? AND cantidad_disponible >= ?";
 
     private final ConexionDB conexionDB;
 
@@ -203,6 +205,19 @@ public class ProductoDAOImpl implements ProductoDAO {
         } catch (SQLException e) {
             throw new PersistenciaException(
                     "No se pudo quitar el modificador " + modificadorId + " del producto " + productoId, e);
+        }
+    }
+
+    @Override
+    public boolean descontarStock(int productoId, int cantidad, Connection conexion) {
+        try (PreparedStatement sentencia = conexion.prepareStatement(SQL_DESCONTAR_STOCK)) {
+
+            sentencia.setInt(1, cantidad);
+            sentencia.setInt(2, productoId);
+            sentencia.setInt(3, cantidad);
+            return sentencia.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new PersistenciaException("No se pudo descontar el stock del producto " + productoId, e);
         }
     }
 

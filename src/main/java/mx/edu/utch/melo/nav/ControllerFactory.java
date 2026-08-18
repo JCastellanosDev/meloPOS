@@ -20,6 +20,7 @@ import mx.edu.utch.melo.geo.ServicioRutas;
 import mx.edu.utch.melo.service.CategoriaService;
 import mx.edu.utch.melo.service.ClienteService;
 import mx.edu.utch.melo.service.DashboardService;
+import mx.edu.utch.melo.service.DeliveryService;
 import mx.edu.utch.melo.service.PagoService;
 import mx.edu.utch.melo.service.ProductoService;
 import mx.edu.utch.melo.service.SucursalService;
@@ -133,6 +134,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
         registro.put(ClienteService.class, contexto.getClienteService());
         registro.put(TurnoService.class, contexto.getTurnoService());
         registro.put(DashboardService.class, contexto.getDashboardService());
+        registro.put(DeliveryService.class, contexto.getDeliveryService());
 
         return registro;
     }

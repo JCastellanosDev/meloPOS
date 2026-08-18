@@ -254,6 +254,40 @@ class PagoServiceTest {
     }
 
     @Test
+    void registrarPagoRechazaElTotalOriginalDespuesDeAplicarUnDescuento() {
+        // ver aplicarDescuento/registrarPago: una vez aplicado el descuento, orden.getTotal() ya
+        // es el monto descontado -- cobrar el monto ORIGINAL (sin descuento) ya no coincide con
+        // lo que la orden vale ahora, y debe rechazarse igual que cualquier otro monto incorrecto.
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.orden = ordenDeEjemplo(); // total 371.20
+        PagoDAOFalso pagoDAO = new PagoDAOFalso();
+        PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), pagoDAO,
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+
+        service.aplicarDescuento(Rol.ADMINISTRADOR, 1, TipoDescuento.PROMOCION); // 10% -> total 334.08
+
+        assertThrows(PagoService.MontoPagadoNoCoincideException.class,
+                () -> service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("371.20"), 9));
+        assertTrue(pagoDAO.creados.isEmpty(), "no debe registrar ningún pago si el monto no coincide con el total ya descontado");
+    }
+
+    @Test
+    void registrarPagoAceptaElTotalYaDescontadoDespuesDeAplicarUnDescuento() {
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.orden = ordenDeEjemplo(); // total 371.20
+        PagoDAOFalso pagoDAO = new PagoDAOFalso();
+        PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), pagoDAO,
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+
+        service.aplicarDescuento(Rol.ADMINISTRADOR, 1, TipoDescuento.PROMOCION); // 10% -> total 334.08
+        boolean resultado = service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("334.08"), 9);
+
+        assertTrue(resultado);
+        assertEquals(0, new BigDecimal("334.08").compareTo(pagoDAO.ultimoCreado.getMonto()));
+        assertEquals(EstadoOrden.EN_PREPARACION, ordenDAO.orden.getEstado());
+    }
+
+    @Test
     void aplicarDescuentoRestaElPorcentajeDeLaCategoriaDelTotal() {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.orden = ordenDeEjemplo(); // total 371.20
@@ -528,6 +562,11 @@ class PagoServiceTest {
 
         @Override
         public void quitarModificador(int productoId, int modificadorId) {
+        }
+
+        @Override
+        public boolean descontarStock(int productoId, int cantidad, Connection conexion) {
+            return true;
         }
     }
 

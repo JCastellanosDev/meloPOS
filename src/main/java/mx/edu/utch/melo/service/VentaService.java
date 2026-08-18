@@ -2,6 +2,7 @@ package mx.edu.utch.melo.service;
 
 import mx.edu.utch.melo.dao.DetalleOrdenDAO;
 import mx.edu.utch.melo.dao.OrdenDAO;
+import mx.edu.utch.melo.dao.ProductoDAO;
 import mx.edu.utch.melo.db.Transaccionador;
 import mx.edu.utch.melo.model.DetalleOrden;
 import mx.edu.utch.melo.model.EstadoOrden;
@@ -11,6 +12,7 @@ import mx.edu.utch.melo.model.TipoOrden;
 import mx.edu.utch.melo.util.Totales;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,17 +26,46 @@ import java.util.List;
  * auditoría de Fase 4) -- {@link #persistir} corre ambos pasos en una sola transacción: si falla
  * a media inserción de detalles, se revierte todo (nunca queda una orden con solo parte de sus
  * artículos guardados).
+ *
+ * Descontar inventario es parte de esa misma operación lógica (ver CLAUDE.md, "Inventario" --
+ * hasta ahora nadie descontaba cantidad_disponible al vender): cada artículo vendido descuenta su
+ * stock dentro de la MISMA transacción que crea la orden y su detalle, vía
+ * {@link ProductoDAO#descontarStock(int, int, Connection)}. Postura elegida (no había una regla de
+ * negocio previa en CLAUDE.md/código sobre qué hacer con stock insuficiente): la venta se RECHAZA
+ * por completo (rollback, ver StockInsuficienteException) si algún artículo dejaría
+ * cantidad_disponible negativo -- es el comportamiento estándar de un POS con inventario real, y
+ * consistente con que el negocio ya pidió alertas de stock bajo (Producto.tieneStockBajo) en vez
+ * de tratar el inventario como un simple contador informativo. No se agrega aquí un "modo
+ * permisivo" que deje vender en negativo -- si el negocio lo pide explícitamente, es un cambio de
+ * diseño aparte, no una opción silenciosa.
  */
 public class VentaService {
 
     private final OrdenDAO ordenDAO;
     private final DetalleOrdenDAO detalleOrdenDAO;
+    private final ProductoDAO productoDAO;
     private final Transaccionador transaccionador;
 
-    public VentaService(OrdenDAO ordenDAO, DetalleOrdenDAO detalleOrdenDAO, Transaccionador transaccionador) {
+    public VentaService(OrdenDAO ordenDAO, DetalleOrdenDAO detalleOrdenDAO, ProductoDAO productoDAO,
+                         Transaccionador transaccionador) {
         this.ordenDAO = ordenDAO;
         this.detalleOrdenDAO = detalleOrdenDAO;
+        this.productoDAO = productoDAO;
         this.transaccionador = transaccionador;
+    }
+
+    /**
+     * @deprecated conserva el constructor de 3 parámetros que AppContext usa hoy
+     * ({@code new VentaService(ordenDAO, detalleOrdenDAO, conexionDB)}) -- este agente no tiene
+     * permitido editar AppContext.java (ver reporte final, "DEPENDENCIA CRUZADA"). Sin
+     * {@link ProductoDAO}, el descuento de inventario queda desactivado ({@link #descontarStock}
+     * se vuelve un no-op): exactamente el mismo comportamiento (el gap) que existía antes de este
+     * cambio, nunca peor. En cuanto AppContext pase productoDAO al construirlo, usa el constructor
+     * de 4 parámetros y borra este.
+     */
+    @Deprecated
+    public VentaService(OrdenDAO ordenDAO, DetalleOrdenDAO detalleOrdenDAO, Transaccionador transaccionador) {
+        this(ordenDAO, detalleOrdenDAO, null, transaccionador);
     }
 
     public int siguienteNumeroOrden(int sucursalId) {
@@ -130,6 +161,9 @@ public class VentaService {
                 detalle.setPrecioUnitario(item.getPrecioUnitario());
                 detalle.setNota(item.getNota().isBlank() ? null : item.getNota());
                 detalleOrdenDAO.crear(detalle, conexion);
+                // Solo los artículos NUEVOS descuentan aquí -- los que ya tenía la orden se
+                // descontaron cuando se crearon originalmente (ver persistir).
+                descontarStock(item.getProductoId(), item.getCantidad(), conexion);
             }
 
             List<ItemOrden> todosLosArticulos = detalleOrdenDAO.obtenerPorOrden(ordenId, conexion).stream()
@@ -155,11 +189,43 @@ public class VentaService {
                 detalle.setPrecioUnitario(item.getPrecioUnitario());
                 detalle.setNota(item.getNota().isBlank() ? null : item.getNota());
                 detalleOrdenDAO.crear(detalle, conexion);
+                descontarStock(item.getProductoId(), item.getCantidad(), conexion);
             }
             return creada;
         });
     }
 
+    /**
+     * Descuenta el stock vendido dentro de la transacción abierta. Si {@link #productoDAO} es
+     * null (ver constructor deprecado de 3 parámetros), el inventario no se toca -- mismo gap que
+     * existía antes de este cambio. Si hay ProductoDAO pero no alcanza el stock, lanza
+     * {@link StockInsuficienteException}: al ser un RuntimeException dentro de
+     * {@code ejecutarEnTransaccion}, ConexionDB hace rollback de TODO (orden + detalle ya
+     * insertados en esta misma transacción) antes de relanzarla -- no queda ni la orden ni sus
+     * líneas de detalle a medias.
+     */
+    private void descontarStock(int productoId, int cantidad, Connection conexion) {
+        if (productoDAO == null) {
+            return;
+        }
+        boolean descontado = productoDAO.descontarStock(productoId, cantidad, conexion);
+        if (!descontado) {
+            throw new StockInsuficienteException(productoId, cantidad);
+        }
+    }
+
     private record TotalesOrden(BigDecimal subtotal, BigDecimal impuestos, BigDecimal total) {
+    }
+
+    /**
+     * Se lanza dentro de una transacción de venta cuando un artículo no tiene stock suficiente
+     * (ver {@link #descontarStock}) -- revierte toda la venta (orden + detalle + cualquier otro
+     * descuento de stock ya aplicado en la misma transacción), no solo el artículo que falló.
+     */
+    public static class StockInsuficienteException extends RuntimeException {
+        public StockInsuficienteException(int productoId, int cantidadSolicitada) {
+            super("No hay suficiente stock del producto " + productoId + " para vender "
+                    + cantidadSolicitada + " unidades.");
+        }
     }
 }

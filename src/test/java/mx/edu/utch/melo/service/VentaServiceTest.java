@@ -2,13 +2,16 @@ package mx.edu.utch.melo.service;
 
 import mx.edu.utch.melo.dao.DetalleOrdenDAO;
 import mx.edu.utch.melo.dao.OrdenDAO;
+import mx.edu.utch.melo.dao.ProductoDAO;
 import mx.edu.utch.melo.db.TrabajoTransaccional;
 import mx.edu.utch.melo.db.Transaccionador;
 import mx.edu.utch.melo.model.DetalleOrden;
 import mx.edu.utch.melo.model.EstadoOrden;
 import mx.edu.utch.melo.model.ItemOrden;
+import mx.edu.utch.melo.model.Modificador;
 import mx.edu.utch.melo.model.ModificadorAplicado;
 import mx.edu.utch.melo.model.Orden;
+import mx.edu.utch.melo.model.Producto;
 import mx.edu.utch.melo.model.TipoOrden;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +19,9 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -229,6 +234,127 @@ class VentaServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service.agregarArticulos(1, List.of(), true));
     }
 
+    @Test
+    void persistirDescuentaElStockDeCadaArticuloVendidoEnLaMismaTransaccion() {
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 10);
+        productoDAO.stockDisponible.put(2, 5);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        List<ItemOrden> items = List.of(
+                new ItemOrden(1, "Tacos al Pastor", new BigDecimal("145.00"), 2),
+                new ItemOrden(2, "Agua de Jamaica", new BigDecimal("30.00"), 1)
+        );
+
+        service.crearOrdenComedor(9, items, true);
+
+        assertEquals(8, productoDAO.stockDisponible.get(1), "debe descontar la cantidad vendida, no solo marcar 'vendido'");
+        assertEquals(4, productoDAO.stockDisponible.get(2));
+    }
+
+    @Test
+    void persistirRevierteTodaLaVentaSiUnArticuloNoTieneStockSuficiente() {
+        // Postura elegida (ver Javadoc de VentaService.descontarStock, no había regla de negocio
+        // previa en CLAUDE.md/código): rechazar la venta completa en vez de dejar vender en
+        // negativo -- el UPDATE atómico de ProductoDAO.descontarStock regresa 0 filas cuando no
+        // alcanza el stock, y el Service lo convierte en una excepción que revierte la
+        // transacción completa.
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 1); // solo queda 1, pero se piden 2
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        List<ItemOrden> items = List.of(new ItemOrden(1, "Tacos", new BigDecimal("145.00"), 2));
+
+        assertThrows(VentaService.StockInsuficienteException.class,
+                () -> service.crearOrdenComedor(9, items, true));
+    }
+
+    @Test
+    void persistirNoDescuentaStockDeArticulosPosterioresAlQueFalloElStock() {
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 0); // el primer artículo del carrito ya falla
+        productoDAO.stockDisponible.put(2, 5);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        List<ItemOrden> items = List.of(
+                new ItemOrden(1, "Tacos", new BigDecimal("145.00"), 1),
+                new ItemOrden(2, "Agua", new BigDecimal("30.00"), 1)
+        );
+
+        assertThrows(VentaService.StockInsuficienteException.class, () -> service.crearOrdenComedor(9, items, true));
+
+        assertEquals(5, productoDAO.stockDisponible.get(2),
+                "no debe descontar artículos que nunca se procesaron tras la falla (aunque aquí, con fakes, "
+                        + "el rollback real de la orden/detalle solo lo garantiza ConexionDB -- ver melo-testing)");
+    }
+
+    @Test
+    void persistirPermiteVenderElUltimoArticuloDejandoElStockEnExactamenteCero() {
+        // límite exacto del UPDATE atómico (actual >= cantidad, no actual > cantidad, ver
+        // ProductoDAOFalso.descontarStock): vender justo lo que queda debe tener éxito y dejar 0
+        // disponible, no rechazarse como si fuera insuficiente ni caer en negativo.
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 2); // quedan exactamente 2, se piden 2
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+        List<ItemOrden> items = List.of(new ItemOrden(1, "Tacos", new BigDecimal("145.00"), 2));
+
+        Orden creada = service.crearOrdenComedor(9, items, true);
+
+        assertEquals(TipoOrden.COMEDOR, creada.getTipoOrden(), "la venta no debe rechazarse en el límite exacto");
+        assertEquals(0, productoDAO.stockDisponible.get(1), "debe quedar en exactamente cero, no en negativo");
+    }
+
+    @Test
+    void elConstructorDeprecadoSinProductoDAONoIntentaDescontarStockNiLanzaNullPointer() {
+        // ver DEPENDENCIA CRUZADA en el reporte final: AppContext hoy sigue construyendo
+        // VentaService sin ProductoDAO -- debe seguir funcionando exactamente igual que antes
+        // (mismo gap de inventario, nunca un NullPointerException nuevo) hasta que se actualice
+        // esa wiring.
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        VentaService service = new VentaService(ordenDAO, new DetalleOrdenDAOFalso(), TRANSACCIONADOR_FALSO);
+
+        Orden creada = service.crearOrdenComedor(9,
+                List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1)), true);
+
+        assertEquals(TipoOrden.COMEDOR, creada.getTipoOrden());
+    }
+
+    @Test
+    void agregarArticulosDescuentaStockSoloDeLosArticulosNuevos() {
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.ultimoCreado = ordenDomicilioExistente();
+        DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
+        detalleDAO.creados.add(detalleExistente(1, "100.00")); // ya en la orden, su stock ya se había descontado
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(1, 3); // NO debe tocarse -- ya se descontó al crear la orden
+        productoDAO.stockDisponible.put(2, 5);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+
+        service.agregarArticulos(1, List.of(new ItemOrden(2, "Agua de Jamaica", new BigDecimal("30.00"), 1)), true);
+
+        assertEquals(3, productoDAO.stockDisponible.get(1), "el artículo que ya existía en la orden no debe volver a descontarse");
+        assertEquals(4, productoDAO.stockDisponible.get(2), "el artículo nuevo sí debe descontar su stock");
+    }
+
+    @Test
+    void agregarArticulosRevierteSiElArticuloNuevoNoTieneStockSuficiente() {
+        OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
+        ordenDAO.ultimoCreado = ordenDomicilioExistente();
+        DetalleOrdenDAOFalso detalleDAO = new DetalleOrdenDAOFalso();
+        detalleDAO.creados.add(detalleExistente(1, "100.00"));
+        ProductoDAOFalso productoDAO = new ProductoDAOFalso();
+        productoDAO.stockDisponible.put(2, 0);
+        VentaService service = new VentaService(ordenDAO, detalleDAO, productoDAO, TRANSACCIONADOR_FALSO);
+
+        assertThrows(VentaService.StockInsuficienteException.class, () -> service.agregarArticulos(1,
+                List.of(new ItemOrden(2, "Agua de Jamaica", new BigDecimal("30.00"), 1)), true));
+    }
+
     private static Orden ordenDomicilioExistente() {
         Orden orden = new Orden();
         orden.setId(1);
@@ -376,6 +502,74 @@ class VentaServiceTest {
 
         @Override
         public void agregarModificador(int detalleOrdenId, int modificadorId, BigDecimal precioExtra) {
+        }
+    }
+
+    private static class ProductoDAOFalso implements ProductoDAO {
+        final Map<Integer, Integer> stockDisponible = new HashMap<>();
+
+        @Override
+        public Producto crear(Producto producto) {
+            return producto;
+        }
+
+        @Override
+        public Optional<Producto> obtenerPorId(Integer id) {
+            return Optional.empty();
+        }
+
+        @Override
+        public List<Producto> obtenerTodos() {
+            return List.of();
+        }
+
+        @Override
+        public boolean actualizar(Producto producto) {
+            return true;
+        }
+
+        @Override
+        public boolean eliminar(Integer id) {
+            return true;
+        }
+
+        @Override
+        public List<Producto> obtenerTodosActivos() {
+            return List.of();
+        }
+
+        @Override
+        public List<Producto> obtenerPorCategoria(int categoriaId) {
+            return List.of();
+        }
+
+        @Override
+        public List<Producto> obtenerPorSucursal(int sucursalId) {
+            return List.of();
+        }
+
+        @Override
+        public List<Modificador> obtenerModificadores(int productoId) {
+            return List.of();
+        }
+
+        @Override
+        public void asignarModificador(int productoId, int modificadorId) {
+        }
+
+        @Override
+        public void quitarModificador(int productoId, int modificadorId) {
+        }
+
+        /** Simula el UPDATE atómico real: descuenta solo si alcanza, regresa false sin lanzar si no. */
+        @Override
+        public boolean descontarStock(int productoId, int cantidad, Connection conexion) {
+            int actual = stockDisponible.getOrDefault(productoId, 0);
+            if (actual < cantidad) {
+                return false;
+            }
+            stockDisponible.put(productoId, actual - cantidad);
+            return true;
         }
     }
 }

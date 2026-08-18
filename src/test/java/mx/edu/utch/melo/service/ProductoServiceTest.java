@@ -141,5 +141,10 @@ class ProductoServiceTest {
         @Override
         public void quitarModificador(int productoId, int modificadorId) {
         }
+
+        @Override
+        public boolean descontarStock(int productoId, int cantidad, java.sql.Connection conexion) {
+            return true;
+        }
     }
 }
