@@ -1,5 +1,6 @@
 package mx.edu.utch.melo.service;
 
+import mx.edu.utch.melo.dao.DescuentoDAO;
 import mx.edu.utch.melo.dao.DetalleOrdenDAO;
 import mx.edu.utch.melo.dao.OrdenDAO;
 import mx.edu.utch.melo.dao.PagoDAO;
@@ -29,7 +30,9 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -65,7 +68,7 @@ class PagoServiceTest {
         productoDAO.producto = productoDeEjemplo(10, "Tacos al Pastor");
 
         PagoService service = new PagoService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(),
-                usuarioDAO, new TurnoDAOFalso(), sucursalDAO, TRANSACCIONADOR_FALSO);
+                usuarioDAO, new TurnoDAOFalso(), sucursalDAO, new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         PagoService.DatosRecibo recibo = service.obtenerRecibo(1, 1);
 
@@ -86,7 +89,7 @@ class PagoServiceTest {
         productoDAO.producto = null; // el producto fue eliminado después de la venta
 
         PagoService service = new PagoService(ordenDAO, detalleDAO, productoDAO, new PagoDAOFalso(),
-                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         PagoService.DatosRecibo recibo = service.obtenerRecibo(1, 1);
 
@@ -99,7 +102,7 @@ class PagoServiceTest {
         ordenDAO.orden = ordenDeEjemplo();
         PagoDAOFalso pagoDAO = new PagoDAOFalso();
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), pagoDAO,
-                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         boolean resultado = service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("371.20"), 9);
 
@@ -118,7 +121,7 @@ class PagoServiceTest {
         turnoAbierto.setId(77);
         turnoDAO.turnoAbierto = turnoAbierto;
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
-                new PagoDAOFalso(), new UsuarioDAOFalso(), turnoDAO, new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new PagoDAOFalso(), new UsuarioDAOFalso(), turnoDAO, new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("371.20"), 9);
 
@@ -134,7 +137,7 @@ class PagoServiceTest {
         TurnoDAOFalso turnoDAO = new TurnoDAOFalso();
         turnoDAO.turnoAbierto = null;
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
-                new PagoDAOFalso(), new UsuarioDAOFalso(), turnoDAO, new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new PagoDAOFalso(), new UsuarioDAOFalso(), turnoDAO, new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         boolean resultado = service.registrarPago(1, MetodoPago.TARJETA, new BigDecimal("371.20"), 9);
 
@@ -153,7 +156,7 @@ class PagoServiceTest {
         PagoDAOFalso pagoDAO = new PagoDAOFalso();
         pagoDAO.lanzarAlCrear = true;
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), pagoDAO,
-                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertThrows(RuntimeException.class,
                 () -> service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("371.20"), 9));
@@ -171,7 +174,7 @@ class PagoServiceTest {
         ordenDAO.orden.setTipoOrden(TipoOrden.DOMICILIO);
         ordenDAO.orden.setEstado(EstadoOrden.EN_PREPARACION);
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
-                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("371.20"), 9);
 
@@ -188,7 +191,7 @@ class PagoServiceTest {
         // mismo flujo "Ordenar -> Preparar -> Recoger/Entregar -> Pagar".
         ordenDAO.orden.setEstado(EstadoOrden.EN_PREPARACION);
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
-                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("371.20"), 9);
 
@@ -208,7 +211,7 @@ class PagoServiceTest {
         ordenDAO.orden.setTipoOrden(TipoOrden.DOMICILIO);
         ordenDAO.orden.setEstado(EstadoOrden.LISTA);
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
-                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("371.20"), 9);
 
@@ -223,7 +226,7 @@ class PagoServiceTest {
         ordenDAO.orden = ordenDeEjemplo();
         ordenDAO.orden.setTipoOrden(TipoOrden.PARA_LLEVAR);
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
-                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("371.20"), 9);
 
@@ -236,7 +239,7 @@ class PagoServiceTest {
         ordenDAO.orden = ordenDeEjemplo();
         PagoDAOFalso pagoDAO = new PagoDAOFalso();
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), pagoDAO,
-                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         boolean resultado = service.registrarPagoDividido(1, new BigDecimal("200.00"), new BigDecimal("171.20"), 9);
 
@@ -255,7 +258,7 @@ class PagoServiceTest {
         ordenDAO.orden = ordenDeEjemplo();
         PagoDAOFalso pagoDAO = new PagoDAOFalso();
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), pagoDAO,
-                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         service.registrarPagoDividido(1, new BigDecimal("371.20"), BigDecimal.ZERO, 9);
 
@@ -269,7 +272,7 @@ class PagoServiceTest {
         ordenDAO.orden = ordenDeEjemplo();
         PagoDAOFalso pagoDAO = new PagoDAOFalso();
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), pagoDAO,
-                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertThrows(PagoService.MontoPagadoNoCoincideException.class,
                 () -> service.registrarPagoDividido(1, new BigDecimal("100.00"), new BigDecimal("100.00"), 9));
@@ -286,7 +289,7 @@ class PagoServiceTest {
         ordenDAO.orden = ordenDeEjemplo(); // total 371.20
         PagoDAOFalso pagoDAO = new PagoDAOFalso();
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), pagoDAO,
-                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         service.aplicarDescuento(Rol.ADMINISTRADOR, 1, TipoDescuento.PROMOCION); // 10% -> total 334.08
 
@@ -301,7 +304,7 @@ class PagoServiceTest {
         ordenDAO.orden = ordenDeEjemplo(); // total 371.20
         PagoDAOFalso pagoDAO = new PagoDAOFalso();
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), pagoDAO,
-                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         service.aplicarDescuento(Rol.ADMINISTRADOR, 1, TipoDescuento.PROMOCION); // 10% -> total 334.08
         boolean resultado = service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("334.08"), 9);
@@ -316,7 +319,7 @@ class PagoServiceTest {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.orden = ordenDeEjemplo(); // total 371.20
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
-                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         Orden actualizada = service.aplicarDescuento(Rol.ADMINISTRADOR, 1, TipoDescuento.PROMOCION); // 10%
 
@@ -330,7 +333,7 @@ class PagoServiceTest {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.orden = ordenDeEjemplo();
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
-                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertThrows(AccesoDenegadoException.class, () -> service.aplicarDescuento(Rol.CAJERO, 1, TipoDescuento.PROMOCION));
         assertNull(ordenDAO.orden.getTipoDescuento());
@@ -341,7 +344,7 @@ class PagoServiceTest {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.orden = ordenDeEjemplo(); // total 371.20
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
-                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         service.aplicarDescuento(Rol.ADMINISTRADOR, 1, TipoDescuento.EMPLEADO); // 20% -> total 296.96
         Orden actualizada = service.aplicarDescuento(Rol.ADMINISTRADOR, 1, TipoDescuento.PROMOCION); // 10% del original
@@ -356,7 +359,7 @@ class PagoServiceTest {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.orden = ordenDeEjemplo();
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
-                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
         service.aplicarDescuento(Rol.ADMINISTRADOR, 1, TipoDescuento.EMPLEADO);
 
         Orden actualizada = service.quitarDescuento(1);
@@ -371,7 +374,7 @@ class PagoServiceTest {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.orden = ordenDeEjemplo();
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
-                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         Orden resultado = service.quitarDescuento(1);
 
@@ -386,7 +389,7 @@ class PagoServiceTest {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.orden = ordenDeEjemplo();
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
-                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
         service.aplicarDescuento(Rol.ADMINISTRADOR, 1, TipoDescuento.EMPLEADO); // 20% -> total 296.96
 
         assertThrows(AccesoDenegadoException.class, () -> service.quitarDescuento(Rol.CAJERO, 1));
@@ -399,7 +402,7 @@ class PagoServiceTest {
         OrdenDAOFalso ordenDAO = new OrdenDAOFalso();
         ordenDAO.orden = ordenDeEjemplo();
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(),
-                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new PagoDAOFalso(), new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
         service.aplicarDescuento(Rol.ADMINISTRADOR, 1, TipoDescuento.EMPLEADO);
 
         Orden actualizada = service.quitarDescuento(Rol.ADMINISTRADOR, 1);
@@ -417,7 +420,7 @@ class PagoServiceTest {
         ordenDAO.orden = ordenDeEjemplo();
         PagoDAOFalso pagoDAO = new PagoDAOFalso();
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), pagoDAO,
-                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertThrows(PagoService.MontoInvalidoException.class,
                 () -> service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("-10.00"), 9));
@@ -434,7 +437,7 @@ class PagoServiceTest {
         ordenDAO.orden = ordenDeEjemplo();
         PagoDAOFalso pagoDAO = new PagoDAOFalso();
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), pagoDAO,
-                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
         service.aplicarDescuento(Rol.ADMINISTRADOR, 1, TipoDescuento.CORTESIA); // 100% -> total 0.00
 
         boolean resultado = service.registrarPago(1, MetodoPago.EFECTIVO, BigDecimal.ZERO, 9);
@@ -452,7 +455,7 @@ class PagoServiceTest {
         ordenDAO.orden = ordenDeEjemplo();
         PagoDAOFalso pagoDAO = new PagoDAOFalso();
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), pagoDAO,
-                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
         service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("371.20"), 9);
         assertEquals(1, pagoDAO.creados.size());
 
@@ -468,7 +471,7 @@ class PagoServiceTest {
         ordenDAO.orden.setEstado(EstadoOrden.CANCELADA);
         PagoDAOFalso pagoDAO = new PagoDAOFalso();
         PagoService service = new PagoService(ordenDAO, new DetalleOrdenDAOFalso(), new ProductoDAOFalso(), pagoDAO,
-                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new UsuarioDAOFalso(), new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         assertThrows(PagoService.OrdenCanceladaException.class,
                 () -> service.registrarPago(1, MetodoPago.EFECTIVO, new BigDecimal("371.20"), 9));
@@ -849,6 +852,33 @@ class PagoServiceTest {
         @Override
         public List<Sucursal> obtenerActivas() {
             return List.of();
+        }
+    }
+
+    /** Porcentajes iguales a los que traía TipoDescuento como constante, para no cambiar el
+     * resultado de ninguna prueba existente que no sea específicamente sobre el porcentaje. */
+    private static class DescuentoDAOFalso implements DescuentoDAO {
+        Map<TipoDescuento, BigDecimal> porcentajes = new EnumMap<>(Map.of(
+                TipoDescuento.EMPLEADO, new BigDecimal("0.20"),
+                TipoDescuento.CORTESIA, new BigDecimal("1.00"),
+                TipoDescuento.PROMOCION, new BigDecimal("0.10"),
+                TipoDescuento.AJUSTE, new BigDecimal("0.05")
+        ));
+
+        @Override
+        public BigDecimal obtenerPorcentaje(TipoDescuento tipo) {
+            return porcentajes.get(tipo);
+        }
+
+        @Override
+        public Map<TipoDescuento, BigDecimal> obtenerTodos() {
+            return porcentajes;
+        }
+
+        @Override
+        public boolean actualizar(TipoDescuento tipo, BigDecimal porcentaje) {
+            porcentajes.put(tipo, porcentaje);
+            return true;
         }
     }
 }

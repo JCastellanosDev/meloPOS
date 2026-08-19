@@ -236,6 +236,58 @@
                 </ScrollPane>
             </Tab>
 
+            <!-- ===== PESTAÑA: Descuentos ===== -->
+            <Tab text="Descuentos" closable="false">
+                <ScrollPane fitToWidth="true" styleClass="kds-scroll">
+                    <VBox alignment="TOP_CENTER" styleClass="pad-32">
+                        <VBox prefWidth="520" maxWidth="520" styleClass="card-lg gap-0">
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <FontIcon iconLiteral="mdi2s-sale" iconSize="18" styleClass="text-icon-accent"/>
+                                <Label text="Porcentaje de Descuento" styleClass="text-subtitle"/>
+                            </HBox>
+                            <Label text="Cada categoría sigue requiriendo PIN de Administrador para autorizarse al cobrar; este es el porcentaje que se aplica en cada una." styleClass="text-muted" wrapText="true">
+                                <VBox.margin><Insets top="4" bottom="20"/></VBox.margin>
+                            </Label>
+
+                            <VBox styleClass="totals-box gap-12">
+                                <HBox alignment="CENTER_LEFT" spacing="8">
+                                    <Label text="Empleado" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                                    <TextField fx:id="txtPorcentajeEmpleado" promptText="20" prefWidth="60" styleClass="search-field"/>
+                                    <Label text="\%" styleClass="text-muted"/>
+                                </HBox>
+                                <HBox alignment="CENTER_LEFT" spacing="8">
+                                    <Label text="Cortesía" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                                    <TextField fx:id="txtPorcentajeCortesia" promptText="100" prefWidth="60" styleClass="search-field"/>
+                                    <Label text="\%" styleClass="text-muted"/>
+                                </HBox>
+                                <HBox alignment="CENTER_LEFT" spacing="8">
+                                    <Label text="Promoción" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                                    <TextField fx:id="txtPorcentajePromocion" promptText="10" prefWidth="60" styleClass="search-field"/>
+                                    <Label text="\%" styleClass="text-muted"/>
+                                </HBox>
+                                <HBox alignment="CENTER_LEFT" spacing="8">
+                                    <Label text="Ajuste" styleClass="text-muted" HBox.hgrow="ALWAYS"/>
+                                    <TextField fx:id="txtPorcentajeAjuste" promptText="5" prefWidth="60" styleClass="search-field"/>
+                                    <Label text="\%" styleClass="text-muted"/>
+                                </HBox>
+                            </VBox>
+
+                            <Label fx:id="lblErrorDescuentos" styleClass="form-error" wrapText="true" visible="false" managed="false">
+                                <VBox.margin><Insets top="12"/></VBox.margin>
+                            </Label>
+                            <Label fx:id="lblExitoDescuentos" styleClass="form-success" wrapText="true" visible="false" managed="false">
+                                <VBox.margin><Insets top="12"/></VBox.margin>
+                            </Label>
+
+                            <Button fx:id="btnGuardarDescuentos" text="Guardar Porcentajes" graphicTextGap="8" maxWidth="Infinity" styleClass="btn-primary" onAction="#onGuardarDescuentos">
+                                <graphic><FontIcon iconLiteral="mdi2c-content-save-outline" iconSize="16" /></graphic>
+                                <VBox.margin><Insets top="20"/></VBox.margin>
+                            </Button>
+                        </VBox>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+
         </TabPane>
     </center>
 

@@ -134,6 +134,12 @@ public class PaymentPortalController {
     private MetodoPago metodoSeleccionado = MetodoPago.EFECTIVO;
     private ModoPago modoPago = ModoPago.UNICO;
     private CampoDividido campoDivididoActivo = CampoDividido.EFECTIVO;
+    /** Cargado junto con la orden (ver cargarOrden); porcentaje vigente de cada categoría de
+     * descuento, configurable desde Ajustes (ver DescuentoService) -- ya no una constante fija en
+     * TipoDescuento. Solo para mostrar el "(20%)" en el panel de autorización; el cobro real
+     * siempre vuelve a leer el valor vigente en PagoService.aplicarDescuento, nunca confía en este
+     * caché. */
+    private Map<TipoDescuento, BigDecimal> porcentajesDescuento = Map.of();
     /** Categoría que se está autorizando ahora mismo (ver panelAutorizacion); null si no hay ninguna en curso. */
     private TipoDescuento descuentoPendienteAutorizar;
 
@@ -239,6 +245,7 @@ public class PaymentPortalController {
                 () -> pagoService.obtenerRecibo(ordenId, sesion.getSucursalActivaId()),
                 datos -> {
                     this.ordenActiva = datos.orden();
+                    this.porcentajesDescuento = datos.porcentajesDescuento();
                     lblNumeroOrden.setText("Orden #" + datos.orden().getId());
                     renderizarTicket(datos.lineas());
                     // Precarga "Recibido" con el total para el caso común de pago exacto en efectivo
@@ -311,7 +318,8 @@ public class PaymentPortalController {
 
     private void iniciarAutorizacionDescuento(TipoDescuento tipo) {
         descuentoPendienteAutorizar = tipo;
-        int porcentaje = tipo.getPorcentaje().multiply(BigDecimal.valueOf(100)).intValue();
+        BigDecimal fraccion = porcentajesDescuento.getOrDefault(tipo, BigDecimal.ZERO);
+        int porcentaje = fraccion.multiply(BigDecimal.valueOf(100)).intValue();
         lblAutorizacionTitulo.setText("Autoriza \"" + tipo.getEtiqueta() + "\" (" + porcentaje + "%)");
         txtPinAutorizacion.clear();
         ocultarErrorDescuento();

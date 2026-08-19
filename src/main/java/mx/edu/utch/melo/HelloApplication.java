@@ -9,6 +9,7 @@ import mx.edu.utch.melo.dao.CategoriaDAO;
 import mx.edu.utch.melo.dao.ClienteDAO;
 import mx.edu.utch.melo.dao.ControlIntentosPinDAO;
 import mx.edu.utch.melo.dao.DashboardDAO;
+import mx.edu.utch.melo.dao.DescuentoDAO;
 import mx.edu.utch.melo.dao.DetalleOrdenDAO;
 import mx.edu.utch.melo.dao.MesaDAO;
 import mx.edu.utch.melo.dao.ModificadorDAO;
@@ -23,6 +24,7 @@ import mx.edu.utch.melo.dao.impl.CategoriaDAOImpl;
 import mx.edu.utch.melo.dao.impl.ClienteDAOImpl;
 import mx.edu.utch.melo.dao.impl.ControlIntentosPinDAOImpl;
 import mx.edu.utch.melo.dao.impl.DashboardDAOImpl;
+import mx.edu.utch.melo.dao.impl.DescuentoDAOImpl;
 import mx.edu.utch.melo.dao.impl.DetalleOrdenDAOImpl;
 import mx.edu.utch.melo.dao.impl.MesaDAOImpl;
 import mx.edu.utch.melo.dao.impl.ModificadorDAOImpl;
@@ -88,6 +90,7 @@ public class HelloApplication extends Application {
         ReporteDAO reporteDAO = new ReporteDAOImpl(conexionDB);
         DashboardDAO dashboardDAO = new DashboardDAOImpl(conexionDB);
         ControlIntentosPinDAO controlIntentosPinDAO = new ControlIntentosPinDAOImpl(conexionDB);
+        DescuentoDAO descuentoDAO = new DescuentoDAOImpl(conexionDB);
 
         SesionActual sesion = new SesionActual();
 
@@ -104,6 +107,6 @@ public class HelloApplication extends Application {
 
         return new AppContext(navigator, sesion, geocodificador, usuarioDAO, sucursalDAO, categoriaDAO,
                 clienteDAO, modificadorDAO, mesaDAO, turnoDAO, productoDAO, ordenDAO, detalleOrdenDAO, pagoDAO,
-                reporteDAO, dashboardDAO, servicioRutas, controlIntentosPinDAO, conexionDB);
+                reporteDAO, dashboardDAO, servicioRutas, controlIntentosPinDAO, descuentoDAO, conexionDB);
     }
 }

@@ -55,6 +55,7 @@ DROP TABLE IF EXISTS usuarios;
 DROP TABLE IF EXISTS modificadores;
 DROP TABLE IF EXISTS clientes;
 DROP TABLE IF EXISTS categorias;
+DROP TABLE IF EXISTS descuentos;
 DROP TABLE IF EXISTS sucursales;
 
 -- ============================================================
@@ -97,6 +98,17 @@ CREATE TABLE categorias (
     id      INT AUTO_INCREMENT PRIMARY KEY,
     nombre  VARCHAR(80) NOT NULL,
     UNIQUE KEY uk_categorias_nombre (nombre)
+);
+
+-- Porcentaje de cada categoría de descuento (ver PagoService.aplicarDescuento) -- antes era
+-- una constante fija por categoría (model.TipoDescuento), ahora un Administrador lo puede
+-- ajustar desde Ajustes sin recompilar. Compartido por toda la cadena, igual que categorias:
+-- la política de descuentos no varía por sucursal salvo que se pida lo contrario. Una fila
+-- por cada valor de TipoDescuento, sembradas abajo con los mismos valores por defecto que
+-- tenía la constante que reemplazan.
+CREATE TABLE descuentos (
+    tipo_descuento  VARCHAR(20)     NOT NULL PRIMARY KEY,
+    porcentaje      DECIMAL(5, 4)   NOT NULL
 );
 
 -- Compartidos entre sucursales: un cliente de la cadena, no de una sola tienda.
@@ -338,6 +350,12 @@ INSERT INTO sucursales (nombre, calle, numero, colonia, codigo_postal, ciudad, e
 VALUES ('Crepas de Oro', 'Av de las Águilas', '3046', 'Arboledas', '31110', 'Chihuahua', 'Chihuahua', 'México', 28.6580350, -106.1239400, 20.00, 8.00);
 
 INSERT INTO categorias (nombre) VALUES ('General');
+
+INSERT INTO descuentos (tipo_descuento, porcentaje) VALUES
+    ('EMPLEADO', 0.20),
+    ('CORTESIA', 1.00),
+    ('PROMOCION', 0.10),
+    ('AJUSTE', 0.05);
 
 INSERT INTO usuarios (sucursal_id, nombre, pin_acceso, rol, activo)
 VALUES (1, 'Administrador Demo', '0000', 'ADMINISTRADOR', TRUE);

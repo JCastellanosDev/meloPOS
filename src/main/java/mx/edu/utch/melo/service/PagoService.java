@@ -1,5 +1,6 @@
 package mx.edu.utch.melo.service;
 
+import mx.edu.utch.melo.dao.DescuentoDAO;
 import mx.edu.utch.melo.dao.DetalleOrdenDAO;
 import mx.edu.utch.melo.dao.OrdenDAO;
 import mx.edu.utch.melo.dao.PagoDAO;
@@ -28,6 +29,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Recibo de cobro y registro de pagos (ver PaymentPortalController). Antes de esta extracción, el
@@ -49,11 +51,12 @@ public class PagoService {
     private final UsuarioDAO usuarioDAO;
     private final TurnoDAO turnoDAO;
     private final SucursalDAO sucursalDAO;
+    private final DescuentoDAO descuentoDAO;
     private final Transaccionador transaccionador;
 
     public PagoService(OrdenDAO ordenDAO, DetalleOrdenDAO detalleOrdenDAO, ProductoDAO productoDAO,
                         PagoDAO pagoDAO, UsuarioDAO usuarioDAO, TurnoDAO turnoDAO, SucursalDAO sucursalDAO,
-                        Transaccionador transaccionador) {
+                        DescuentoDAO descuentoDAO, Transaccionador transaccionador) {
         this.ordenDAO = ordenDAO;
         this.detalleOrdenDAO = detalleOrdenDAO;
         this.productoDAO = productoDAO;
@@ -61,10 +64,15 @@ public class PagoService {
         this.usuarioDAO = usuarioDAO;
         this.turnoDAO = turnoDAO;
         this.sucursalDAO = sucursalDAO;
+        this.descuentoDAO = descuentoDAO;
         this.transaccionador = transaccionador;
     }
 
-    /** Junta la orden, su cajero, la sucursal activa y las líneas de detalle para armar el recibo. */
+    /**
+     * Junta la orden, su cajero, la sucursal activa, las líneas de detalle y el porcentaje vigente
+     * de cada categoría de descuento (ver DescuentoDAO -- ya no es una constante fija, PaymentPortal
+     * necesita el valor real para mostrarlo antes de autorizar, no el que tenía la app al compilar).
+     */
     public DatosRecibo obtenerRecibo(int ordenId, int sucursalId) {
         Orden orden = ordenDAO.obtenerPorId(ordenId).orElseThrow();
         Usuario cajero = usuarioDAO.obtenerPorId(orden.getUsuarioId()).orElse(null);
@@ -76,7 +84,7 @@ public class PagoService {
             String nombre = producto == null ? "Producto #" + detalle.getProductoId() : producto.getNombre();
             lineas.add(new LineaRecibo(nombre, detalle.getCantidad(), detalle.getSubtotal(), detalle.getNota()));
         }
-        return new DatosRecibo(orden, cajero, sucursal, lineas);
+        return new DatosRecibo(orden, cajero, sucursal, lineas, descuentoDAO.obtenerTodos());
     }
 
     /**
@@ -207,11 +215,16 @@ public class PagoService {
     }
 
     /**
-     * Aplica (o reemplaza, si ya tenía uno) un descuento por categoría con porcentaje predefinido
-     * (ver TipoDescuento) -- requiere PIN de Administrador, verificado antes de llamar aquí (ver
+     * Aplica (o reemplaza, si ya tenía uno) un descuento por categoría, con el porcentaje vigente
+     * de esa categoría (ver DescuentoDAO -- configurable desde Ajustes, ya no una constante fija en
+     * TipoDescuento) -- requiere PIN de Administrador, verificado antes de llamar aquí (ver
      * UsuarioService.autenticarAdministrador); {@code rolAutorizante} es el rol de quien autorizó,
      * no del cajero que está cobrando. Vuelve a exigir ADMINISTRADOR aquí también (ver ControlAcceso,
      * "no basta con que la UI ya lo haya pedido") por si algún día se llama desde otro lugar.
+     *
+     * El porcentaje se lee aquí, en el momento del cobro -- no se recibe como parámetro del
+     * Controller -- para que un cambio en Ajustes entre EMPLEADO/CORTESIA... siempre aplique el
+     * valor real vigente, nunca uno que el cliente ya tenía cacheado desde antes.
      *
      * El descuento se resta directo del total ya calculado (post-IVA) -- no se recalculan
      * subtotal/impuestos, que siguen reflejando lo que realmente se vendió; monto_descuento es el
@@ -222,7 +235,8 @@ public class PagoService {
         Orden orden = ordenDAO.obtenerPorId(ordenId).orElseThrow();
 
         BigDecimal totalSinDescuento = orden.getTotal().add(orden.getMontoDescuento());
-        BigDecimal montoDescuento = totalSinDescuento.multiply(tipo.getPorcentaje()).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal porcentaje = descuentoDAO.obtenerPorcentaje(tipo);
+        BigDecimal montoDescuento = totalSinDescuento.multiply(porcentaje).setScale(2, RoundingMode.HALF_UP);
 
         orden.setTipoDescuento(tipo);
         orden.setMontoDescuento(montoDescuento);
@@ -284,7 +298,8 @@ public class PagoService {
     public record LineaRecibo(String nombre, int cantidad, BigDecimal monto, String nota) {
     }
 
-    public record DatosRecibo(Orden orden, Usuario cajero, Sucursal sucursal, List<LineaRecibo> lineas) {
+    public record DatosRecibo(Orden orden, Usuario cajero, Sucursal sucursal, List<LineaRecibo> lineas,
+                               Map<TipoDescuento, BigDecimal> porcentajesDescuento) {
     }
 
     public static class MontoPagadoNoCoincideException extends RuntimeException {

@@ -21,8 +21,10 @@ import mx.edu.utch.melo.model.Categoria;
 import mx.edu.utch.melo.model.Producto;
 import mx.edu.utch.melo.model.Rol;
 import mx.edu.utch.melo.model.Sucursal;
+import mx.edu.utch.melo.model.TipoDescuento;
 import mx.edu.utch.melo.nav.Pantalla;
 import mx.edu.utch.melo.service.CategoriaService;
+import mx.edu.utch.melo.service.DescuentoService;
 import mx.edu.utch.melo.service.ProductoService;
 import mx.edu.utch.melo.service.SucursalService;
 import mx.edu.utch.melo.service.UsuarioService;
@@ -32,7 +34,9 @@ import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /** Datos de la sucursal activa (solo lectura) y alta de productos para el Menú. */
@@ -122,12 +126,34 @@ public class AjustesController {
     private Button btnRegistrarPersonal;
 
     @FXML
+    private TextField txtPorcentajeEmpleado;
+
+    @FXML
+    private TextField txtPorcentajeCortesia;
+
+    @FXML
+    private TextField txtPorcentajePromocion;
+
+    @FXML
+    private TextField txtPorcentajeAjuste;
+
+    @FXML
+    private Label lblErrorDescuentos;
+
+    @FXML
+    private Label lblExitoDescuentos;
+
+    @FXML
+    private Button btnGuardarDescuentos;
+
+    @FXML
     private SidebarController sidebarController;
 
     private final SucursalService sucursalService;
     private final ProductoService productoService;
     private final CategoriaService categoriaService;
     private final UsuarioService usuarioService;
+    private final DescuentoService descuentoService;
     private final SesionActual sesion;
 
     /** Foto elegida con el FileChooser antes de guardar; null si no se eligió ninguna (ver onSeleccionarImagen). */
@@ -137,17 +163,20 @@ public class AjustesController {
     private Sucursal sucursalActual;
 
     public AjustesController(SucursalService sucursalService, ProductoService productoService,
-                              CategoriaService categoriaService, UsuarioService usuarioService, SesionActual sesion) {
+                              CategoriaService categoriaService, UsuarioService usuarioService,
+                              DescuentoService descuentoService, SesionActual sesion) {
         this.sucursalService = sucursalService;
         this.productoService = productoService;
         this.categoriaService = categoriaService;
         this.usuarioService = usuarioService;
+        this.descuentoService = descuentoService;
         this.sesion = sesion;
     }
 
     @FXML
     void initialize() {
         sidebarController.activar(Pantalla.AJUSTES);
+        cargarDescuentos();
         comboCategoriaProducto.setConverter(new StringConverter<>() {
             @Override
             public String toString(Categoria categoria) {
@@ -233,6 +262,107 @@ public class AjustesController {
     private void ocultarErrorIva() {
         lblErrorIva.setVisible(false);
         lblErrorIva.setManaged(false);
+    }
+
+    /** Porcentajes vigentes de cada categoría (ver DescuentoService) -- ya no una constante fija en TipoDescuento. */
+    private void cargarDescuentos() {
+        Async.ejecutar(
+                descuentoService::obtenerPorcentajes,
+                this::mostrarDescuentos,
+                error -> mostrarErrorDescuentos("No se pudieron cargar los porcentajes. Revisa la conexión con la base de datos.")
+        );
+    }
+
+    private void mostrarDescuentos(Map<TipoDescuento, BigDecimal> porcentajes) {
+        txtPorcentajeEmpleado.setText(comoEnteroPorcentaje(porcentajes.get(TipoDescuento.EMPLEADO)));
+        txtPorcentajeCortesia.setText(comoEnteroPorcentaje(porcentajes.get(TipoDescuento.CORTESIA)));
+        txtPorcentajePromocion.setText(comoEnteroPorcentaje(porcentajes.get(TipoDescuento.PROMOCION)));
+        txtPorcentajeAjuste.setText(comoEnteroPorcentaje(porcentajes.get(TipoDescuento.AJUSTE)));
+    }
+
+    /** BigDecimal (0-1, ej. 0.20) <-> texto de porcentaje entero (ej. "20") para el campo en pantalla. */
+    private String comoEnteroPorcentaje(BigDecimal fraccion) {
+        if (fraccion == null) {
+            return "";
+        }
+        return fraccion.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).toPlainString();
+    }
+
+    private Optional<BigDecimal> parsearPorcentaje(String texto) {
+        if (texto == null || texto.isBlank()) {
+            return Optional.empty();
+        }
+        try {
+            BigDecimal entero = new BigDecimal(texto.trim());
+            if (entero.signum() < 0 || entero.compareTo(BigDecimal.valueOf(100)) > 0) {
+                return Optional.empty();
+            }
+            return Optional.of(entero.divide(BigDecimal.valueOf(100)));
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
+    }
+
+    /** Guarda las 4 categorías de una sola vez -- son pocos campos relacionados, no amerita un botón por fila. */
+    @FXML
+    void onGuardarDescuentos() {
+        Optional<BigDecimal> empleado = parsearPorcentaje(txtPorcentajeEmpleado.getText());
+        Optional<BigDecimal> cortesia = parsearPorcentaje(txtPorcentajeCortesia.getText());
+        Optional<BigDecimal> promocion = parsearPorcentaje(txtPorcentajePromocion.getText());
+        Optional<BigDecimal> ajuste = parsearPorcentaje(txtPorcentajeAjuste.getText());
+
+        if (empleado.isEmpty() || cortesia.isEmpty() || promocion.isEmpty() || ajuste.isEmpty()) {
+            mostrarErrorDescuentos("Cada porcentaje debe ser un número entre 0 y 100.");
+            return;
+        }
+
+        ocultarMensajesDescuentos();
+        btnGuardarDescuentos.setDisable(true);
+        Rol rol = sesion.getUsuarioActivo().getRol();
+        Map<TipoDescuento, BigDecimal> aGuardar = Map.of(
+                TipoDescuento.EMPLEADO, empleado.get(),
+                TipoDescuento.CORTESIA, cortesia.get(),
+                TipoDescuento.PROMOCION, promocion.get(),
+                TipoDescuento.AJUSTE, ajuste.get()
+        );
+
+        Async.ejecutar(
+                () -> {
+                    aGuardar.forEach((tipo, porcentaje) -> descuentoService.actualizarPorcentaje(rol, tipo, porcentaje));
+                    return true;
+                },
+                exito -> {
+                    btnGuardarDescuentos.setDisable(false);
+                    mostrarExitoDescuentos("Porcentajes de descuento actualizados.");
+                },
+                error -> {
+                    btnGuardarDescuentos.setDisable(false);
+                    mostrarErrorDescuentos("No se pudieron guardar los porcentajes. Intenta de nuevo.");
+                }
+        );
+    }
+
+    private void mostrarErrorDescuentos(String mensaje) {
+        lblExitoDescuentos.setVisible(false);
+        lblExitoDescuentos.setManaged(false);
+        lblErrorDescuentos.setText("⚠ " + mensaje);
+        lblErrorDescuentos.setVisible(true);
+        lblErrorDescuentos.setManaged(true);
+    }
+
+    private void mostrarExitoDescuentos(String mensaje) {
+        lblErrorDescuentos.setVisible(false);
+        lblErrorDescuentos.setManaged(false);
+        lblExitoDescuentos.setText("✔ " + mensaje);
+        lblExitoDescuentos.setVisible(true);
+        lblExitoDescuentos.setManaged(true);
+    }
+
+    private void ocultarMensajesDescuentos() {
+        lblErrorDescuentos.setVisible(false);
+        lblErrorDescuentos.setManaged(false);
+        lblExitoDescuentos.setVisible(false);
+        lblExitoDescuentos.setManaged(false);
     }
 
     private void cargarCategorias() {

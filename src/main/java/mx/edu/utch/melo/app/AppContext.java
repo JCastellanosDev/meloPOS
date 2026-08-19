@@ -4,6 +4,7 @@ import mx.edu.utch.melo.dao.CategoriaDAO;
 import mx.edu.utch.melo.dao.ClienteDAO;
 import mx.edu.utch.melo.dao.ControlIntentosPinDAO;
 import mx.edu.utch.melo.dao.DashboardDAO;
+import mx.edu.utch.melo.dao.DescuentoDAO;
 import mx.edu.utch.melo.dao.DetalleOrdenDAO;
 import mx.edu.utch.melo.dao.MesaDAO;
 import mx.edu.utch.melo.dao.ModificadorDAO;
@@ -22,6 +23,7 @@ import mx.edu.utch.melo.service.CategoriaService;
 import mx.edu.utch.melo.service.ClienteService;
 import mx.edu.utch.melo.service.DashboardService;
 import mx.edu.utch.melo.service.DeliveryService;
+import mx.edu.utch.melo.service.DescuentoService;
 import mx.edu.utch.melo.service.PagoService;
 import mx.edu.utch.melo.service.ProductoService;
 import mx.edu.utch.melo.service.SucursalService;
@@ -68,6 +70,7 @@ public class AppContext {
     private final ReporteDAO reporteDAO;
     private final DashboardDAO dashboardDAO;
     private final ServicioRutas servicioRutas;
+    private final DescuentoDAO descuentoDAO;
 
     private final SucursalService sucursalService;
     private final CategoriaService categoriaService;
@@ -79,13 +82,14 @@ public class AppContext {
     private final TurnoService turnoService;
     private final DashboardService dashboardService;
     private final DeliveryService deliveryService;
+    private final DescuentoService descuentoService;
 
     public AppContext(Navigator navigator, SesionActual sesion, Geocodificador geocodificador,
                        UsuarioDAO usuarioDAO, SucursalDAO sucursalDAO, CategoriaDAO categoriaDAO,
                        ClienteDAO clienteDAO, ModificadorDAO modificadorDAO, MesaDAO mesaDAO, TurnoDAO turnoDAO,
                        ProductoDAO productoDAO, OrdenDAO ordenDAO, DetalleOrdenDAO detalleOrdenDAO, PagoDAO pagoDAO,
                        ReporteDAO reporteDAO, DashboardDAO dashboardDAO, ServicioRutas servicioRutas,
-                       ControlIntentosPinDAO controlIntentosPinDAO, ConexionDB conexionDB) {
+                       ControlIntentosPinDAO controlIntentosPinDAO, DescuentoDAO descuentoDAO, ConexionDB conexionDB) {
         this.navigator = navigator;
         this.sesion = sesion;
         this.geocodificador = geocodificador;
@@ -103,6 +107,7 @@ public class AppContext {
         this.reporteDAO = reporteDAO;
         this.dashboardDAO = dashboardDAO;
         this.servicioRutas = servicioRutas;
+        this.descuentoDAO = descuentoDAO;
 
         this.sucursalService = new SucursalService(sucursalDAO);
         this.categoriaService = new CategoriaService(categoriaDAO);
@@ -110,11 +115,12 @@ public class AppContext {
         this.usuarioService = new UsuarioService(usuarioDAO, controlIntentosPinDAO);
         this.ventaService = new VentaService(ordenDAO, detalleOrdenDAO, productoDAO, pagoDAO, conexionDB);
         this.pagoService = new PagoService(ordenDAO, detalleOrdenDAO, productoDAO, pagoDAO, usuarioDAO, turnoDAO,
-                sucursalDAO, conexionDB);
+                sucursalDAO, descuentoDAO, conexionDB);
         this.clienteService = new ClienteService(clienteDAO, sucursalDAO, geocodificador, servicioRutas);
         this.turnoService = new TurnoService(turnoDAO, reporteDAO);
         this.dashboardService = new DashboardService(dashboardDAO, productoDAO, ordenDAO, this.turnoService);
         this.deliveryService = new DeliveryService(ordenDAO, clienteDAO);
+        this.descuentoService = new DescuentoService(descuentoDAO);
     }
 
     public Navigator getNavigator() {
@@ -223,5 +229,13 @@ public class AppContext {
 
     public DeliveryService getDeliveryService() {
         return deliveryService;
+    }
+
+    public DescuentoDAO getDescuentoDAO() {
+        return descuentoDAO;
+    }
+
+    public DescuentoService getDescuentoService() {
+        return descuentoService;
     }
 }

@@ -1,5 +1,6 @@
 package mx.edu.utch.melo.service;
 
+import mx.edu.utch.melo.dao.DescuentoDAO;
 import mx.edu.utch.melo.dao.DetalleOrdenDAO;
 import mx.edu.utch.melo.dao.OrdenDAO;
 import mx.edu.utch.melo.dao.PagoDAO;
@@ -20,6 +21,7 @@ import mx.edu.utch.melo.model.Pago;
 import mx.edu.utch.melo.model.Producto;
 import mx.edu.utch.melo.model.Rol;
 import mx.edu.utch.melo.model.Sucursal;
+import mx.edu.utch.melo.model.TipoDescuento;
 import mx.edu.utch.melo.model.TipoOrden;
 import mx.edu.utch.melo.model.Turno;
 import mx.edu.utch.melo.model.Usuario;
@@ -29,6 +31,7 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,7 +75,7 @@ class VentaPagoInventarioFlujoTest {
         PagoDAOFalso pagoDAO = new PagoDAOFalso();
         VentaService ventaService = new VentaService(ordenDAO, detalleDAO, productoDAO, pagoDAO, TRANSACCIONADOR_FALSO);
         PagoService pagoService = new PagoService(ordenDAO, detalleDAO, productoDAO, pagoDAO, new UsuarioDAOFalso(),
-                new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
         List<ItemOrden> items = List.of(
                 new ItemOrden(1, "Tacos al Pastor", new BigDecimal("145.00"), 2),
                 new ItemOrden(2, "Agua de Jamaica", new BigDecimal("30.00"), 1)
@@ -103,7 +106,7 @@ class VentaPagoInventarioFlujoTest {
         PagoDAOFalso pagoDAO = new PagoDAOFalso();
         VentaService ventaService = new VentaService(ordenDAO, detalleDAO, productoDAO, pagoDAO, TRANSACCIONADOR_FALSO);
         PagoService pagoService = new PagoService(ordenDAO, detalleDAO, productoDAO, pagoDAO, new UsuarioDAOFalso(),
-                new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
         List<ItemOrden> items = List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1));
 
         Orden creada = ventaService.crearOrdenDomicilio(9, 55, items, true, new BigDecimal("4.2"), new BigDecimal("50.00"));
@@ -124,7 +127,7 @@ class VentaPagoInventarioFlujoTest {
         PagoDAOFalso pagoDAO = new PagoDAOFalso();
         VentaService ventaService = new VentaService(ordenDAO, detalleDAO, productoDAO, pagoDAO, TRANSACCIONADOR_FALSO);
         PagoService pagoService = new PagoService(ordenDAO, detalleDAO, productoDAO, pagoDAO, new UsuarioDAOFalso(),
-                new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         Orden creada = ventaService.crearOrdenComedor(9, List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1)), true);
         // total real 116.00; el cajero teclea un monto que no cuadra.
@@ -158,7 +161,7 @@ class VentaPagoInventarioFlujoTest {
         PagoDAOFalso pagoDAO = new PagoDAOFalso();
         VentaService ventaService = new VentaService(ordenDAO, detalleDAO, productoDAO, pagoDAO, TRANSACCIONADOR_FALSO);
         PagoService pagoService = new PagoService(ordenDAO, detalleDAO, productoDAO, pagoDAO, new UsuarioDAOFalso(),
-                new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         Orden creada = ventaService.crearOrdenComedor(9, List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 3)), true);
         pagoService.registrarPago(creada.getId(), MetodoPago.EFECTIVO, creada.getTotal(), 9);
@@ -191,7 +194,7 @@ class VentaPagoInventarioFlujoTest {
         PagoDAOFalso pagoDAO = new PagoDAOFalso();
         VentaService ventaService = new VentaService(ordenDAO, detalleDAO, productoDAO, pagoDAO, TRANSACCIONADOR_FALSO);
         PagoService pagoService = new PagoService(ordenDAO, detalleDAO, productoDAO, pagoDAO, new UsuarioDAOFalso(),
-                new TurnoDAOFalso(), new SucursalDAOFalso(), TRANSACCIONADOR_FALSO);
+                new TurnoDAOFalso(), new SucursalDAOFalso(), new DescuentoDAOFalso(), TRANSACCIONADOR_FALSO);
 
         Orden creada = ventaService.crearOrdenDomicilio(9, 55,
                 List.of(new ItemOrden(1, "Tacos", new BigDecimal("100.00"), 1)), true,
@@ -652,6 +655,31 @@ class VentaPagoInventarioFlujoTest {
         @Override
         public List<Sucursal> obtenerActivas() {
             return List.of();
+        }
+    }
+
+    private static class DescuentoDAOFalso implements DescuentoDAO {
+        Map<TipoDescuento, BigDecimal> porcentajes = new EnumMap<>(Map.of(
+                TipoDescuento.EMPLEADO, new BigDecimal("0.20"),
+                TipoDescuento.CORTESIA, new BigDecimal("1.00"),
+                TipoDescuento.PROMOCION, new BigDecimal("0.10"),
+                TipoDescuento.AJUSTE, new BigDecimal("0.05")
+        ));
+
+        @Override
+        public BigDecimal obtenerPorcentaje(TipoDescuento tipo) {
+            return porcentajes.get(tipo);
+        }
+
+        @Override
+        public Map<TipoDescuento, BigDecimal> obtenerTodos() {
+            return porcentajes;
+        }
+
+        @Override
+        public boolean actualizar(TipoDescuento tipo, BigDecimal porcentaje) {
+            porcentajes.put(tipo, porcentaje);
+            return true;
         }
     }
 }

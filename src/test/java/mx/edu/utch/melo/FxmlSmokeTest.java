@@ -8,6 +8,7 @@ import mx.edu.utch.melo.dao.CategoriaDAO;
 import mx.edu.utch.melo.dao.ClienteDAO;
 import mx.edu.utch.melo.dao.ControlIntentosPinDAO;
 import mx.edu.utch.melo.dao.DashboardDAO;
+import mx.edu.utch.melo.dao.DescuentoDAO;
 import mx.edu.utch.melo.dao.DetalleOrdenDAO;
 import mx.edu.utch.melo.dao.MesaDAO;
 import mx.edu.utch.melo.dao.ModificadorDAO;
@@ -85,6 +86,7 @@ class FxmlSmokeTest {
             daoInactivo(DashboardDAO.class),
             (origen, destino) -> Optional.empty(),
             daoInactivo(ControlIntentosPinDAO.class),
+            daoInactivo(DescuentoDAO.class),
             // Singleton real, pero seguro aquí: solo lo usan VentaService/PagoService para abrir una
             // transacción (ver ConexionDB#ejecutarEnTransaccion), y eso nunca se dispara en esta prueba
             // (solo se llama initialize(), nunca "Cobrar"/"Confirmar Pago"). Construirlo no valida

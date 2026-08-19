@@ -5,6 +5,7 @@ import mx.edu.utch.melo.app.AppContext;
 import mx.edu.utch.melo.dao.CategoriaDAO;
 import mx.edu.utch.melo.dao.ClienteDAO;
 import mx.edu.utch.melo.dao.DashboardDAO;
+import mx.edu.utch.melo.dao.DescuentoDAO;
 import mx.edu.utch.melo.dao.DetalleOrdenDAO;
 import mx.edu.utch.melo.dao.MesaDAO;
 import mx.edu.utch.melo.dao.ModificadorDAO;
@@ -21,6 +22,7 @@ import mx.edu.utch.melo.service.CategoriaService;
 import mx.edu.utch.melo.service.ClienteService;
 import mx.edu.utch.melo.service.DashboardService;
 import mx.edu.utch.melo.service.DeliveryService;
+import mx.edu.utch.melo.service.DescuentoService;
 import mx.edu.utch.melo.service.PagoService;
 import mx.edu.utch.melo.service.ProductoService;
 import mx.edu.utch.melo.service.SucursalService;
@@ -135,6 +137,8 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
         registro.put(TurnoService.class, contexto.getTurnoService());
         registro.put(DashboardService.class, contexto.getDashboardService());
         registro.put(DeliveryService.class, contexto.getDeliveryService());
+        registro.put(DescuentoDAO.class, contexto.getDescuentoDAO());
+        registro.put(DescuentoService.class, contexto.getDescuentoService());
 
         return registro;
     }
