@@ -26,13 +26,13 @@
 
     <GridPane hgap="10" vgap="10">
         <VBox.margin><Insets bottom="16"/></VBox.margin>
-        <Button text="Empleado" maxWidth="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="0"
+        <Button fx:id="btnEmpleado" text="Empleado" maxWidth="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="0"
                 styleClass="btn-outline-accent" onAction="#onDescuentoEmpleado"/>
-        <Button text="Cortesía" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0"
+        <Button fx:id="btnCortesia" text="Cortesía" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0"
                 styleClass="btn-outline-accent" onAction="#onDescuentoCortesia"/>
-        <Button text="Promoción" maxWidth="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="1"
+        <Button fx:id="btnPromocion" text="Promoción" maxWidth="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="1"
                 styleClass="btn-outline-accent" onAction="#onDescuentoPromocion"/>
-        <Button text="Ajuste" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1"
+        <Button fx:id="btnAjuste" text="Ajuste" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1"
                 styleClass="btn-outline-accent" onAction="#onDescuentoAjuste"/>
         <columnConstraints>
             <ColumnConstraints percentWidth="50"/>

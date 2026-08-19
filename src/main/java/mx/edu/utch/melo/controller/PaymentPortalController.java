@@ -15,6 +15,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import mx.edu.utch.melo.async.Async;
+import mx.edu.utch.melo.dao.DescuentoDAO;
 import mx.edu.utch.melo.model.EntradaMonetaria;
 import mx.edu.utch.melo.model.MetodoPago;
 import mx.edu.utch.melo.model.Orden;
@@ -134,12 +135,12 @@ public class PaymentPortalController {
     private MetodoPago metodoSeleccionado = MetodoPago.EFECTIVO;
     private ModoPago modoPago = ModoPago.UNICO;
     private CampoDividido campoDivididoActivo = CampoDividido.EFECTIVO;
-    /** Cargado junto con la orden (ver cargarOrden); porcentaje vigente de cada categoría de
-     * descuento, configurable desde Ajustes (ver DescuentoService) -- ya no una constante fija en
-     * TipoDescuento. Solo para mostrar el "(20%)" en el panel de autorización; el cobro real
-     * siempre vuelve a leer el valor vigente en PagoService.aplicarDescuento, nunca confía en este
-     * caché. */
-    private Map<TipoDescuento, BigDecimal> porcentajesDescuento = Map.of();
+    /** Cargado junto con la orden (ver cargarOrden); etiqueta y porcentaje vigentes de cada
+     * categoría de descuento, configurables desde Ajustes (ver DescuentoService) -- ya no una
+     * constante fija en TipoDescuento. Solo para mostrar el nombre real y el "(20%)" en pantalla;
+     * el cobro real siempre vuelve a leer el porcentaje vigente en PagoService.aplicarDescuento,
+     * nunca confía en este caché. */
+    private Map<TipoDescuento, DescuentoDAO.ConfiguracionDescuento> configuracionesDescuento = Map.of();
     /** Categoría que se está autorizando ahora mismo (ver panelAutorizacion); null si no hay ninguna en curso. */
     private TipoDescuento descuentoPendienteAutorizar;
 
@@ -245,7 +246,7 @@ public class PaymentPortalController {
                 () -> pagoService.obtenerRecibo(ordenId, sesion.getSucursalActivaId()),
                 datos -> {
                     this.ordenActiva = datos.orden();
-                    this.porcentajesDescuento = datos.porcentajesDescuento();
+                    this.configuracionesDescuento = datos.configuracionesDescuento();
                     lblNumeroOrden.setText("Orden #" + datos.orden().getId());
                     renderizarTicket(datos.lineas());
                     // Precarga "Recibido" con el total para el caso común de pago exacto en efectivo
@@ -295,7 +296,7 @@ public class PaymentPortalController {
         if (tieneDescuento) {
             BigDecimal totalOriginal = ordenActiva.getTotal().add(ordenActiva.getMontoDescuento());
             lblTotalOriginal.setText(Dinero.formatear(totalOriginal));
-            lblDescuentoEtiqueta.setText("Descuento (" + ordenActiva.getTipoDescuento().getEtiqueta() + ")");
+            lblDescuentoEtiqueta.setText("Descuento (" + etiquetaDe(ordenActiva.getTipoDescuento()) + ")");
             lblDescuentoMonto.setText("-" + Dinero.formatear(ordenActiva.getMontoDescuento()));
         }
         lblTotalAPagar.setText(Dinero.formatear(ordenActiva.getTotal()));
@@ -312,15 +313,24 @@ public class PaymentPortalController {
         filaDescuentoAplicado.setManaged(tieneDescuento);
         if (tieneDescuento) {
             lblDescuentoAplicadoTexto.setText(
-                    ordenActiva.getTipoDescuento().getEtiqueta() + ": -" + Dinero.formatear(ordenActiva.getMontoDescuento()));
+                    etiquetaDe(ordenActiva.getTipoDescuento()) + ": -" + Dinero.formatear(ordenActiva.getMontoDescuento()));
         }
+    }
+
+    /** Nombre vigente de la categoría (ver DescuentoService, configurable desde Ajustes) -- si el
+     * caché de esta pantalla no lo tiene (p. ej. no se pudo cargar), cae al nombre por defecto del
+     * enum en vez de mostrar un hueco en blanco. */
+    private String etiquetaDe(TipoDescuento tipo) {
+        DescuentoDAO.ConfiguracionDescuento config = configuracionesDescuento.get(tipo);
+        return config != null ? config.etiqueta() : tipo.getEtiqueta();
     }
 
     private void iniciarAutorizacionDescuento(TipoDescuento tipo) {
         descuentoPendienteAutorizar = tipo;
-        BigDecimal fraccion = porcentajesDescuento.getOrDefault(tipo, BigDecimal.ZERO);
+        DescuentoDAO.ConfiguracionDescuento config = configuracionesDescuento.get(tipo);
+        BigDecimal fraccion = config != null ? config.porcentaje() : BigDecimal.ZERO;
         int porcentaje = fraccion.multiply(BigDecimal.valueOf(100)).intValue();
-        lblAutorizacionTitulo.setText("Autoriza \"" + tipo.getEtiqueta() + "\" (" + porcentaje + "%)");
+        lblAutorizacionTitulo.setText("Autoriza \"" + etiquetaDe(tipo) + "\" (" + porcentaje + "%)");
         txtPinAutorizacion.clear();
         ocultarErrorDescuento();
         btnElegirDescuento.setVisible(false);

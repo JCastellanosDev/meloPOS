@@ -100,14 +100,17 @@ CREATE TABLE categorias (
     UNIQUE KEY uk_categorias_nombre (nombre)
 );
 
--- Porcentaje de cada categoría de descuento (ver PagoService.aplicarDescuento) -- antes era
--- una constante fija por categoría (model.TipoDescuento), ahora un Administrador lo puede
--- ajustar desde Ajustes sin recompilar. Compartido por toda la cadena, igual que categorias:
--- la política de descuentos no varía por sucursal salvo que se pida lo contrario. Una fila
--- por cada valor de TipoDescuento, sembradas abajo con los mismos valores por defecto que
--- tenía la constante que reemplazan.
+-- Porcentaje Y nombre visible de cada categoría de descuento (ver PagoService.aplicarDescuento)
+-- -- antes ambos eran una constante fija por categoría (model.TipoDescuento), ahora un
+-- Administrador los puede ajustar desde Ajustes sin recompilar. tipo_descuento sigue siendo el
+-- identificador interno fijo (coincide con el enum, nunca se edita); etiqueta es el nombre que
+-- ve el cajero en pantalla, editable. Compartido por toda la cadena, igual que categorias: la
+-- política de descuentos no varía por sucursal salvo que se pida lo contrario. Una fila por
+-- cada valor de TipoDescuento, sembradas abajo con los mismos valores por defecto que tenía la
+-- constante que reemplazan.
 CREATE TABLE descuentos (
     tipo_descuento  VARCHAR(20)     NOT NULL PRIMARY KEY,
+    etiqueta        VARCHAR(40)     NOT NULL,
     porcentaje      DECIMAL(5, 4)   NOT NULL
 );
 
@@ -351,11 +354,11 @@ VALUES ('Crepas de Oro', 'Av de las Águilas', '3046', 'Arboledas', '31110', 'Ch
 
 INSERT INTO categorias (nombre) VALUES ('General');
 
-INSERT INTO descuentos (tipo_descuento, porcentaje) VALUES
-    ('EMPLEADO', 0.20),
-    ('CORTESIA', 1.00),
-    ('PROMOCION', 0.10),
-    ('AJUSTE', 0.05);
+INSERT INTO descuentos (tipo_descuento, etiqueta, porcentaje) VALUES
+    ('EMPLEADO', 'Empleado', 0.20),
+    ('CORTESIA', 'Cortesía', 1.00),
+    ('PROMOCION', 'Promoción', 0.10),
+    ('AJUSTE', 'Ajuste', 0.05);
 
 INSERT INTO usuarios (sucursal_id, nombre, pin_acceso, rol, activo)
 VALUES (1, 'Administrador Demo', '0000', 'ADMINISTRADOR', TRUE);

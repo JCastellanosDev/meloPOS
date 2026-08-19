@@ -92,13 +92,13 @@ public class PagoService {
             lineas.add(new LineaRecibo(nombre, detalle.getCantidad(), detalle.getSubtotal(), detalle.getNota()));
         }
 
-        Map<TipoDescuento, BigDecimal> porcentajes;
+        Map<TipoDescuento, DescuentoDAO.ConfiguracionDescuento> configuraciones;
         try {
-            porcentajes = descuentoDAO.obtenerTodos();
+            configuraciones = descuentoDAO.obtenerTodos();
         } catch (RuntimeException e) {
-            porcentajes = Map.of();
+            configuraciones = Map.of();
         }
-        return new DatosRecibo(orden, cajero, sucursal, lineas, porcentajes);
+        return new DatosRecibo(orden, cajero, sucursal, lineas, configuraciones);
     }
 
     /**
@@ -313,7 +313,7 @@ public class PagoService {
     }
 
     public record DatosRecibo(Orden orden, Usuario cajero, Sucursal sucursal, List<LineaRecibo> lineas,
-                               Map<TipoDescuento, BigDecimal> porcentajesDescuento) {
+                               Map<TipoDescuento, DescuentoDAO.ConfiguracionDescuento> configuracionesDescuento) {
     }
 
     public static class MontoPagadoNoCoincideException extends RuntimeException {

@@ -18,8 +18,8 @@ import java.util.NoSuchElementException;
 public class DescuentoDAOImpl implements DescuentoDAO {
 
     private static final String SQL_POR_TIPO = "SELECT porcentaje FROM descuentos WHERE tipo_descuento = ?";
-    private static final String SQL_TODOS = "SELECT tipo_descuento, porcentaje FROM descuentos";
-    private static final String SQL_ACTUALIZAR = "UPDATE descuentos SET porcentaje = ? WHERE tipo_descuento = ?";
+    private static final String SQL_TODOS = "SELECT tipo_descuento, etiqueta, porcentaje FROM descuentos";
+    private static final String SQL_ACTUALIZAR = "UPDATE descuentos SET etiqueta = ?, porcentaje = ? WHERE tipo_descuento = ?";
 
     private final ConexionDB conexionDB;
 
@@ -45,32 +45,33 @@ public class DescuentoDAOImpl implements DescuentoDAO {
     }
 
     @Override
-    public Map<TipoDescuento, BigDecimal> obtenerTodos() {
-        Map<TipoDescuento, BigDecimal> resultado = new EnumMap<>(TipoDescuento.class);
+    public Map<TipoDescuento, ConfiguracionDescuento> obtenerTodos() {
+        Map<TipoDescuento, ConfiguracionDescuento> resultado = new EnumMap<>(TipoDescuento.class);
         try (Connection conexion = conexionDB.obtenerConexion();
              PreparedStatement sentencia = conexion.prepareStatement(SQL_TODOS);
              ResultSet filas = sentencia.executeQuery()) {
 
             while (filas.next()) {
                 TipoDescuento tipo = TipoDescuento.valueOf(filas.getString("tipo_descuento"));
-                resultado.put(tipo, filas.getBigDecimal("porcentaje"));
+                resultado.put(tipo, new ConfiguracionDescuento(filas.getString("etiqueta"), filas.getBigDecimal("porcentaje")));
             }
         } catch (SQLException e) {
-            throw new PersistenciaException("No se pudo obtener la lista de porcentajes de descuento", e);
+            throw new PersistenciaException("No se pudo obtener la lista de configuración de descuentos", e);
         }
         return resultado;
     }
 
     @Override
-    public boolean actualizar(TipoDescuento tipo, BigDecimal porcentaje) {
+    public boolean actualizar(TipoDescuento tipo, String etiqueta, BigDecimal porcentaje) {
         try (Connection conexion = conexionDB.obtenerConexion();
              PreparedStatement sentencia = conexion.prepareStatement(SQL_ACTUALIZAR)) {
 
-            sentencia.setBigDecimal(1, porcentaje);
-            sentencia.setString(2, tipo.name());
+            sentencia.setString(1, etiqueta);
+            sentencia.setBigDecimal(2, porcentaje);
+            sentencia.setString(3, tipo.name());
             return sentencia.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new PersistenciaException("No se pudo actualizar el porcentaje de descuento para " + tipo, e);
+            throw new PersistenciaException("No se pudo actualizar la configuración de descuento para " + tipo, e);
         }
     }
 }

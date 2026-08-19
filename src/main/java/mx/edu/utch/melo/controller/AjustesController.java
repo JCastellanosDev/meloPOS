@@ -17,6 +17,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
 import mx.edu.utch.melo.async.Async;
+import mx.edu.utch.melo.dao.DescuentoDAO.ConfiguracionDescuento;
 import mx.edu.utch.melo.model.Categoria;
 import mx.edu.utch.melo.model.Producto;
 import mx.edu.utch.melo.model.Rol;
@@ -126,13 +127,25 @@ public class AjustesController {
     private Button btnRegistrarPersonal;
 
     @FXML
+    private TextField txtNombreEmpleado;
+
+    @FXML
     private TextField txtPorcentajeEmpleado;
+
+    @FXML
+    private TextField txtNombreCortesia;
 
     @FXML
     private TextField txtPorcentajeCortesia;
 
     @FXML
+    private TextField txtNombrePromocion;
+
+    @FXML
     private TextField txtPorcentajePromocion;
+
+    @FXML
+    private TextField txtNombreAjuste;
 
     @FXML
     private TextField txtPorcentajeAjuste;
@@ -264,20 +277,28 @@ public class AjustesController {
         lblErrorIva.setManaged(false);
     }
 
-    /** Porcentajes vigentes de cada categoría (ver DescuentoService) -- ya no una constante fija en TipoDescuento. */
+    /** Nombre y porcentaje vigentes de cada categoría (ver DescuentoService) -- ya no constantes fijas en TipoDescuento. */
     private void cargarDescuentos() {
         Async.ejecutar(
-                descuentoService::obtenerPorcentajes,
+                descuentoService::obtenerConfiguraciones,
                 this::mostrarDescuentos,
-                error -> mostrarErrorDescuentos("No se pudieron cargar los porcentajes. Revisa la conexión con la base de datos.")
+                error -> mostrarErrorDescuentos("No se pudo cargar la configuración de descuentos. Revisa la conexión con la base de datos.")
         );
     }
 
-    private void mostrarDescuentos(Map<TipoDescuento, BigDecimal> porcentajes) {
-        txtPorcentajeEmpleado.setText(comoEnteroPorcentaje(porcentajes.get(TipoDescuento.EMPLEADO)));
-        txtPorcentajeCortesia.setText(comoEnteroPorcentaje(porcentajes.get(TipoDescuento.CORTESIA)));
-        txtPorcentajePromocion.setText(comoEnteroPorcentaje(porcentajes.get(TipoDescuento.PROMOCION)));
-        txtPorcentajeAjuste.setText(comoEnteroPorcentaje(porcentajes.get(TipoDescuento.AJUSTE)));
+    private void mostrarDescuentos(Map<TipoDescuento, ConfiguracionDescuento> configuraciones) {
+        mostrarConfiguracion(txtNombreEmpleado, txtPorcentajeEmpleado, configuraciones.get(TipoDescuento.EMPLEADO));
+        mostrarConfiguracion(txtNombreCortesia, txtPorcentajeCortesia, configuraciones.get(TipoDescuento.CORTESIA));
+        mostrarConfiguracion(txtNombrePromocion, txtPorcentajePromocion, configuraciones.get(TipoDescuento.PROMOCION));
+        mostrarConfiguracion(txtNombreAjuste, txtPorcentajeAjuste, configuraciones.get(TipoDescuento.AJUSTE));
+    }
+
+    private void mostrarConfiguracion(TextField txtNombre, TextField txtPorcentaje, ConfiguracionDescuento configuracion) {
+        if (configuracion == null) {
+            return;
+        }
+        txtNombre.setText(configuracion.etiqueta());
+        txtPorcentaje.setText(comoEnteroPorcentaje(configuracion.porcentaje()));
     }
 
     /** BigDecimal (0-1, ej. 0.20) <-> texto de porcentaje entero (ej. "20") para el campo en pantalla. */
@@ -306,11 +327,19 @@ public class AjustesController {
     /** Guarda las 4 categorías de una sola vez -- son pocos campos relacionados, no amerita un botón por fila. */
     @FXML
     void onGuardarDescuentos() {
+        Optional<String> nombreEmpleado = parsearNombre(txtNombreEmpleado.getText());
+        Optional<String> nombreCortesia = parsearNombre(txtNombreCortesia.getText());
+        Optional<String> nombrePromocion = parsearNombre(txtNombrePromocion.getText());
+        Optional<String> nombreAjuste = parsearNombre(txtNombreAjuste.getText());
+        if (nombreEmpleado.isEmpty() || nombreCortesia.isEmpty() || nombrePromocion.isEmpty() || nombreAjuste.isEmpty()) {
+            mostrarErrorDescuentos("El nombre de cada categoría no puede quedar vacío.");
+            return;
+        }
+
         Optional<BigDecimal> empleado = parsearPorcentaje(txtPorcentajeEmpleado.getText());
         Optional<BigDecimal> cortesia = parsearPorcentaje(txtPorcentajeCortesia.getText());
         Optional<BigDecimal> promocion = parsearPorcentaje(txtPorcentajePromocion.getText());
         Optional<BigDecimal> ajuste = parsearPorcentaje(txtPorcentajeAjuste.getText());
-
         if (empleado.isEmpty() || cortesia.isEmpty() || promocion.isEmpty() || ajuste.isEmpty()) {
             mostrarErrorDescuentos("Cada porcentaje debe ser un número entre 0 y 100.");
             return;
@@ -319,27 +348,32 @@ public class AjustesController {
         ocultarMensajesDescuentos();
         btnGuardarDescuentos.setDisable(true);
         Rol rol = sesion.getUsuarioActivo().getRol();
-        Map<TipoDescuento, BigDecimal> aGuardar = Map.of(
-                TipoDescuento.EMPLEADO, empleado.get(),
-                TipoDescuento.CORTESIA, cortesia.get(),
-                TipoDescuento.PROMOCION, promocion.get(),
-                TipoDescuento.AJUSTE, ajuste.get()
+        Map<TipoDescuento, ConfiguracionDescuento> aGuardar = Map.of(
+                TipoDescuento.EMPLEADO, new ConfiguracionDescuento(nombreEmpleado.get(), empleado.get()),
+                TipoDescuento.CORTESIA, new ConfiguracionDescuento(nombreCortesia.get(), cortesia.get()),
+                TipoDescuento.PROMOCION, new ConfiguracionDescuento(nombrePromocion.get(), promocion.get()),
+                TipoDescuento.AJUSTE, new ConfiguracionDescuento(nombreAjuste.get(), ajuste.get())
         );
 
         Async.ejecutar(
                 () -> {
-                    aGuardar.forEach((tipo, porcentaje) -> descuentoService.actualizarPorcentaje(rol, tipo, porcentaje));
+                    aGuardar.forEach((tipo, config) ->
+                            descuentoService.actualizarConfiguracion(rol, tipo, config.etiqueta(), config.porcentaje()));
                     return true;
                 },
                 exito -> {
                     btnGuardarDescuentos.setDisable(false);
-                    mostrarExitoDescuentos("Porcentajes de descuento actualizados.");
+                    mostrarExitoDescuentos("Categorías de descuento actualizadas.");
                 },
                 error -> {
                     btnGuardarDescuentos.setDisable(false);
-                    mostrarErrorDescuentos("No se pudieron guardar los porcentajes. Intenta de nuevo.");
+                    mostrarErrorDescuentos("No se pudieron guardar los cambios. Intenta de nuevo.");
                 }
         );
+    }
+
+    private Optional<String> parsearNombre(String texto) {
+        return texto == null || texto.isBlank() ? Optional.empty() : Optional.of(texto.trim());
     }
 
     private void mostrarErrorDescuentos(String mensaje) {

@@ -1,6 +1,7 @@
 package mx.edu.utch.melo.service;
 
 import mx.edu.utch.melo.dao.DescuentoDAO;
+import mx.edu.utch.melo.dao.DescuentoDAO.ConfiguracionDescuento;
 import mx.edu.utch.melo.dao.DetalleOrdenDAO;
 import mx.edu.utch.melo.dao.OrdenDAO;
 import mx.edu.utch.melo.dao.PagoDAO;
@@ -659,26 +660,26 @@ class VentaPagoInventarioFlujoTest {
     }
 
     private static class DescuentoDAOFalso implements DescuentoDAO {
-        Map<TipoDescuento, BigDecimal> porcentajes = new EnumMap<>(Map.of(
-                TipoDescuento.EMPLEADO, new BigDecimal("0.20"),
-                TipoDescuento.CORTESIA, new BigDecimal("1.00"),
-                TipoDescuento.PROMOCION, new BigDecimal("0.10"),
-                TipoDescuento.AJUSTE, new BigDecimal("0.05")
+        Map<TipoDescuento, ConfiguracionDescuento> configuraciones = new EnumMap<>(Map.of(
+                TipoDescuento.EMPLEADO, new ConfiguracionDescuento("Empleado", new BigDecimal("0.20")),
+                TipoDescuento.CORTESIA, new ConfiguracionDescuento("Cortesía", new BigDecimal("1.00")),
+                TipoDescuento.PROMOCION, new ConfiguracionDescuento("Promoción", new BigDecimal("0.10")),
+                TipoDescuento.AJUSTE, new ConfiguracionDescuento("Ajuste", new BigDecimal("0.05"))
         ));
 
         @Override
         public BigDecimal obtenerPorcentaje(TipoDescuento tipo) {
-            return porcentajes.get(tipo);
+            return configuraciones.get(tipo).porcentaje();
         }
 
         @Override
-        public Map<TipoDescuento, BigDecimal> obtenerTodos() {
-            return porcentajes;
+        public Map<TipoDescuento, ConfiguracionDescuento> obtenerTodos() {
+            return configuraciones;
         }
 
         @Override
-        public boolean actualizar(TipoDescuento tipo, BigDecimal porcentaje) {
-            porcentajes.put(tipo, porcentaje);
+        public boolean actualizar(TipoDescuento tipo, String etiqueta, BigDecimal porcentaje) {
+            configuraciones.put(tipo, new ConfiguracionDescuento(etiqueta, porcentaje));
             return true;
         }
     }
