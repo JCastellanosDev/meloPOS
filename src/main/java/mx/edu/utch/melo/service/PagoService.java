@@ -72,6 +72,13 @@ public class PagoService {
      * Junta la orden, su cajero, la sucursal activa, las líneas de detalle y el porcentaje vigente
      * de cada categoría de descuento (ver DescuentoDAO -- ya no es una constante fija, PaymentPortal
      * necesita el valor real para mostrarlo antes de autorizar, no el que tenía la app al compilar).
+     *
+     * El porcentaje de descuento es secundario frente a poder cobrar -- si falla su lectura (p. ej.
+     * una base de datos a la que todavía no se le aplicó la migración de la tabla "descuentos"), el
+     * recibo se sigue armando igual, sin bloquear el cobro completo por un problema en una pieza
+     * que ni siquiera se usa en la mayoría de las cuentas. Ver PaymentPortalController: sin datos
+     * de porcentaje, el panel de autorización de descuento simplemente mostraría 0% -- degradado,
+     * no roto.
      */
     public DatosRecibo obtenerRecibo(int ordenId, int sucursalId) {
         Orden orden = ordenDAO.obtenerPorId(ordenId).orElseThrow();
@@ -84,7 +91,14 @@ public class PagoService {
             String nombre = producto == null ? "Producto #" + detalle.getProductoId() : producto.getNombre();
             lineas.add(new LineaRecibo(nombre, detalle.getCantidad(), detalle.getSubtotal(), detalle.getNota()));
         }
-        return new DatosRecibo(orden, cajero, sucursal, lineas, descuentoDAO.obtenerTodos());
+
+        Map<TipoDescuento, BigDecimal> porcentajes;
+        try {
+            porcentajes = descuentoDAO.obtenerTodos();
+        } catch (RuntimeException e) {
+            porcentajes = Map.of();
+        }
+        return new DatosRecibo(orden, cajero, sucursal, lineas, porcentajes);
     }
 
     /**
